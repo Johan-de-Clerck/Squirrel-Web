@@ -387,6 +387,11 @@
 #view-sound .synth-controls{display:flex;flex-direction:column;gap:13px;min-width:0}
 #view-sound .oscillator-sections{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
 #view-sound .osc-section{border:1px solid #674c37;border-radius:9px;padding:14px;background:#2b211a;display:flex;flex-direction:column;gap:13px;min-width:0}
+#view-sound .osc-header{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:22px}
+#view-sound .osc-header h3{margin:0}
+#view-sound .osc-toggle{display:inline-flex;gap:5px;align-items:center;color:#e9b882;font-size:11px;white-space:nowrap;cursor:pointer}
+#view-sound .osc-toggle input{accent-color:#dfaa74;margin:0}
+#view-sound .osc-disabled .field{opacity:.5}
 #view-sound .osc-section h3,#view-sound .synth-filter-section h3{font-family:Georgia,serif;color:#efc493;font-size:15px;letter-spacing:.3px;margin:0 0 3px}
 #view-sound .osc-section .field{width:100%}
 #view-sound .synth-filter-section{border:1px solid #594432;border-radius:9px;padding:12px 14px;background:#281f19}
@@ -407,7 +412,7 @@
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark" aria-hidden="true">S</div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO UIT</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI NIET VERBONDEN</span></span><span class="version">BUILD 0.1.19</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark" aria-hidden="true">S</div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO UIT</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI NIET VERBONDEN</span></span><span class="version">BUILD 0.1.20</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ AUDIO STARTEN</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Afspelen">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="EDIT aan: noten typen in het sequencergrid">✎ EDIT UIT</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octaaf"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" value="120" aria-label="Tempo in BPM"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Mastervolume"><output id="masterOut">75%</output></label></div></section>
@@ -465,7 +470,7 @@ const bases=[
  {name:'EMPTY 7',type:'empty',channel:7,volume:0,pan:0,color:'#887b6d',note:48},
  {name:'EMPTY 8',type:'empty',channel:8,volume:0,pan:0,color:'#887b6d',note:48}
 ];
-function defaultSound(t){return t.type==='chord'?{subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:8,pulseWidth:50,cutoff:1500,resonance:0.9,attack:.09,decay:.42,sustain:.68,release:.7,chord:'minor'}:t.type==='synth'&&t.name==='BASS'?{subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'square',detune:9,pulseWidth:43,cutoff:1350,resonance:1.8,attack:.009,decay:.22,sustain:.52,release:.19,chord:'major'}:{subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:14,pulseWidth:50,cutoff:4200,resonance:.8,attack:.015,decay:.21,sustain:.65,release:.27,chord:'major'}}
+function defaultSound(t){return t.type==='chord'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:8,pulseWidth:50,cutoff:1500,resonance:0.9,attack:.09,decay:.42,sustain:.68,release:.7,chord:'minor'}:t.type==='synth'&&t.name==='BASS'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'square',detune:9,pulseWidth:43,cutoff:1350,resonance:1.8,attack:.009,decay:.22,sustain:.52,release:.19,chord:'major'}:{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:14,pulseWidth:50,cutoff:4200,resonance:.8,attack:.015,decay:.21,sustain:.65,release:.27,chord:'major'}}
 const LFO_TARGETS=[['off','UIT'],['lead-volume','LEAD · VOLUME'],['lead-cutoff','LEAD · FILTER CUTOFF'],['bass-volume','BASS · VOLUME'],['bass-cutoff','BASS · FILTER CUTOFF'],['bass-pan','BASS · PANNING'],['lead-pan','LEAD · PANNING'],['chord-pan','CHORD · PANNING'],['sampler7-volume','SAMPLER 7 · VOLUME'],['sampler7-cutoff','SAMPLER 7 · FILTER'],['sampler7-pan','SAMPLER 7 · PANNING'],['sampler8-volume','SAMPLER 8 · VOLUME'],['sampler8-cutoff','SAMPLER 8 · FILTER'],['sampler8-pan','SAMPLER 8 · PANNING']];
 const LFO_WAVES=['sine','triangle','square','sawtooth'];
 const LFO_DIVISIONS=['free','1/1','1/2','1/4','1/8','1/16','1/32'];
@@ -608,7 +613,7 @@ function fresh(withDemo=true){const tracks=bases.map(b=>({...b,muted:false,solo:
  if(withDemo){set(0,[0,4,8,12]);set(1,[4,12]);set(2,[2,6,10,14],90);set(2,[0,4,8,12],75);set(3,[0,3,6,8,11,14]);[36,36,39,43,36,41,39].forEach((n,i)=>{const idx=[0,3,6,8,11,14,15][i];patterns[0][3][idx].on=true;patterns[0][3][idx].note=n;});
  set(4,[2,7,10,15]);patterns[0][3][3].fx=1;patterns[0][3][3].fxAmount=5;patterns[0][3][4].fx=1;patterns[0][3][4].fxAmount=0;patterns[0][3][11].fx=2;patterns[0][3][11].fxAmount=5;patterns[0][3][12].fx=2;patterns[0][3][12].fxAmount=0;patterns[0][4][10].fx=3;[60,62,67,64].forEach((n,i)=>patterns[0][4][[2,7,10,15][i]].note=n);set(5,[0,8]);patterns[0][5][0].note=48;patterns[0][5][8].note=53;}
  tracks.forEach(t=>{t.delaySend=0;t.reverbSend=0});
- return {version:11,bpm:120,swing:0,master:75,keyboardOctave:3,editMode:false,pattern:0,patternLengths:Array(PATTERN_COUNT).fill(16),selectedTrack:3,selectedStep:0,tracks,patterns,lfos:defaultLFOs(),envelopes:defaultEnvelopes(),sendFX:defaultSendFX()};}
+ return {version:12,bpm:120,swing:0,master:75,keyboardOctave:3,editMode:false,pattern:0,patternLengths:Array(PATTERN_COUNT).fill(16),selectedTrack:3,selectedStep:0,tracks,patterns,lfos:defaultLFOs(),envelopes:defaultEnvelopes(),sendFX:defaultSendFX()};}
 let state=fresh();try{const raw=localStorage.getItem('squirrel-studio-0.1');if(raw)state=validate(JSON.parse(raw));}catch(e){console.warn('Ongeldige lokale opslag:',e)}
 let audio=null,midiAccess=null,selectedInput=null,selectedOutput=null,midiOutEnabled=false,midiHeld=new Map(),clipboard=null,playing=false,recording=false,currentStep=0,lastVisualStep=-1,nextNoteTime=0,timer=null,view='seq',audioSink='default',messageTimeout=null;
 let activeLive=new Map(),scheduledVoices=new Set(),playheadQueue=[],lastBeatAt=0;
@@ -706,7 +711,7 @@ function srcChordDefault(data){
  return data.tracks?.[5]?.sound?.chord==='major'?'major':'minor';
 }
 function validate(data){
- if(!data||![1,2,3,4,5,6,7,8,9,10,11].includes(data.version)||!Array.isArray(data.tracks)||![AUDIO_TRACK_COUNT,TRACK_COUNT].includes(data.tracks.length)||!Array.isArray(data.patterns)||![4,PATTERN_COUNT].includes(data.patterns.length))throw Error('Onjuist bestandsformaat');
+ if(!data||![1,2,3,4,5,6,7,8,9,10,11,12].includes(data.version)||!Array.isArray(data.tracks)||![AUDIO_TRACK_COUNT,TRACK_COUNT].includes(data.tracks.length)||!Array.isArray(data.patterns)||![4,PATTERN_COUNT].includes(data.patterns.length))throw Error('Onjuist bestandsformaat');
  if(data.patterns.length===4){
   const patterns=Array(PATTERN_COUNT).fill(null),lengths=Array(PATTERN_COUNT).fill(16);
   for(let i=0;i<4;i++){patterns[i*4]=data.patterns[i];lengths[i*4]=data.patternLengths?.[i]||16}
@@ -729,8 +734,9 @@ function validate(data){
   target.sampleData=typeof src.sampleData==='string'&&/^data:[^;]*;base64,/i.test(src.sampleData)&&src.sampleData.length<=26000000?src.sampleData:null;
  }
  target.delaySend=clamp(Number(src.delaySend??0)||0,0,100);target.reverbSend=clamp(Number(src.reverbSend??0)||0,0,100);if(target.type==='empty')continue;const p=src.sound||{};for(const k of ['wave1','wave2'])if(['sine','triangle','square','sawtooth','pulse'].includes(p[k]))target.sound[k]=p[k];
+ for(const k of ['osc1On','osc2On','subOn'])if(typeof p[k]==='boolean')target.sound[k]=p[k];
  if(['sine','sawtooth','pulse'].includes(p.subWave))target.sound.subWave=p.subWave;
- if(p.subOctave===-12||p.subOctave===-24)target.sound.subOctave=p.subOctave;for(const [k,a,b] of [['detune',-50,50],['subDetune',-50,50],['subLevel',0,100],['pulseWidth',5,95],['cutoff',80,12000],['resonance',.1,18],['attack',.003,2],['decay',.01,2],['sustain',0,1],['release',.01,3]])if(Number.isFinite(Number(p[k])))target.sound[k]=clamp(Number(p[k]),a,b);if(p.chord==='minor'||p.chord==='major')target.sound.chord=p.chord;
+ if(p.subOctave===-12||p.subOctave===-24)target.sound.subOctave=p.subOctave;for(const [k,a,b] of [['detune',-50,50],['osc1Level',0,100],['osc2Level',0,100],['subDetune',-50,50],['subLevel',0,100],['pulseWidth',5,95],['cutoff',80,12000],['resonance',.1,18],['attack',.003,2],['decay',.01,2],['sustain',0,1],['release',.01,3]])if(Number.isFinite(Number(p[k])))target.sound[k]=clamp(Number(p[k]),a,b);if(p.chord==='minor'||p.chord==='major')target.sound.chord=p.chord;
  }for(let b=0;b<PATTERN_COUNT;b++){if(!Array.isArray(data.patterns[b])||data.patterns[b].length<AUDIO_TRACK_COUNT)continue;for(let t=0;t<TRACK_COUNT;t++){if(!Array.isArray(data.patterns[b][t])||data.patterns[b][t].length<16)continue;for(let i=0;i<Math.min(MAX_STEPS,data.patterns[b][t].length);i++){const p=data.patterns[b][t][i];if(!p||typeof p!=='object')continue;s.patterns[b][t][i]={on:!!p.on,note:clamp(Math.round(Number(p.note)||bases[t].note),24,95),velocity:clamp(Math.round(Number(p.velocity)||100),1,127),gate:clamp(Number(p.gate)||85,10,180),ratchet:clamp(Math.round(Number(p.ratchet)||1),1,6),chance:clamp(Number(p.chance??100),0,100),fx:FX_OPTIONS.some(x=>x.id===(data.version===1&&Number(p.fx)===4?5:Number(p.fx)))?(data.version===1&&Number(p.fx)===4?5:Number(p.fx)):0,fxAmount:data.version===1?clamp(Math.round(Number(p.fxAmount)||2)*3,1,255):clamp(Math.round(Number(p.fxAmount??2))||0,0,255),
   chordMode:t===5?(CHORD_MODES_BY_ID.has(p.chordMode)?p.chordMode:(srcChordDefault(data))):null}}}}
  if(Array.isArray(data.lfos)){data.lfos.slice(0,4).forEach((x,i)=>{if(!x||typeof x!=='object')return;const l=s.lfos[i];l.enabled=!!x.enabled;l.target=LFO_TARGETS.some(t=>t[0]===x.target)?x.target:l.target;l.wave=LFO_WAVES.includes(x.wave)?x.wave:l.wave;l.rate=clamp(Number(x.rate)||l.rate,.05,20);l.sync=LFO_DIVISIONS.includes(x.sync)?x.sync:'free';l.depth=clamp(Number(x.depth??l.depth),0,100)})}
@@ -877,6 +883,24 @@ function voiceGainAt(v,t){
 }
 function releaseVoice(v,when){if(v.released)return;v.released=true;const t=Math.max(audio.ctx.currentTime,when);try{const p=v.env.gain;const level=voiceGainAt(v,t);p.cancelScheduledValues(t);p.setValueAtTime(level,t);p.exponentialRampToValueAtTime(.0001,t+v.release);releaseFilterEnvelopes(v,t);v.oscs.forEach(o=>o.stop(t+v.release+.04));setTimeout(()=>scheduledVoices.delete(v),Math.max(50,(t+v.release+.2-audio.ctx.currentTime)*1000))}catch(e){scheduledVoices.delete(v)}}
 const pulseCache=new Map();function pulseWave(ctx,duty){const key=Math.round(duty);if(pulseCache.has(key))return pulseCache.get(key);const d=key/100,len=65,re=new Float32Array(len),im=new Float32Array(len);for(let n=1;n<len;n++){re[n]=2*Math.sin(Math.PI*n*d)**2/(Math.PI*n);im[n]=Math.sin(2*Math.PI*n*d)/(Math.PI*n)}const wave=ctx.createPeriodicWave(re,im,{disableNormalization:false});pulseCache.set(key,wave);return wave}
+function oscillatorMixGain(s,osc){
+ if(osc===0)return s.osc1On===false?0:.46*clamp(s.osc1Level??100,0,100)/100;
+ if(osc===1)return s.osc2On===false?0:.27*clamp(s.osc2Level??100,0,100)/100;
+ return s.subOn===false?0:.25*clamp(s.subLevel??35,0,100)/100;
+}
+function updateLiveOscillatorMix(trackIndex){
+ if(!audio||trackIndex<0||trackIndex>=TRACK_COUNT)return;
+ const sound=state.tracks[trackIndex]?.sound;
+ if(!sound)return;
+ const when=audio.ctx.currentTime;
+ for(const voice of scheduledVoices){
+  if(voice.trackIndex!==trackIndex||!voice.oscGains)continue;
+  voice.oscGains.forEach((gain,i)=>{
+   gain.gain.cancelScheduledValues(when);
+   gain.gain.setTargetAtTime(oscillatorMixGain(sound,i),when,.012);
+  });
+ }
+}
 function synthVoice(track,note,velocity,when,gate=null){
  const c=audio.ctx,s=track.sound,f=hz(note),trackIndex=state.tracks.indexOf(track);
  const out=c.createGain(),modGain=c.createGain(),filt=c.createBiquadFilter();
@@ -886,7 +910,7 @@ function synthVoice(track,note,velocity,when,gate=null){
  const filterEnvelopes=attachFilterEnvelopes(filt,trackIndex,when);
  if(trackIndex===3||trackIndex===4)audio.cutoffBuses[trackIndex].connect(filt.frequency);
  // Keep the sub level independently adjustable; 0% mutes it without changing the patch.
- g1.gain.value=.46;g2.gain.value=.27;subGain.gain.value=.25*clamp(s.subLevel??35,0,100)/100;
+ g1.gain.value=oscillatorMixGain(s,0);g2.gain.value=oscillatorMixGain(s,1);subGain.gain.value=oscillatorMixGain(s,2);
  const osc1=c.createOscillator(),osc2=c.createOscillator(),subOsc=c.createOscillator();
  for(const [osc,wave] of [[osc1,s.wave1],[osc2,s.wave2],[subOsc,s.subWave||'sine']]){
   if(wave==='pulse')osc.setPeriodicWave(pulseWave(c,s.pulseWidth));else osc.type=wave;
@@ -900,7 +924,7 @@ function synthVoice(track,note,velocity,when,gate=null){
  gainEnv(out.gain,when,velocity,s.attack,s.decay,s.sustain);
  for(const osc of [osc1,osc2,subOsc])osc.start(when);
  const v={env:out,oscs:[osc1,osc2,subOsc],pitchParams:[osc1.detune,osc2.detune,subOsc.detune],
-  modGain,release:Math.max(.02,s.release),released:false,trackIndex,filter:filt,filterEnvelopes,
+  modGain,oscGains:[g1,g2,subGain],release:Math.max(.02,s.release),released:false,trackIndex,filter:filt,filterEnvelopes,
   ampEnvelope:{start:when,peak:Math.max(.0002,velocity/127*.5),attack:Math.max(.003,s.attack),
                decay:Math.max(.01,s.decay),sustain:s.sustain}};
  scheduledVoices.add(v);
@@ -1131,8 +1155,10 @@ function renderFXEditor(){
 const oscillatorFields=[
  {k:'wave1',label:'WAVE',type:'select',options:['sawtooth','square','pulse','triangle','sine']},
  {k:'pulseWidth',label:'PULSE WIDTH 1+2',min:5,max:95,step:1,unit:'%'},
+ {k:'osc1Level',label:'LEVEL',min:0,max:100,step:1,unit:'%'},
  {k:'wave2',label:'WAVE',type:'select',options:['sawtooth','square','pulse','triangle','sine']},
  {k:'detune',label:'DETUNE',min:-50,max:50,step:1,unit:' cent'},
+ {k:'osc2Level',label:'LEVEL',min:0,max:100,step:1,unit:'%'},
  {k:'subWave',label:'WAVE',type:'select',options:['sawtooth','pulse','sine']},
  {k:'subOctave',label:'OCTAVE',type:'select',options:[{value:-12,label:'−12 SEMITONES'},{value:-24,label:'−24 SEMITONES'}]},
  {k:'subDetune',label:'DETUNE',min:-50,max:50,step:1,unit:' cent'},
@@ -1174,6 +1200,7 @@ function soundFieldControl(s,f){
   s[f.k]=f.type==='select'&&f.k!=='subOctave'?ctrl.value:Number(ctrl.value);
   show();persist();
   if(f.k==='cutoff')updateLiveCutoff(state.selectedTrack);
+  if(['osc1Level','osc2Level','subLevel'].includes(f.k))updateLiveOscillatorMix(state.selectedTrack);
   drawWave();
  };
  wrap.append(ctrl);show();return wrap;
@@ -1200,13 +1227,26 @@ function renderSound(){
  area.classList.add('synth-controls');
  const row=document.createElement('div');row.className='oscillator-sections';
  const groups=[
-  ['OSCILLATOR 1',['wave1','pulseWidth']],
-  ['OSCILLATOR 2',['wave2','detune']],
+  ['OSCILLATOR 1',['wave1','pulseWidth','osc1Level']],
+  ['OSCILLATOR 2',['wave2','detune','osc2Level']],
   ['SUB OSCILLATOR',['subWave','subOctave','subDetune','subLevel']]
  ];
- for(const [heading,fields] of groups){
+ for(const [groupIndex,[heading,fields]] of groups.entries()){
   const card=document.createElement('section');card.className='osc-section';
-  const title=document.createElement('h3');title.textContent=heading;card.append(title);
+  const enableKey=['osc1On','osc2On','subOn'][groupIndex];
+  const header=document.createElement('div');header.className='osc-header';
+  const title=document.createElement('h3');title.textContent=heading;
+  const toggle=document.createElement('label');toggle.className='osc-toggle';
+  const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=s[enableKey]!==false;
+  toggle.append(checkbox,document.createTextNode(' AAN'));
+  header.append(title,toggle);card.append(header);
+  card.classList.toggle('osc-disabled',!checkbox.checked);
+  checkbox.onchange=()=>{
+   s[enableKey]=checkbox.checked;
+   card.classList.toggle('osc-disabled',!checkbox.checked);
+   updateLiveOscillatorMix(state.selectedTrack);
+   persist();drawWave();
+  };
   fields.forEach(key=>card.append(soundFieldControl(s,oscillatorFields.find(x=>x.k===key))));
   row.append(card);
  }
@@ -1300,9 +1340,9 @@ function drawWave(){
  const subOctave=sound.subOctave===-24?-24:-12;
  $('waveViz').innerHTML='<svg viewBox="0 0 760 120" preserveAspectRatio="none" role="img" aria-label="Oscillator 1, oscillator 2 en sub oscillator golfvormen">'+
   '<line class="guide" x1="0" y1="60" x2="760" y2="60"/>'+
-  '<polyline points="'+waveform(sound.wave1)+'" style="stroke:#dea76f;opacity:.85"/>'+
-  '<polyline points="'+waveform(sound.wave2,0,sound.detune)+'" style="stroke:#a6c7b0;opacity:.55"/>'+
-  '<polyline points="'+waveform(sound.subWave||'sine',subOctave,sound.subDetune||0)+'" style="stroke:#91b6ec;opacity:'+(.2+.7*clamp(sound.subLevel??35,0,100)/100)+'"/>'+
+  '<polyline points="'+waveform(sound.wave1)+'" style="stroke:#dea76f;opacity:' + (.10+.75*(sound.osc1On===false?0:clamp(sound.osc1Level??100,0,100)/100)) + '"/>'+
+  '<polyline points="'+waveform(sound.wave2,0,sound.detune)+'" style="stroke:#a6c7b0;opacity:' + (.10+.45*(sound.osc2On===false?0:clamp(sound.osc2Level??100,0,100)/100)) + '"/>'+
+  '<polyline points="'+waveform(sound.subWave||'sine',subOctave,sound.subDetune||0)+'" style="stroke:#91b6ec;opacity:'+(.10+.8*(sound.subOn===false?0:clamp(sound.subLevel??35,0,100)/100))+'"/>'+
   '</svg>';
 }
 function renderMixer(){const el=$('mixerStrips');el.replaceChildren();state.tracks.forEach((t,i)=>{const d=document.createElement('div');d.className='mixer-strip';if(t.type==='empty'&&t.slotKind!=='sampler'){d.classList.add('empty-mixer');d.innerHTML='<h3>'+String(i+1).padStart(2,'0')+' '+t.name+'</h3><div class="small-label">SLOT GERESERVEERD · GEEN AUDIO</div><div><button class="btn">MUTE</button> <button class="btn">SOLO</button></div>';const buttons=d.querySelectorAll('button');buttons[0].classList.toggle('active',t.muted);buttons[1].classList.toggle('active',t.solo);buttons[0].onclick=()=>{t.muted=!t.muted;applyTrackMix();persist();renderMixer()};buttons[1].onclick=()=>{t.solo=!t.solo;applyTrackMix();persist();renderMixer()};el.appendChild(d);return;}d.innerHTML='<h3>'+String(i+1).padStart(2,'0')+' '+t.name+'</h3><div class="meter"><div class="meter-fill"></div></div><div class="small-label">VOL</div><input class="vertical-fader" type="range" min="0" max="100" value="'+t.volume+'" aria-label="Volume '+t.name+'"><output>'+t.volume+'%</output><div class="small-label" style="margin-top:12px">PAN</div><input class="vertical-fader" type="range" min="-100" max="100" value="'+t.pan+'" aria-label="Pan '+t.name+'"><div><button class="btn '+(t.muted?'active':'')+'">MUTE</button> <button class="btn '+(t.solo?'active':'')+'">SOLO</button></div>';const ranges=d.querySelectorAll('input');ranges[0].oninput=()=>{t.volume=Number(ranges[0].value);d.querySelector('output').textContent=t.volume+'%';applyTrackMix();persist()};ranges[1].oninput=()=>{t.pan=Number(ranges[1].value);applyTrackMix();persist()};const buttons=d.querySelectorAll('button');buttons[0].onclick=()=>{t.muted=!t.muted;applyTrackMix();persist();renderAll()};buttons[1].onclick=()=>{t.solo=!t.solo;applyTrackMix();persist();renderAll()};el.appendChild(d)})}
@@ -1490,7 +1530,7 @@ function liveNoteOff(t,note,ch=0){if(!audio)return;const key=t+':'+ch+':'+note;c
 async function refreshOutputs(){const s=$('audioOutput'),prev=s.value;s.replaceChildren(new Option('Standaard audio-uitgang (Windows)','default'));if(!navigator.mediaDevices?.enumerateDevices){$('outputHelp').textContent='Deze browser kan audio-uitgangen niet weergeven. Kies Focusrite als standaard in Windows.';return}try{const dev=await navigator.mediaDevices.enumerateDevices();for(const d of dev.filter(x=>x.kind==='audiooutput')){if(d.deviceId==='default')continue;s.add(new Option(d.label||'Audio-uitgang '+(s.options.length),d.deviceId))}s.value=Array.from(s.options).some(o=>o.value===prev)?prev:'default'}catch(e){notify('Audioapparaten ophalen mislukt: '+e.message,true)}}
 async function applyOutput(){if(!await initAudio())return;const id=$('audioOutput').value;if(id==='default'){try{if(audio.outputElement){audio.outputElement.pause();audio.outputElement.srcObject=null}audio.analyser.disconnect();audio.analyser.connect(audio.ctx.destination);audioSink=id;notify('Audio naar Windows standaardafspeelapparaat.')}catch(e){notify('Audio reset mislukt: '+e.message,true)}return}try{if(typeof audio.ctx.setSinkId==='function'){if(audio.outputElement){audio.outputElement.pause();audio.outputElement.srcObject=null}audio.analyser.disconnect();audio.analyser.connect(audio.ctx.destination);await audio.ctx.setSinkId(id);audioSink=id;notify('Audio-uitgang ingesteld: '+$('audioOutput').selectedOptions[0].textContent);return}if(!HTMLMediaElement.prototype.setSinkId)throw Error('Deze browser ondersteunt geen specifieke audio-uitgang.');if(!audio.streamDest)audio.streamDest=audio.ctx.createMediaStreamDestination();if(!audio.outputElement){audio.outputElement=document.createElement('audio');audio.outputElement.autoplay=true;audio.outputElement.srcObject=audio.streamDest.stream}await audio.outputElement.setSinkId(id);audio.analyser.disconnect();audio.analyser.connect(audio.streamDest);await audio.outputElement.play();audioSink=id;notify('Audio-uitgang ingesteld via MediaStream: '+$('audioOutput').selectedOptions[0].textContent)}catch(e){audio.analyser.disconnect();audio.analyser.connect(audio.ctx.destination);notify('Selecteren van deze audio-uitgang is mislukt: '+e.message,true)}}
 async function chooseOutput(){if(!navigator.mediaDevices?.selectAudioOutput){notify('Selecteer je Focusrite via Windows Geluidsinstellingen; apparaatselectie niet ondersteund.',true);return}try{const x=await navigator.mediaDevices.selectAudioOutput();await refreshOutputs();if(x?.deviceId&&![...$('audioOutput').options].some(o=>o.value===x.deviceId))$('audioOutput').add(new Option(x.label||'Gekozen uitvoer',x.deviceId));if(x?.deviceId)$('audioOutput').value=x.deviceId;notify('Audioapparaat gekozen. Klik op UITGANG INSTELLEN.')}catch(e){notify('Geen apparaat geselecteerd: '+e.message,true)}}
-function saveProject(){const project=JSON.stringify({...state,savedAt:new Date().toISOString(),app:'Squirrel Studio'},null,2);const url=URL.createObjectURL(new Blob([project],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='SquirrelStudio_0.1.19_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),800);notify('Project als JSON gedownload.')}
+function saveProject(){const project=JSON.stringify({...state,savedAt:new Date().toISOString(),app:'Squirrel Studio'},null,2);const url=URL.createObjectURL(new Blob([project],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='SquirrelStudio_0.1.20_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),800);notify('Project als JSON gedownload.')}
 function typeFXDigit(key){
  const digit=key.toUpperCase();if(!/^[0-9A-F]$/.test(digit))return false;
  if(fxDigitBuffer.length===0&&!FX_OPTIONS.some(x=>fxCode(x.id)===digit))return true;
