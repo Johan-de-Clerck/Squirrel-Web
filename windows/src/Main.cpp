@@ -1,5 +1,6 @@
 #include <JuceHeader.h>
 #include <cstring>
+#include <functional>
 #include <optional>
 #include <vector>
 
@@ -9,7 +10,103 @@ namespace
     const juce::Colour panel      {0xff32271f};
     const juce::Colour highlight  {0xffe2af7a};
 
-    juce::WebBrowserComponent::Options browserOptions()
+    // Squirrel native MIDI facade: only injected in the trusted, embedded Windows UI.
+    // The normal browser build continues to use the standard Web MIDI API.
+    constexpr const char* midiBridgeScript = R"JSMIDI(
+(() => {
+  const backend = window.__JUCE__ && window.__JUCE__.backend;
+  if (!backend) return;
+  const inputs = new Map(), outputs = new Map(), waiters = [];
+  const access = {inputs, outputs, onstatechange: null};
+  const emit = (action, detail = {}) =>
+    backend.emitEvent('squirrel-midi-command', {action, ...detail});
+
+  backend.addEventListener('squirrel-midi-ports', ports => {
+    const liveInputs = new Set((ports.inputs || []).map(p => p.id));
+    const liveOutputs = new Set((ports.outputs || []).map(p => p.id));
+    for (const p of ports.inputs || []) {
+      let port = inputs.get(p.id);
+      if (!port) {
+        port = {id:p.id, name:p.name, state:'connected', type:'input',
+                connection:'closed', _listener:null};
+        Object.defineProperty(port, 'onmidimessage', {
+          get(){return this._listener;},
+          set(fn){
+            this._listener = fn;
+            this.connection = fn ? 'open' : 'closed';
+            emit('input', {id:fn ? this.id : ''});
+          }
+        });
+        inputs.set(p.id, port);
+      }
+      port.name = p.name;
+      port.state = 'connected';
+    }
+    for (const [id, port] of inputs) {
+      if (!liveInputs.has(id)) {port.state = 'disconnected'; inputs.delete(id);}
+    }
+    for (const p of ports.outputs || []) {
+      let port = outputs.get(p.id);
+      if (!port) {
+        port = {
+          id:p.id, name:p.name, type:'output', state:'connected', connection:'open',
+          _timers:new Set(),
+          send(data, timestamp){
+            const bytes=Array.from(data, value => Number(value)&255);
+            const execute=()=>emit('send', {id:this.id, data:bytes});
+            const delay=Number.isFinite(timestamp)?Math.max(0,timestamp-performance.now()):0;
+            if (delay < 2) execute();
+            else {
+              const timer=setTimeout(()=>{this._timers.delete(timer);execute();},delay);
+              this._timers.add(timer);
+            }
+          },
+          clear(){
+            for (const timer of this._timers) clearTimeout(timer);
+            this._timers.clear();
+          }
+        };
+        outputs.set(p.id, port);
+      }
+      port.name=p.name;
+      port.state='connected';
+    }
+    for (const [id, port] of outputs) {
+      if (!liveOutputs.has(id)) {port.clear();port.state='disconnected';outputs.delete(id);}
+    }
+    if (typeof access.onstatechange === 'function') access.onstatechange({port:null});
+    while(waiters.length) waiters.shift()(access);
+  });
+
+  backend.addEventListener('squirrel-midi-message', payload => {
+    const port=inputs.get(payload.id);
+    if (port && port.state==='connected' && typeof port.onmidimessage==='function')
+      port.onmidimessage({data:Uint8Array.from(payload.data || []),
+                          receivedTime:performance.now(),target:port});
+  });
+  backend.addEventListener('squirrel-midi-error', payload => {
+    console.warn('Native MIDI:',payload.message);
+    if (typeof window.notify === 'function')
+      window.notify('Native MIDI: '+payload.message,true);
+  });
+
+  // WebView2 can reject requestMIDIAccess even if Windows MIDI devices exist.
+  // We expose compatible MIDIInput/MIDIOutput objects backed by JUCE instead.
+  const request=()=>new Promise((resolve,reject)=>{
+    const done=value=>{clearTimeout(timeout);resolve(value);};
+    waiters.push(done);
+    const timeout=setTimeout(()=>{
+      const i=waiters.indexOf(done);if(i>=0)waiters.splice(i,1);
+      reject(new Error('Native MIDI-apparaten reageren niet.'));
+    },6000);
+    emit('list');
+  });
+  Object.defineProperty(navigator, 'requestMIDIAccess',
+                        {configurable:true, value:request});
+})();
+)JSMIDI";
+
+    juce::WebBrowserComponent::Options browserOptions (std::function<void(juce::var)> midiCommand)
     {
         // ResourceProvider houdt de gedeelde HTML binnen de eigen applicatie.
         const auto dataDir = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
@@ -19,6 +116,10 @@ namespace
 
         return juce::WebBrowserComponent::Options{}
             .withBackend (juce::WebBrowserComponent::Options::Backend::webview2)
+            .withNativeIntegrationEnabled()
+            .withUserScript (midiBridgeScript)
+            .withEventListener ("squirrel-midi-command",
+                [handler = std::move (midiCommand)] (juce::var event) {handler (std::move (event));})
             .withWinWebView2Options (juce::WebBrowserComponent::Options::WinWebView2{}
                                         .withUserDataFolder (dataDir))
             .withResourceProvider ([] (const juce::String& requestedPath)
@@ -34,10 +135,12 @@ namespace
     }
 }
 
-class SquirrelMainComponent final : public juce::Component
+class SquirrelMainComponent final : public juce::Component,
+                                   private juce::MidiInputCallback,
+                                   private juce::AsyncUpdater
 {
 public:
-    SquirrelMainComponent() : browser (browserOptions())
+    SquirrelMainComponent() : browser (browserOptions ([this] (juce::var event) { handleMidiCommand (event); }))
     {
         setOpaque (true);
         addAndMakeVisible (browser);
@@ -67,7 +170,7 @@ public:
             status.setText ("Audio initialiseren mislukt: " + error, juce::dontSendNotification);
         audioManager.addAudioCallback (&audioPlayer);
 
-        if (! juce::WebBrowserComponent::areOptionsSupported (browserOptions()))
+        if (! juce::WebBrowserComponent::areOptionsSupported (browserOptions ([] (juce::var) {})))
         {
             status.setText ("WebView2 ontbreekt; installeer de Microsoft Edge WebView2 Runtime.",
                             juce::dontSendNotification);
@@ -79,6 +182,9 @@ public:
 
     ~SquirrelMainComponent() override
     {
+        midiInput.reset();
+        midiOutput.reset();
+        cancelPendingUpdate();
         audioManager.removeAudioCallback (&audioPlayer);
         audioPlayer.setSource (nullptr);
     }
@@ -98,6 +204,114 @@ public:
     }
 
 private:
+    // MIDI callbacks originate from the Windows MIDI input thread. The bridge
+    // only talks to WebView2 after switching to the JUCE message thread.
+    void handleIncomingMidiMessage (juce::MidiInput*, const juce::MidiMessage& message) override
+    {
+        if (message.getRawDataSize() < 1 || message.getRawDataSize() > 3)
+            return;
+        {
+            const juce::ScopedLock lock (midiQueueMutex);
+            midiQueue.add (message);
+        }
+        triggerAsyncUpdate();
+    }
+
+    void handleAsyncUpdate() override
+    {
+        juce::Array<juce::MidiMessage> messages;
+        {
+            const juce::ScopedLock lock (midiQueueMutex);
+            messages.swapWith (midiQueue);
+        }
+        for (const auto& message : messages)
+        {
+            juce::Array<juce::var> data;
+            for (int i = 0; i < message.getRawDataSize(); ++i)
+                data.add (static_cast<int> (message.getRawData()[i]));
+            juce::var event (new juce::DynamicObject());
+            event.getDynamicObject()->setProperty ("id", midiInputId);
+            event.getDynamicObject()->setProperty ("data", juce::var (data));
+            browser.emitEventIfBrowserIsVisible ("squirrel-midi-message", event);
+        }
+    }
+
+    void sendMidiError (const juce::String& message)
+    {
+        juce::var event (new juce::DynamicObject());
+        event.getDynamicObject()->setProperty ("message", message);
+        browser.emitEventIfBrowserIsVisible ("squirrel-midi-error", event);
+    }
+
+    void handleMidiCommand (const juce::var& event)
+    {
+        const auto action = event.getProperty ("action", {}).toString();
+        const auto id = event.getProperty ("id", {}).toString();
+        if (action == "list")
+        {
+            juce::Array<juce::var> inputs, outputs;
+            for (const auto& device : juce::MidiInput::getAvailableDevices())
+            {
+                juce::var port (new juce::DynamicObject());
+                port.getDynamicObject()->setProperty ("id", device.identifier);
+                port.getDynamicObject()->setProperty ("name", device.name);
+                inputs.add (port);
+            }
+            for (const auto& device : juce::MidiOutput::getAvailableDevices())
+            {
+                juce::var port (new juce::DynamicObject());
+                port.getDynamicObject()->setProperty ("id", device.identifier);
+                port.getDynamicObject()->setProperty ("name", device.name);
+                outputs.add (port);
+            }
+            juce::var result (new juce::DynamicObject());
+            result.getDynamicObject()->setProperty ("inputs", juce::var (inputs));
+            result.getDynamicObject()->setProperty ("outputs", juce::var (outputs));
+            browser.emitEventIfBrowserIsVisible ("squirrel-midi-ports", result);
+        }
+        else if (action == "input")
+        {
+            if (id == midiInputId) return;
+            midiInput.reset();
+            midiInputId.clear();
+            if (id.isNotEmpty())
+            {
+                midiInput = juce::MidiInput::openDevice (id, this);
+                if (midiInput)
+                {
+                    midiInputId = id;
+                    midiInput->start();
+                }
+                else sendMidiError ("Kan MIDI IN niet openen. Controleer je apparaat.");
+            }
+        }
+        else if (action == "send")
+        {
+            if (id.isEmpty()) return;
+            if (!midiOutput || midiOutputId != id)
+            {
+                midiOutput.reset();
+                midiOutputId.clear();
+                midiOutput = juce::MidiOutput::openDevice (id);
+                if (!midiOutput)
+                {
+                    sendMidiError ("Kan MIDI OUT niet openen. Controleer je apparaat.");
+                    return;
+                }
+                midiOutputId = id;
+            }
+            const auto payload = event.getProperty ("data", {});
+            const auto* bytes = payload.getArray();
+            if (!bytes || bytes->size() < 1 || bytes->size() > 3) return;
+            juce::uint8 data[3] {};
+            for (int i = 0; i < bytes->size(); ++i)
+                data[i] = static_cast<juce::uint8> (juce::jlimit (0,255,
+                    static_cast<int> (bytes->getUnchecked (i))));
+            if ((data[0] & 0x80) == 0 || data[0] == 0xf0) return;
+            midiOutput->sendMessageNow (juce::MidiMessage (data,bytes->size()));
+        }
+    }
+
     void openAudioSettings()
     {
         auto* selector = new juce::AudioDeviceSelectorComponent (audioManager,
@@ -116,6 +330,11 @@ private:
         options.launchAsync();
     }
 
+    juce::CriticalSection midiQueueMutex;
+    juce::Array<juce::MidiMessage> midiQueue;
+    juce::String midiInputId, midiOutputId;
+    std::unique_ptr<juce::MidiInput> midiInput;
+    std::unique_ptr<juce::MidiOutput> midiOutput;
     juce::AudioDeviceManager audioManager;
     juce::ToneGeneratorAudioSource testTone;
     juce::AudioSourcePlayer audioPlayer;
@@ -129,7 +348,7 @@ class SquirrelStudioApplication final : public juce::JUCEApplication
 {
 public:
     const juce::String getApplicationName() override    { return "Squirrel Studio Desktop"; }
-    const juce::String getApplicationVersion() override { return "0.1.1"; }
+    const juce::String getApplicationVersion() override { return "0.1.4"; }
     bool moreThanOneInstanceAllowed() override { return false; }
 
     void initialise (const juce::String&) override
@@ -145,7 +364,7 @@ private:
     class Window final : public juce::DocumentWindow
     {
     public:
-        Window() : juce::DocumentWindow ("Squirrel Studio Desktop 0.1.1",
+        Window() : juce::DocumentWindow ("Squirrel Studio Desktop 0.1.4",
                                         juce::Colour (0xff171310),
                                         juce::DocumentWindow::allButtons)
         {
