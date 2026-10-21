@@ -151,3 +151,18 @@ Voor de native Windows-app gaat een nieuwe GitHub Actions-build lopen zodra de w
 ## Bediening
 
 Kies BASS, LEAD of CHORD en open de tab SYNTH. Stel in het SUB OSCILLATOR-paneel waveform, octave, detune en level in. Voor een klassieke diepe bas: SINE, -12 semitones, 0 cent, level 30–50%. Voor een zwaardere sublaag: -24 semitones, bijvoorbeeld met SAW op lager level.
+
+---
+
+# Squirrel Studio Web 0.1.20
+
+Nieuw: Bass, Lead en Chord hebben nu afzonderlijke AAN/UIT-schakelaars voor OSC 1, OSC 2 en SUB, plus LEVEL 0–100% per oscillator. De SUB behoudt zijn waveform, −12/−24 semitones en detune. Schakelen en volume wijzigen werkt op actieve noten met een korte gain-ramp.
+
+Andere functies blijven behouden: acht tracks, 16 patronen, samples, per-step CHORD MODE, FX, LFO/envelopes, MIDI IN/OUT en project-export. Oude projectbestanden laden met hun bestaande oscillatormix.
+
+## Starten
+1. Start `START_STUDIO.cmd` met Python 3 op Windows.
+2. Open `http://localhost:8765` in Edge of Chrome.
+3. Klik AUDIO AAN en open SYNTH; selecteer Bass, Lead of Chord.
+
+Windows desktop gebruikt de actuele `index.html` uit GitHub bij het bouwen. Focusrite ASIO is in de desktopbasis nog een aparte native testuitgang; de synth zelf draait via Web Audio.
