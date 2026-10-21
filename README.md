@@ -1,4 +1,4 @@
-# Squirrel Studio 0.1.2
+# Squirrel Studio 0.1.3
 
 Standalone web synthesizer en grafische 16-step groovebox.
 
@@ -71,3 +71,10 @@ SNEL STARTEN (WINDOWS)
 - Chord part speelt een drieklank. Klanken zijn bewust basic v0.1.
 - MIDI is invoer; MIDI export of MIDI clock sync komt later.
 - Een apart native Windows ASIO programma komt in een volgende fase.
+
+VERSIE 0.1.3 — BEDIENING
+- Na het slepen van Velocity, Gate, Chance, Track Volume, Pan, Swing of Master
+  gaat de focus automatisch terug naar het geselecteerde step-pad.
+- Pijltjes toetsen navigeren dan direct weer door het sequencergrid.
+- Na het wijzigen van de step-noot via de dropdown keert de focus ook terug.
+- Sliders blijven via Tab en pijltjestoetsen toegankelijk voor keyboard-only bediening.
