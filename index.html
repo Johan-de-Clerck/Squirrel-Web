@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
-  <title>Squirrel Studio 0.1.16 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.1.17 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -131,7 +131,7 @@
     .mod-card input[type=range],.send-row input[type=range],.send-global input[type=range]{width:100%;min-width:0}
     .send-title,.send-row{display:grid;grid-template-columns:minmax(110px,1fr) minmax(120px,2fr) minmax(120px,2fr);gap:24px;align-items:center}
     .send-title{padding:7px 11px;color:#bd956f;font-size:11px;letter-spacing:1px}
-    .send-row{padding:10px 11px;border-top:1px solid #4f3b2c;min-height:61px}
+    .send-row{padding:8px 11px;border-top:1px solid #4f3b2c;min-height:51px}
     .send-row strong{font-size:13px;color:#ead0af}
     .send-row .send-fader{display:flex;align-items:center;gap:10px}
     .send-row output{color:#e8ad72;min-width:38px;text-align:right;font-size:12px}
@@ -211,6 +211,8 @@
     @media(min-width:1001px) and (max-height:900px){.envelope-card{padding:12px 14px}.env-plot{height:115px;margin-bottom:8px}.env-controls{gap:9px 14px}}
 
 
+    /* v0.1.17: eight-track sends fit short Windows WebView2 windows. */
+    @media (min-width:891px) and (max-height:900px){.send-row{min-height:42px;padding:5px 11px}.send-title{padding:4px 11px}.send-global{margin-top:9px}}
     /* v0.1.12: eight instrument slots with breathing room between paired NOTE/FX lanes. */
     .seq-row:not(.fx-row) .pad{height:27px}
     .seq-row.fx-row{margin-top:0;margin-bottom:11px}
@@ -330,7 +332,7 @@
 
 
 
-/* v0.1.16: short desktop / WebView2. Keep editor height independent of note visibility. */
+/* v0.1.17: short desktop / WebView2. Keep editor height independent of note visibility. */
 @media (min-width:1100px) {
   #view-seq .two-cols > section:first-child .control-grid {
     grid-template-columns:repeat(5,minmax(0,1fr));
@@ -379,7 +381,7 @@
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark" aria-hidden="true">S</div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO UIT</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI NIET VERBONDEN</span></span><span class="version">BUILD 0.1.16</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark" aria-hidden="true">S</div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO UIT</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI NIET VERBONDEN</span></span><span class="version">BUILD 0.1.17</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ AUDIO STARTEN</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Afspelen">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="EDIT aan: noten typen in het sequencergrid">✎ EDIT UIT</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octaaf"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" value="120" aria-label="Tempo in BPM"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Mastervolume"><output id="masterOut">75%</output></label></div></section>
@@ -398,7 +400,7 @@
       <div id="view-mixer" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Eight-track mixer</h2></div><button class="mini-btn" id="resetMixerBtn">RESET MIXER</button></div><div class="mixer" id="mixerStrips"></div></section></div>
       <div id="view-mod" class="hidden"><div class="mod-layout"><section class="panel"><div class="panel-head"><h2 class="section-title">LFO modulation</h2><span class="pill">4 LFO's</span></div><div class="lfo-grid" id="lfoGrid"></div></section><section class="panel"><div class="panel-head"><h2 class="section-title">Filter envelopes</h2><span class="pill">2 ADSR</span></div><div id="envelopeGrid" class="envelope-grid"></div></section></div></div>
       <div id="view-sample" class="hidden"><section class="panel sample-editor-panel"><div class="panel-head"><h2 class="section-title">Waveform sample editor</h2><span class="pill">TRACK 7 / 8</span></div><div class="sample-editor-top"><label class="field"><span class="field-head">SAMPLER TRACK</span><select id="sampleEditTrack"><option value="6">07 · SAMPLER</option><option value="7">08 · SAMPLER</option></select></label><button class="btn" id="sampleEditorLoad">↑ WAV LADEN</button><button class="btn" id="sampleEditorPreview">▶ BELUISTER</button><span id="sampleEditorFile" class="sample-filename">GEEN SAMPLE</span><span id="samplePlayStatus" class="sample-play-status" aria-live="off">POS —</span></div><div class="waveform-wrap"><canvas id="sampleWaveCanvas" width="1200" height="230" aria-label="Waveform met sleepbare START, END, LOOP START en LOOP END markeringen"></canvas><div class="sample-wave-legend"><span>START</span><span>LOOP START</span><span>LOOP END</span><span>END</span><span style="color:#b2f1ce">◆ PLAYHEAD</span></div></div><div id="sampleEditControls" class="sample-editor-controls"></div><input id="sampleEditorFileInput" type="file" accept=".wav,.wave,.mp3,.ogg,.aiff,.aif,audio/*" class="hidden"></section></div>
-      <div id="view-send" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Delay / Reverb sends</h2><span class="pill">6 TRACKS</span></div><div class="sends-grid" id="sendsGrid"></div><div class="send-global" id="sendGlobal"></div></section></div>
+      <div id="view-send" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Delay / Reverb sends</h2><span class="pill">8 TRACKS</span></div><div class="sends-grid" id="sendsGrid"></div><div class="send-global" id="sendGlobal"></div></section></div>
       <div id="view-options" class="hidden"><section class="panel options-panel"><div class="panel-head"><h2 class="section-title">Pattern options</h2><span class="pill">MAX 32 STEPS</span></div><div id="optionsPatterns" class="options-patterns"></div>
         <div class="options-slots-head"><h3>Instrument slots</h3><span class="pill">7–8 · SAMPLER BESCHIKBAAR</span></div>
         <div id="optionsSlots" class="options-slots"></div><div class="new-song-actions"><button class="btn" type="button" id="newSongBtn">＋ NEW SONG</button></div></section></div>
@@ -438,11 +440,11 @@ const bases=[
  {name:'EMPTY 8',type:'empty',channel:8,volume:0,pan:0,color:'#887b6d',note:48}
 ];
 function defaultSound(t){return t.type==='chord'?{wave1:'sawtooth',wave2:'triangle',detune:8,pulseWidth:50,cutoff:1500,resonance:0.9,attack:.09,decay:.42,sustain:.68,release:.7,chord:'minor'}:t.type==='synth'&&t.name==='BASS'?{wave1:'sawtooth',wave2:'square',detune:9,pulseWidth:43,cutoff:1350,resonance:1.8,attack:.009,decay:.22,sustain:.52,release:.19,chord:'major'}:{wave1:'sawtooth',wave2:'triangle',detune:14,pulseWidth:50,cutoff:4200,resonance:.8,attack:.015,decay:.21,sustain:.65,release:.27,chord:'major'}}
-const LFO_TARGETS=[['off','UIT'],['lead-volume','LEAD · VOLUME'],['lead-cutoff','LEAD · FILTER CUTOFF'],['bass-volume','BASS · VOLUME'],['bass-cutoff','BASS · FILTER CUTOFF'],['bass-pan','BASS · PANNING'],['lead-pan','LEAD · PANNING'],['chord-pan','CHORD · PANNING']];
+const LFO_TARGETS=[['off','UIT'],['lead-volume','LEAD · VOLUME'],['lead-cutoff','LEAD · FILTER CUTOFF'],['bass-volume','BASS · VOLUME'],['bass-cutoff','BASS · FILTER CUTOFF'],['bass-pan','BASS · PANNING'],['lead-pan','LEAD · PANNING'],['chord-pan','CHORD · PANNING'],['sampler7-volume','SAMPLER 7 · VOLUME'],['sampler7-cutoff','SAMPLER 7 · FILTER'],['sampler7-pan','SAMPLER 7 · PANNING'],['sampler8-volume','SAMPLER 8 · VOLUME'],['sampler8-cutoff','SAMPLER 8 · FILTER'],['sampler8-pan','SAMPLER 8 · PANNING']];
 const LFO_WAVES=['sine','triangle','square','sawtooth'];
 const LFO_DIVISIONS=['free','1/1','1/2','1/4','1/8','1/16','1/32'];
 function lfoFrequency(l){const sync=LFO_DIVISIONS.includes(l.sync)?l.sync:'free';if(sync==='free')return l.rate;const denominator=Number(sync.split('/')[1]);return Math.max(.01,state.bpm*denominator/240)}
-const ENVELOPE_TARGETS=[['off','UIT'],['bass-cutoff','BASS · FILTER CUTOFF'],['bass-resonance','BASS · RESONANCE'],['lead-cutoff','LEAD / SYNTH · FILTER CUTOFF'],['lead-resonance','LEAD / SYNTH · RESONANCE']];
+const ENVELOPE_TARGETS=[['off','UIT'],['bass-cutoff','BASS · FILTER CUTOFF'],['bass-resonance','BASS · RESONANCE'],['lead-cutoff','LEAD / SYNTH · FILTER CUTOFF'],['lead-resonance','LEAD / SYNTH · RESONANCE'],['sampler7-cutoff','SAMPLER 7 · FILTER'],['sampler7-resonance','SAMPLER 7 · RESONANCE'],['sampler8-cutoff','SAMPLER 8 · FILTER'],['sampler8-resonance','SAMPLER 8 · RESONANCE']];
 const defaultEnvelopes=()=>['bass-cutoff','lead-cutoff'].map(target=>({enabled:false,target,attack:.02,decay:.26,sustain:30,release:.3,amount:65}));
 const defaultLFOs=()=>['lead-volume','lead-cutoff','bass-volume','bass-cutoff'].map((target,i)=>({enabled:false,target,wave:i%2?'triangle':'sine',rate:i<2?2.2:0.45,sync:'free',depth:30}));
 const defaultSendFX=()=>({delayTime:0.34,feedback:32,reverbDecay:1.8});
@@ -552,7 +554,7 @@ function applyFXCommand(rt, step){
  if(amount)rt.memory[effect]=amount;
  rt.activeAmount=amount||rt.memory[effect]||0;
 }
-function fresh(withDemo=true){const tracks=bases.map(b=>({...b,muted:false,solo:false,slotKind:b.type==='empty'?'empty':null,sound:b.type==='empty'?null:defaultSound(b),sampleName:'',sampleRoot:48,sampleData:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false}));const patterns=Array.from({length:PATTERN_COUNT},()=>tracks.map((_,t)=>Array.from({length:MAX_STEPS},()=>makeStep(t))));
+function fresh(withDemo=true){const tracks=bases.map(b=>({...b,muted:false,solo:false,slotKind:b.type==='empty'?'empty':null,sound:b.type==='empty'?null:defaultSound(b),sampleName:'',sampleRoot:48,sampleData:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,sampleCutoff:12000,sampleResonance:.7}));const patterns=Array.from({length:PATTERN_COUNT},()=>tracks.map((_,t)=>Array.from({length:MAX_STEPS},()=>makeStep(t))));
  const set=(t,ns,note=null,vel=null)=>{for(const s of ns){const p=patterns[0][t][s];p.on=true;if(note!==null)p.note=note;if(vel!==null)p.velocity=vel;}};
  if(withDemo){set(0,[0,4,8,12]);set(1,[4,12]);set(2,[2,6,10,14],90);set(2,[0,4,8,12],75);set(3,[0,3,6,8,11,14]);[36,36,39,43,36,41,39].forEach((n,i)=>{const idx=[0,3,6,8,11,14,15][i];patterns[0][3][idx].on=true;patterns[0][3][idx].note=n;});
  set(4,[2,7,10,15]);patterns[0][3][3].fx=1;patterns[0][3][3].fxAmount=5;patterns[0][3][4].fx=1;patterns[0][3][4].fxAmount=0;patterns[0][3][11].fx=2;patterns[0][3][11].fxAmount=5;patterns[0][3][12].fx=2;patterns[0][3][12].fxAmount=0;patterns[0][4][10].fx=3;[60,62,67,64].forEach((n,i)=>patterns[0][4][[2,7,10,15][i]].note=n);set(5,[0,8]);patterns[0][5][0].note=48;patterns[0][5][8].note=53;}
@@ -669,10 +671,12 @@ function validate(data){
    if(Number.isFinite(Number(src[k])))target[k]=clamp(Number(src[k]),0,1);
   }
   target.sampleLoop=!!src.sampleLoop;
+  target.sampleCutoff=clamp(Number(src.sampleCutoff??12000),80,12000);
+  target.sampleResonance=clamp(Number(src.sampleResonance??.7),.1,18);
   sanitizeSampleMarkers(target);
   target.sampleData=typeof src.sampleData==='string'&&/^data:[^;]*;base64,/i.test(src.sampleData)&&src.sampleData.length<=26000000?src.sampleData:null;
  }
- target.delaySend=t<AUDIO_TRACK_COUNT?clamp(Number(src.delaySend??0)||0,0,100):0;target.reverbSend=t<AUDIO_TRACK_COUNT?clamp(Number(src.reverbSend??0)||0,0,100):0;if(target.type==='empty')continue;const p=src.sound||{};for(const k of ['wave1','wave2'])if(['sine','triangle','square','sawtooth','pulse'].includes(p[k]))target.sound[k]=p[k];for(const [k,a,b] of [['detune',-50,50],['pulseWidth',5,95],['cutoff',80,12000],['resonance',.1,18],['attack',.003,2],['decay',.01,2],['sustain',0,1],['release',.01,3]])if(Number.isFinite(Number(p[k])))target.sound[k]=clamp(Number(p[k]),a,b);if(p.chord==='minor'||p.chord==='major')target.sound.chord=p.chord;
+ target.delaySend=clamp(Number(src.delaySend??0)||0,0,100);target.reverbSend=clamp(Number(src.reverbSend??0)||0,0,100);if(target.type==='empty')continue;const p=src.sound||{};for(const k of ['wave1','wave2'])if(['sine','triangle','square','sawtooth','pulse'].includes(p[k]))target.sound[k]=p[k];for(const [k,a,b] of [['detune',-50,50],['pulseWidth',5,95],['cutoff',80,12000],['resonance',.1,18],['attack',.003,2],['decay',.01,2],['sustain',0,1],['release',.01,3]])if(Number.isFinite(Number(p[k])))target.sound[k]=clamp(Number(p[k]),a,b);if(p.chord==='minor'||p.chord==='major')target.sound.chord=p.chord;
  }for(let b=0;b<PATTERN_COUNT;b++){if(!Array.isArray(data.patterns[b])||data.patterns[b].length<AUDIO_TRACK_COUNT)continue;for(let t=0;t<TRACK_COUNT;t++){if(!Array.isArray(data.patterns[b][t])||data.patterns[b][t].length<16)continue;for(let i=0;i<Math.min(MAX_STEPS,data.patterns[b][t].length);i++){const p=data.patterns[b][t][i];if(!p||typeof p!=='object')continue;s.patterns[b][t][i]={on:!!p.on,note:clamp(Math.round(Number(p.note)||bases[t].note),24,95),velocity:clamp(Math.round(Number(p.velocity)||100),1,127),gate:clamp(Number(p.gate)||85,10,180),ratchet:clamp(Math.round(Number(p.ratchet)||1),1,6),chance:clamp(Number(p.chance??100),0,100),fx:FX_OPTIONS.some(x=>x.id===(data.version===1&&Number(p.fx)===4?5:Number(p.fx)))?(data.version===1&&Number(p.fx)===4?5:Number(p.fx)):0,fxAmount:data.version===1?clamp(Math.round(Number(p.fxAmount)||2)*3,1,255):clamp(Math.round(Number(p.fxAmount??2))||0,0,255)}}}}
  if(Array.isArray(data.lfos)){data.lfos.slice(0,4).forEach((x,i)=>{if(!x||typeof x!=='object')return;const l=s.lfos[i];l.enabled=!!x.enabled;l.target=LFO_TARGETS.some(t=>t[0]===x.target)?x.target:l.target;l.wave=LFO_WAVES.includes(x.wave)?x.wave:l.wave;l.rate=clamp(Number(x.rate)||l.rate,.05,20);l.sync=LFO_DIVISIONS.includes(x.sync)?x.sync:'free';l.depth=clamp(Number(x.depth??l.depth),0,100)})}
  if(Array.isArray(data.envelopes)){
@@ -711,7 +715,11 @@ function updateSendEngine(){if(!audio)return;const now=audio.ctx.currentTime,f=s
 // oscillator adds a left/right offset to StereoPannerNode.pan. At full depth
 // the sweep spans all available stereo width without exceeding [-1, 1].
 // Multiple LFOs routed to one destination are normalized to avoid clipping.
-const LFO_PAN_TRACKS={'bass-pan':3,'lead-pan':4,'chord-pan':5};
+const LFO_PAN_TRACKS={'bass-pan':3,'lead-pan':4,'chord-pan':5,'sampler7-pan':6,'sampler8-pan':7};
+const LFO_VOLUME_TRACKS={'bass-volume':3,'lead-volume':4,'sampler7-volume':6,'sampler8-volume':7};
+const LFO_CUTOFF_TRACKS={'bass-cutoff':3,'lead-cutoff':4,'sampler7-cutoff':6,'sampler8-cutoff':7};
+function filterBaseCutoff(index){return index>=AUDIO_TRACK_COUNT?state.tracks[index].sampleCutoff:state.tracks[index].sound.cutoff}
+function filterBaseResonance(index){return index>=AUDIO_TRACK_COUNT?state.tracks[index].sampleResonance:state.tracks[index].sound.resonance}
 function lfoModulationAmount(l,target,normalizer){
  if(!l.enabled||target==='off')return 0;
  const ratio=(l.depth/100)/normalizer;
@@ -720,7 +728,7 @@ function lfoModulationAmount(l,target,normalizer){
   return ratio*Math.max(0,1-Math.abs(track.pan/100));
  }
  if(target.endsWith('-volume'))return ratio*.9;
- if(target.endsWith('-cutoff'))return ratio*.8*state.tracks[target.startsWith('bass')?3:4].sound.cutoff;
+ if(Object.hasOwn(LFO_CUTOFF_TRACKS,target))return ratio*.8*filterBaseCutoff(LFO_CUTOFF_TRACKS[target]);
  return 0;
 }
 function applyLFOs(){if(!audio)return;const now=audio.ctx.currentTime;
@@ -728,10 +736,8 @@ function applyLFOs(){if(!audio)return;const now=audio.ctx.currentTime;
  audio.lfoNodes.forEach((node,i)=>{
   const l=state.lfos[i],target=l.enabled?l.target:'off';
   if(node.route!==target){node.depthNode.disconnect();node.route=target;
-   if(target==='lead-volume')node.depthNode.connect(audio.trackModGains[4].gain);
-   if(target==='bass-volume')node.depthNode.connect(audio.trackModGains[3].gain);
-   if(target==='lead-cutoff')node.depthNode.connect(audio.cutoffBuses[4]);
-   if(target==='bass-cutoff')node.depthNode.connect(audio.cutoffBuses[3]);
+   if(Object.hasOwn(LFO_VOLUME_TRACKS,target))node.depthNode.connect(audio.trackModGains[LFO_VOLUME_TRACKS[target]].gain);
+   if(Object.hasOwn(LFO_CUTOFF_TRACKS,target))node.depthNode.connect(audio.cutoffBuses[LFO_CUTOFF_TRACKS[target]]);
    if(Object.hasOwn(LFO_PAN_TRACKS,target))node.depthNode.connect(audio.trackPans[LFO_PAN_TRACKS[target]].pan);
   }
   if(node.osc.type!==l.wave)node.osc.type=l.wave;
@@ -741,7 +747,7 @@ function applyLFOs(){if(!audio)return;const now=audio.ctx.currentTime;
  });
 }
 function updateLiveCutoff(trackIndex){if(!audio)return;const now=audio.ctx.currentTime;
- for(const voice of scheduledVoices){if(voice.trackIndex===trackIndex&&voice.filter&&!voice.released)voice.filter.frequency.setTargetAtTime(state.tracks[trackIndex].sound.cutoff,now,.02)}
+ for(const voice of scheduledVoices){if(voice.trackIndex===trackIndex&&voice.filter&&!voice.released)voice.filter.frequency.setTargetAtTime(filterBaseCutoff(trackIndex),now,.02)}
  applyLFOs();
 }
 function applyTrackMix(){if(!audio)return;const solo=state.tracks.some(t=>t.solo);state.tracks.forEach((t,i)=>{const isOn=!t.muted&&(!solo||t.solo);audio.trackGains[i].gain.setTargetAtTime(isOn?(t.volume/100)**1.4:0,audio.ctx.currentTime,.018);audio.trackPans[i].pan.setTargetAtTime(t.pan/100,audio.ctx.currentTime,.02);
@@ -781,11 +787,11 @@ function envelopeOffsetAt(entry,time){
  return entry.delta*s;
 }
 function attachFilterEnvelopes(filter,trackIndex,when){
- if(trackIndex!==3&&trackIndex!==4)return [];
- const name=trackIndex===3?'bass':'lead',track=state.tracks[trackIndex],entries=[];
+ if(![3,4,6,7].includes(trackIndex))return [];
+ const name=({3:'bass',4:'lead',6:'sampler7',7:'sampler8'})[trackIndex],entries=[];
  for(const e of state.envelopes){
   if(!e.enabled||e.target==='off'||!e.target.startsWith(name+'-')||!e.amount)continue;
-  const isCutoff=e.target.endsWith('cutoff'),base=isCutoff?track.sound.cutoff:track.sound.resonance;
+  const isCutoff=e.target.endsWith('cutoff'),base=isCutoff?filterBaseCutoff(trackIndex):filterBaseResonance(trackIndex);
   const peak=isCutoff?clamp(base*Math.pow(2,e.amount/100*3.4),80,12000):clamp(base+(e.amount/100)*(e.amount>=0?12:Math.max(.1,base-.1)),.1,18);
   const delta=peak-base,source=audio.ctx.createConstantSource(),param=source.offset;
   const settings={...e};
@@ -824,17 +830,19 @@ function oneShot(type,track,velocity,when,pitch=0){const c=audio.ctx,vol=clamp(v
 function sampleVoice(t,note,velocity,when,pitch=0){
  const track=state.tracks[t],buffer=sampleBuffers.get(t);
  if(!buffer)return null;
- const c=audio.ctx,src=c.createBufferSource(),env=c.createGain(),modGain=c.createGain();
+ const c=audio.ctx,src=c.createBufferSource(),env=c.createGain(),modGain=c.createGain(),filter=c.createBiquadFilter();
  src.buffer=buffer;
  src.playbackRate.setValueAtTime(Math.pow(2,((note+pitch)-(track.sampleRoot??48))/12),when);
  env.gain.setValueAtTime(.0001,when);
  env.gain.linearRampToValueAtTime(Math.max(.0002,velocity/127*.8),when+.003);
- modGain.gain.value=1;src.connect(env).connect(modGain).connect(audio.trackGains[t]);
- const voice={env,oscs:[src],pitchParams:[src.detune],modGain,release:.065,released:false,
-  trackIndex:t,filterEnvelopes:[],ampEnvelope:{start:when,peak:Math.max(.0002,velocity/127*.8),attack:.003,decay:.01,sustain:1}};
+ filter.type='lowpass';filter.frequency.setValueAtTime(track.sampleCutoff??12000,when);filter.Q.setValueAtTime(track.sampleResonance??.7,when);
+ const filterEnvelopes=attachFilterEnvelopes(filter,t,when);audio.cutoffBuses[t].connect(filter.frequency);
+ modGain.gain.value=1;src.connect(filter).connect(env).connect(modGain).connect(audio.trackGains[t]);
+ const voice={env,oscs:[src],pitchParams:[src.detune],modGain,release:.065,released:false,filter,
+  trackIndex:t,filterEnvelopes,ampEnvelope:{start:when,peak:Math.max(.0002,velocity/127*.8),attack:.003,decay:.01,sustain:1}};
  scheduledVoices.add(voice);let playback=null;src.onended=()=>{
   if(playback)playback.ended=true;voice.released=true;scheduledVoices.delete(voice);
-  try{src.disconnect();env.disconnect();modGain.disconnect()}catch(e){}
+  try{src.disconnect();audio.cutoffBuses[t].disconnect(filter.frequency);filterEnvelopes.forEach(e=>{try{e.source.stop();e.source.disconnect()}catch(_){}});filter.disconnect();env.disconnect();modGain.disconnect()}catch(e){}
  };
  sanitizeSampleMarkers(track);
  const startAt=track.sampleStart*buffer.duration,endAt=track.sampleEnd*buffer.duration;
@@ -1057,6 +1065,15 @@ function renderSampleEditor(){
  const root=document.createElement('label');root.className='field';root.innerHTML='<span class="field-head">GRONDTOON</span>';
  const rootSelect=document.createElement('select');for(let n=24;n<=95;n++)rootSelect.add(new Option(noteName(n),String(n)));rootSelect.value=String(track.sampleRoot);rootSelect.onchange=()=>{track.sampleRoot=Number(rootSelect.value);persist()};root.append(rootSelect);grid.append(root);
  const loop=document.createElement('label');loop.className='sample-loop-toggle';const cb=document.createElement('input');cb.type='checkbox';cb.checked=track.sampleLoop;cb.onchange=()=>{track.sampleLoop=cb.checked;persist();drawSampleWaveform()};loop.append(cb,document.createTextNode('LOOP AAN'));grid.append(loop);
+ // Sampler 7/8 hebben elk een eigen cutoff en resonantie; ook LFO/ADSR mag deze moduleren.
+ for(const [key,label,min,max,step,unit] of [['sampleCutoff','FILTER CUTOFF',80,12000,10,' Hz'],['sampleResonance','RESONANCE',.1,18,.1,' Q']]){
+  const field=document.createElement('label');field.className='field';const top=document.createElement('span');top.className='field-head';const out=document.createElement('output');
+  const fmt=()=>key==='sampleCutoff'?Math.round(track[key])+unit:track[key].toFixed(1)+unit;
+  out.textContent=fmt();top.append(document.createTextNode(label),out);
+  const slider=document.createElement('input');slider.type='range';slider.min=String(min);slider.max=String(max);slider.step=String(step);slider.value=String(track[key]);
+  slider.oninput=()=>{track[key]=Number(slider.value);out.textContent=fmt();persist();if(audio){const now=audio.ctx.currentTime;for(const voice of scheduledVoices){if(voice.trackIndex!==selectedSampleEditorTrack||!voice.filter||voice.released)continue;const param=key==='sampleCutoff'?voice.filter.frequency:voice.filter.Q;param.setTargetAtTime(track[key],now,.015)}applyLFOs()}};
+  field.append(top,slider);grid.append(field);
+ }
  for(const [key,label] of SAMPLE_MARKERS){const field=document.createElement('label');field.className='field';const head=document.createElement('span');head.className='field-head';const output=document.createElement('output');output.textContent=(track[key]*100).toFixed(1)+'%';head.append(document.createTextNode(label),output);
  const slider=document.createElement('input');slider.type='range';slider.min='0';slider.max='1000';slider.step='1';slider.value=String(Math.round(track[key]*1000));slider.dataset.marker=key;
  slider.oninput=()=>{sampleMarkerChanges(track,key,Number(slider.value)/1000);slider.value=Math.round(track[key]*1000);output.textContent=(track[key]*100).toFixed(1)+'%';drawSampleWaveform()};field.append(head,slider);grid.append(field)}
@@ -1137,7 +1154,7 @@ function renderEnvelopes(){
 function renderSendFX(){
  const grid=$('sendsGrid');grid.replaceChildren();
  const head=document.createElement('div');head.className='send-title';head.innerHTML='<span>TRACK</span><span>DELAY SEND</span><span>REVERB SEND</span>';grid.appendChild(head);
- state.tracks.slice(0,AUDIO_TRACK_COUNT).forEach((t,i)=>{
+ state.tracks.forEach((t,i)=>{
    const row=document.createElement('div');row.className='send-row';const name=document.createElement('strong');name.textContent=String(i+1).padStart(2,'0')+' '+t.name;row.appendChild(name);
   for(const [key,label] of [['delaySend','DELAY'],['reverbSend','REVERB']]){
    const wrap=document.createElement('label');wrap.className='send-fader';const slider=document.createElement('input');slider.type='range';slider.min='0';slider.max='100';slider.value=t[key];slider.setAttribute('aria-label',label+' '+t.name);const output=document.createElement('output');output.textContent=t[key]+'%';
