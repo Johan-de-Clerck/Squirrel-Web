@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
-  <title>Squirrel Studio 0.1.7 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.1.8 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -140,29 +140,55 @@
     @media(max-width:1100px){.lfo-grid{grid-template-columns:1fr}}
     @media(max-width:680px){.send-title,.send-row{grid-template-columns:95px 1fr 1fr;gap:8px}.send-row{padding:9px 4px}.send-global{grid-template-columns:1fr}.mod-fields{gap:10px}}
     @media (min-width:891px) and (max-height:940px){.seq-row.fx-row{margin-bottom:3px}}
+
+    /* 0.1.8: full-width 32-column sequencer without redundant left hardware sidebar. */
+    .shell{max-width:none;width:100%;padding:11px 16px 12px}
+    .app{display:block}
+    .workspace{width:100%;min-width:0}
+    .grid-board{min-width:1180px;width:100%}
+    .grid-head,.seq-row{grid-template-columns:132px repeat(32,minmax(0,1fr));gap:3px}
+    .grid-head span{font-size:9px}
+    .seq-row{margin-bottom:4px}
+    .seq-row:not(.fx-row) .pad{height:34px;border-radius:5px}
+    .seq-row.fx-row{margin-top:-2px;margin-bottom:5px}
+    .fx-pad{height:21px;font-size:9px;border-radius:3px}
+    .pad:nth-child(4n+2){margin-left:0}
+    .pad .note-label{font-size:9px;white-space:nowrap}
+    .pad .mini-bar{left:3px;bottom:3px;height:2px;max-width:calc(100% - 6px)}
+    .lane-main{gap:5px;padding:5px 3px}
+    .lane-name{gap:2px}
+    .lane-main strong{font-size:10px}
+    .lane-toggle{width:19px;height:22px;font-size:10px}
+    .seq-row.fx-row .fx-lane-label{font-size:9px;padding-left:4px}
+    .pad.inactive-step,.fx-pad.inactive-step{background:#181512;border-color:#322923;color:#584838;opacity:.44;box-shadow:none;cursor:not-allowed;transform:none}
+    .pad.inactive-step.on{background:#2d251f;color:#7b6959;box-shadow:none}
+    .pad.inactive-step .note-label{color:#645044}
+    .pad.inactive-step:after,.fx-pad.inactive-step:after{display:none}
+    .grid-head .inactive-step{opacity:.4;color:#716456}
+    .options-patterns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .option-pattern{display:flex;align-items:center;gap:18px;padding:15px;border:1px solid #614a37;border-radius:9px;background:#30261e}
+    .option-pattern label{display:flex;align-items:center;justify-content:space-between;gap:18px;flex:1}
+    .option-pattern strong{font-size:13px;color:#f0c99c}
+    .option-pattern select{width:140px;max-width:55%;background:#211912;color:#f3d3b4;border:1px solid #77583b;border-radius:6px;padding:9px}
+    .option-pattern.current{border-color:#d5a06c;background:#453124}
+    @media (min-width:891px) and (max-height:900px){.seq-row:not(.fx-row) .pad{height:29px}.seq-row.fx-row{margin-bottom:3px}.fx-pad{height:18px}.panel-head{margin-bottom:6px}.panel{padding:10px 12px;margin-bottom:7px}.field{gap:4px}.control-grid{gap:10px 17px}.setup-actions{margin-top:6px}}
+    @media (max-width:890px){.shell{padding:9px}.grid-head,.seq-row{grid-template-columns:132px repeat(32,minmax(28px,1fr))}.options-patterns{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark" aria-hidden="true">S</div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO UIT</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI NIET VERBONDEN</span></span><span class="version">BUILD 0.1.7</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark" aria-hidden="true">S</div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO UIT</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI NIET VERBONDEN</span></span><span class="version">BUILD 0.1.8</span></div></header>
   <div class="app">
-    <aside class="unit" aria-label="Squirrel hardwareoverzicht">
-      <div class="unit-header"><h2>SQUIRREL STUDIO</h2></div>
-      <div class="display"><div class="lcd"><div class="lcd-title">SQUIRREL STUDIO</div><div class="lcd-meta"><span id="lcdPattern">PAT A · 120 BPM</span><span id="lcdStep">STEP 01</span></div><div id="lcdTracks"></div><div class="lcd-footer"><span id="lcdMode">● READY</span><span id="lcdNote">C-3</span></div></div></div>
-      <div class="hw-controls" aria-hidden="true"><div><div class="hw-knob"></div><span>BPM</span></div><div><div class="hw-knob"></div><span>SWING</span></div><div><div class="hw-knob"></div><span>TONE</span></div><div><div class="hw-knob"></div><span>MASTER</span></div></div>
-      
-      <div class="unit-selector" id="unitTracks"></div>
-    </aside>
     <main class="workspace">
-      <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ AUDIO STARTEN</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Afspelen">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button></div><div class="transport-right"><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" value="120" aria-label="Tempo in BPM"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Mastervolume"><output id="masterOut">75%</output></label></div></section>
-      <nav class="tabs" aria-label="Werkruimte"><button class="tab active" data-view="seq">▦ SEQUENCER</button><button class="tab" data-view="sound">◈ SYNTH</button><button class="tab" data-view="mixer">▥ MIXER</button><button class="tab" data-view="lfo">◌ LFO</button><button class="tab" data-view="send">◉ SEND FX</button><button class="tab" data-view="setup">⚙ MIDI / AUDIO</button></nav>
+      <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ AUDIO STARTEN</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Afspelen">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" value="120" aria-label="Tempo in BPM"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Mastervolume"><output id="masterOut">75%</output></label></div></section>
+      <nav class="tabs" aria-label="Werkruimte"><button class="tab active" data-view="seq">▦ SEQUENCER</button><button class="tab" data-view="sound">◈ SYNTH</button><button class="tab" data-view="mixer">▥ MIXER</button><button class="tab" data-view="lfo">◌ LFO</button><button class="tab" data-view="send">◉ SEND FX</button><button class="tab" data-view="options">⚙ OPTIONS</button><button class="tab" data-view="setup">◈ MIDI / AUDIO</button></nav>
       <div id="view-seq">
         <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step sequencer</h2></div><div class="panel-controls"><span class="small-label">PATROON</span><button class="bank-btn active" data-bank="0">A</button><button class="bank-btn" data-bank="1">B</button><button class="bank-btn" data-bank="2">C</button><button class="bank-btn" data-bank="3">D</button><button class="mini-btn" id="copyPatternBtn">KOPIEER</button><button class="mini-btn" id="pastePatternBtn">PLAK</button></div></div>
           <div class="grid-scroll"><div class="grid-board" id="gridBoard"></div></div>
           
         </section>
         <div class="two-cols">
-          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step editor</h2><p class="subtext" id="stepEditorTitle">Track 4 · Step 01</p></div><span class="pill" id="stepOnLabel">STEP UIT</span></div><div class="control-grid"><label class="field" id="stepNoteField"><span class="field-head"><span>NOTE</span><output id="stepNoteOut">C-3</output></span><select id="stepNote"></select></label><label class="field"><span class="field-head"><span>VELOCITY</span><output id="velocityOut">110</output></span><input id="velocity" type="range" min="1" max="127" value="110"></label><label class="field"><span class="field-head"><span>GATE</span><output id="gateOut">85%</output></span><input id="gate" type="range" min="10" max="180" value="85"></label><label class="field"><span class="field-head"><span>CHANCE</span><output id="chanceOut">100%</output></span><input id="chance" type="range" min="0" max="100" value="100"></label></div><div class="setup-actions"><button class="mini-btn" id="toggleStepBtn">STEP AAN/UIT</button><button class="mini-btn" id="auditionStepBtn">♪ BELUISTER</button></div></section>
+          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step editor</h2><p class="subtext" id="stepEditorTitle">Track 4 · Step 01</p></div><span class="pill" id="stepOnLabel">STEP UIT</span></div><div class="control-grid"><label class="field" id="stepNoteField"><span class="field-head"><span>NOTE</span><output id="stepNoteOut">C-3</output></span><select id="stepNote"></select></label><label class="field"><span class="field-head"><span>VELOCITY</span><output id="velocityOut">110</output></span><input id="velocity" type="range" min="1" max="127" value="110"></label><label class="field"><span class="field-head"><span>GATE</span><output id="gateOut">85%</output></span><input id="gate" type="range" min="10" max="180" value="85"></label><label class="field"><span class="field-head"><span>CHANCE</span><output id="chanceOut">100%</output></span><input id="chance" type="range" min="0" max="100" value="100"></label><label class="field"><span class="field-head"><span>RATCHET</span><output id="ratchetOut">1×</output></span><input id="ratchet" type="range" min="1" max="6" step="1" value="1"></label></div><div class="setup-actions"><button class="mini-btn" id="toggleStepBtn">STEP AAN/UIT</button><button class="mini-btn" id="auditionStepBtn">♪ BELUISTER</button></div></section>
           <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step FX</h2><p class="subtext" id="fxEditorTitle">Track 4 · Step 01</p></div><span class="pill" id="fxStatus">FX UIT</span></div><div class="control-grid fx-controls"><label class="field"><span class="field-head"><span>FX COMMANDO</span></span><select id="stepFx" aria-label="Effect voor geselecteerde step"><option value="0">0 · GEEN EFFECT</option><option value="1">1 · PORTAMENTO UP</option><option value="2">2 · PORTAMENTO DOWN</option><option value="3">3 · OCTAVE UP</option><option value="4">4 · VIBRATO</option><option value="5">5 · OCTAVE DOWN</option><option value="10">A · VOLUME SLIDE DOWN</option><option value="11">B · VOLUME SLIDE UP</option></select></label><label class="field" id="fxAmountField"><span class="field-head"><span id="fxAmountLabel">PERIOD/TICK · HEX</span><output id="fxAmountOut">02</output></span><div class="fx-amount-row"><input id="fxAmount" aria-label="FX waarde" type="range" min="0" max="255" step="1" value="2"><input id="fxHex" type="text" maxlength="2" spellcheck="false" autocomplete="off" inputmode="text" aria-label="Effectparameter in hex" value="02"></div></label></div><div class="setup-actions fx-actions"><button class="mini-btn" id="clearStepFx">FX WISSEN</button><button class="mini-btn" id="clearTrackFx">ALLE FX TRACK WISSEN</button></div></section>
         </div>
       </div>
@@ -170,6 +196,7 @@
       <div id="view-mixer" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Six-part mixer</h2></div><button class="mini-btn" id="resetMixerBtn">RESET MIXER</button></div><div class="mixer" id="mixerStrips"></div></section></div>
       <div id="view-lfo" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">LFO modulation</h2><span class="pill">4 LFO's</span></div><div class="lfo-grid" id="lfoGrid"></div></section></div>
       <div id="view-send" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Delay / Reverb sends</h2><span class="pill">6 TRACKS</span></div><div class="sends-grid" id="sendsGrid"></div><div class="send-global" id="sendGlobal"></div></section></div>
+      <div id="view-options" class="hidden"><section class="panel options-panel"><div class="panel-head"><h2 class="section-title">Pattern options</h2><span class="pill">MAX 32 STEPS</span></div><div id="optionsPatterns" class="options-patterns"></div></section></div>
       <div id="view-setup" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">MIDI & audio</h2></div></div>
         <div class="setting-cols"><div class="setup-box"><h3>USB MIDI input</h3><select id="midiInput"><option value="">Geen MIDI-poort gekozen</option></select><div class="setup-actions"><button class="btn primary" id="connectMidiBtn">MIDI VERBINDEN</button><button class="mini-btn" id="refreshMidiBtn">VERNIEUW</button></div><div style="height:14px"></div><label class="field"><span class="field-head"><span>MIDI ROUTING</span></span><select id="midiRouting"><option value="selected">Alle kanalen → geselecteerde track</option><option value="channels">Per MIDI-kanaal (CH 1–6)</option></select></label></div>
         <div class="setup-box"><h3>Audio-uitgang / Focusrite</h3><select id="audioOutput"><option value="default">Standaard audio-uitgang (Windows)</option></select><div class="setup-actions"><button class="btn primary" id="applyOutputBtn">UITGANG INSTELLEN</button><button class="mini-btn" id="refreshAudioBtn">VERNIEUW APPARATEN</button><button class="mini-btn" id="chooseOutputBtn">KIES APPARAAT…</button></div><p id="outputHelp" class="hidden" aria-hidden="true"></p></div></div>
@@ -181,7 +208,7 @@
 </div>
 <script>
 'use strict';
-// Squirrel Studio 0.1.7 — standalone Web Audio + Web MIDI groovebox.
+// Squirrel Studio 0.1.8 — standalone Web Audio + Web MIDI groovebox.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 const NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -200,7 +227,8 @@ const LFO_TARGETS=[['off','UIT'],['lead-volume','LEAD · VOLUME'],['lead-cutoff'
 const LFO_WAVES=['sine','triangle','square','sawtooth'];
 const defaultLFOs=()=>['lead-volume','lead-cutoff','bass-volume','bass-cutoff'].map((target,i)=>({enabled:false,target,wave:i%2?'triangle':'sine',rate:i<2?2.2:0.45,depth:30}));
 const defaultSendFX=()=>({delayTime:0.34,feedback:32,reverbDecay:1.8});
-const makeStep=(track,on=false,note=null)=>({on,note:note??bases[track].note,velocity:track<3?112:104,gate:track<3?70:92,chance:100,fx:0,fxAmount:2});
+const MAX_STEPS=32;
+const makeStep=(track,on=false,note=null)=>({on,note:note??bases[track].note,velocity:track<3?112:104,gate:track<3?70:92,ratchet:1,chance:100,fx:0,fxAmount:2});
 // Trackereffecten per rij (ProTracker-timing): tick 0 behoudt de beginwaarde,
 // ticks 1..5 voeren de slide uit; lege FX-rijen stoppen de slide, maar behouden
 // de laatste period/volume. 1xx/2xx gebruiken period-units, Axx/Bxx volume-units.
@@ -227,7 +255,7 @@ function advanceFXTick(rt){
 }
 function applyFXVoice(voices, when, result){
  for(const voice of voices){
-  if(voice.released)continue;
+  if(voice.released && (!voice.releaseScheduled || when>=voice.releaseScheduled))continue;
   for(const pitch of voice.pitchParams||[])pitch.setValueAtTime(result.cents,when);
   if(voice.modGain)voice.modGain.gain.setValueAtTime(result.level,when);
  }
@@ -255,26 +283,27 @@ function applyFXCommand(rt, step){
  if(amount)rt.memory[effect]=amount;
  rt.activeAmount=amount||rt.memory[effect]||0;
 }
-function fresh(){const tracks=bases.map(b=>({...b,muted:false,solo:false,sound:defaultSound(b)}));const patterns=Array.from({length:4},()=>tracks.map((_,t)=>Array.from({length:16},()=>makeStep(t))));
+function fresh(){const tracks=bases.map(b=>({...b,muted:false,solo:false,sound:defaultSound(b)}));const patterns=Array.from({length:4},()=>tracks.map((_,t)=>Array.from({length:MAX_STEPS},()=>makeStep(t))));
  const set=(t,ns,note=null,vel=null)=>{for(const s of ns){const p=patterns[0][t][s];p.on=true;if(note!==null)p.note=note;if(vel!==null)p.velocity=vel;}};
  set(0,[0,4,8,12]);set(1,[4,12]);set(2,[2,6,10,14],90);set(2,[0,4,8,12],75);set(3,[0,3,6,8,11,14]);[36,36,39,43,36,41,39].forEach((n,i)=>{const idx=[0,3,6,8,11,14,15][i];patterns[0][3][idx].on=true;patterns[0][3][idx].note=n;});
  set(4,[2,7,10,15]);patterns[0][3][3].fx=1;patterns[0][3][3].fxAmount=5;patterns[0][3][4].fx=1;patterns[0][3][4].fxAmount=0;patterns[0][3][11].fx=2;patterns[0][3][11].fxAmount=5;patterns[0][3][12].fx=2;patterns[0][3][12].fxAmount=0;patterns[0][4][10].fx=3;[60,62,67,64].forEach((n,i)=>patterns[0][4][[2,7,10,15][i]].note=n);set(5,[0,8]);patterns[0][5][0].note=48;patterns[0][5][8].note=53;
  tracks.forEach(t=>{t.delaySend=0;t.reverbSend=0});
- return {version:3,bpm:120,swing:0,master:75,pattern:0,selectedTrack:3,selectedStep:0,tracks,patterns,lfos:defaultLFOs(),sendFX:defaultSendFX()};}
+ return {version:4,bpm:120,swing:0,master:75,pattern:0,patternLengths:[16,16,16,16],selectedTrack:3,selectedStep:0,tracks,patterns,lfos:defaultLFOs(),sendFX:defaultSendFX()};}
 let state=fresh();try{const raw=localStorage.getItem('squirrel-studio-0.1');if(raw)state=validate(JSON.parse(raw));}catch(e){console.warn('Ongeldige lokale opslag:',e)}
 let audio=null,midiAccess=null,selectedInput=null,clipboard=null,playing=false,recording=false,currentStep=0,lastVisualStep=-1,nextNoteTime=0,timer=null,view='seq',audioSink='default',messageTimeout=null;
 let activeLive=new Map(),scheduledVoices=new Set(),playheadQueue=[],lastBeatAt=0;
 let fxEditMode=false,fxDigitBuffer='';
 const liveKeys=['a','w','s','e','d','f','t','g','y','h','u','j'];const keyNotes=[0,1,2,3,4,5,6,7,8,9,10,11];const keyboardDown=new Set();
-function validate(data){if(!data||![1,2,3].includes(data.version)||!Array.isArray(data.tracks)||data.tracks.length!==6||!Array.isArray(data.patterns)||data.patterns.length!==4)throw Error('Onjuist bestandsformaat');const s=fresh();s.bpm=clamp(Number(data.bpm)||120,50,240);s.swing=clamp(Number(data.swing)||0,0,65);s.master=clamp(Number(data.master)??75,0,100);s.pattern=clamp(Number(data.pattern)||0,0,3);s.selectedTrack=clamp(Number(data.selectedTrack)||3,0,5);s.selectedStep=clamp(Number(data.selectedStep)||0,0,15);
+function validate(data){if(!data||![1,2,3,4].includes(data.version)||!Array.isArray(data.tracks)||data.tracks.length!==6||!Array.isArray(data.patterns)||data.patterns.length!==4)throw Error('Onjuist bestandsformaat');const s=fresh();s.bpm=clamp(Number(data.bpm)||120,50,240);s.swing=clamp(Number(data.swing)||0,0,65);s.master=clamp(Number(data.master)??75,0,100);s.pattern=clamp(Number(data.pattern)||0,0,3);s.selectedTrack=clamp(Number(data.selectedTrack)||3,0,5);s.patternLengths=Array.from({length:4},(_,b)=>data.version>=4?clamp(Math.round(Number(data.patternLengths?.[b])||16),1,MAX_STEPS):16);s.selectedStep=clamp(Number(data.selectedStep)||0,0,s.patternLengths[s.pattern]-1);
  for(let t=0;t<6;t++){const src=data.tracks[t];if(!src||typeof src!=='object')continue;const target=s.tracks[t];target.volume=clamp(Number(src.volume??target.volume),0,100);target.pan=clamp(Number(src.pan??target.pan),-100,100);target.muted=!!src.muted;target.solo=!!src.solo;
  target.delaySend=clamp(Number(src.delaySend??0)||0,0,100);target.reverbSend=clamp(Number(src.reverbSend??0)||0,0,100);const p=src.sound||{};for(const k of ['wave1','wave2'])if(['sine','triangle','square','sawtooth','pulse'].includes(p[k]))target.sound[k]=p[k];for(const [k,a,b] of [['detune',-50,50],['pulseWidth',5,95],['cutoff',80,12000],['resonance',.1,18],['attack',.003,2],['decay',.01,2],['sustain',0,1],['release',.01,3]])if(Number.isFinite(Number(p[k])))target.sound[k]=clamp(Number(p[k]),a,b);if(p.chord==='minor'||p.chord==='major')target.sound.chord=p.chord;
- }for(let b=0;b<4;b++){if(!Array.isArray(data.patterns[b])||data.patterns[b].length!==6)continue;for(let t=0;t<6;t++){if(!Array.isArray(data.patterns[b][t])||data.patterns[b][t].length!==16)continue;for(let i=0;i<16;i++){const p=data.patterns[b][t][i];if(!p||typeof p!=='object')continue;s.patterns[b][t][i]={on:!!p.on,note:clamp(Math.round(Number(p.note)||bases[t].note),24,95),velocity:clamp(Math.round(Number(p.velocity)||100),1,127),gate:clamp(Number(p.gate)||85,10,180),chance:clamp(Number(p.chance??100),0,100),fx:FX_OPTIONS.some(x=>x.id===(data.version===1&&Number(p.fx)===4?5:Number(p.fx)))?(data.version===1&&Number(p.fx)===4?5:Number(p.fx)):0,fxAmount:data.version===1?clamp(Math.round(Number(p.fxAmount)||2)*3,1,255):clamp(Math.round(Number(p.fxAmount??2))||0,0,255)}}}}
+ }for(let b=0;b<4;b++){if(!Array.isArray(data.patterns[b])||data.patterns[b].length!==6)continue;for(let t=0;t<6;t++){if(!Array.isArray(data.patterns[b][t])||data.patterns[b][t].length<16)continue;for(let i=0;i<Math.min(MAX_STEPS,data.patterns[b][t].length);i++){const p=data.patterns[b][t][i];if(!p||typeof p!=='object')continue;s.patterns[b][t][i]={on:!!p.on,note:clamp(Math.round(Number(p.note)||bases[t].note),24,95),velocity:clamp(Math.round(Number(p.velocity)||100),1,127),gate:clamp(Number(p.gate)||85,10,180),ratchet:clamp(Math.round(Number(p.ratchet)||1),1,6),chance:clamp(Number(p.chance??100),0,100),fx:FX_OPTIONS.some(x=>x.id===(data.version===1&&Number(p.fx)===4?5:Number(p.fx)))?(data.version===1&&Number(p.fx)===4?5:Number(p.fx)):0,fxAmount:data.version===1?clamp(Math.round(Number(p.fxAmount)||2)*3,1,255):clamp(Math.round(Number(p.fxAmount??2))||0,0,255)}}}}
  if(Array.isArray(data.lfos)){data.lfos.slice(0,4).forEach((x,i)=>{if(!x||typeof x!=='object')return;const l=s.lfos[i];l.enabled=!!x.enabled;l.target=LFO_TARGETS.some(t=>t[0]===x.target)?x.target:l.target;l.wave=LFO_WAVES.includes(x.wave)?x.wave:l.wave;l.rate=clamp(Number(x.rate)||l.rate,.05,20);l.depth=clamp(Number(x.depth??l.depth),0,100)})}
  if(data.sendFX&&typeof data.sendFX==='object'){const f=data.sendFX;s.sendFX.delayTime=clamp(Number(f.delayTime??s.sendFX.delayTime),.07,1.2);s.sendFX.feedback=clamp(Number(f.feedback??s.sendFX.feedback),0,85);s.sendFX.reverbDecay=clamp(Number(f.reverbDecay??s.sendFX.reverbDecay),.5,4)}
  return s;}
 function persist(){try{localStorage.setItem('squirrel-studio-0.1',JSON.stringify(state));}catch(e){console.warn('Opslag mislukt:',e)}}
 function notify(msg,bad=false){const el=$('notice');el.textContent=msg;el.classList.toggle('bad',bad);clearTimeout(messageTimeout);messageTimeout=setTimeout(()=>{el.textContent=''},5700)}
+function patternLength(bank=state.pattern){return state.patternLengths[bank]||16}
 function selectedStep(){return state.patterns[state.pattern][state.selectedTrack][state.selectedStep]}
 // Stereo send busses preserve the dry signal. Each track has independent send levels.
 function makeReverbIR(ctx,seconds){
@@ -343,7 +372,7 @@ function releaseVoice(v,when){if(v.released)return;v.released=true;const t=Math.
 const pulseCache=new Map();function pulseWave(ctx,duty){const key=Math.round(duty);if(pulseCache.has(key))return pulseCache.get(key);const d=key/100,len=65,re=new Float32Array(len),im=new Float32Array(len);for(let n=1;n<len;n++){re[n]=2*Math.sin(Math.PI*n*d)**2/(Math.PI*n);im[n]=Math.sin(2*Math.PI*n*d)/(Math.PI*n)}const wave=ctx.createPeriodicWave(re,im,{disableNormalization:false});pulseCache.set(key,wave);return wave}
 function synthVoice(track,note,velocity,when,gate=null){const c=audio.ctx,s=track.sound,f=hz(note),trackIndex=state.tracks.indexOf(track);const out=c.createGain(),modGain=c.createGain(),filt=c.createBiquadFilter(),g1=c.createGain(),g2=c.createGain();modGain.gain.value=1;filt.type='lowpass';filt.frequency.setValueAtTime(s.cutoff,when);filt.Q.value=s.resonance;
  if(trackIndex===3||trackIndex===4)audio.cutoffBuses[trackIndex].connect(filt.frequency);g1.gain.value=.46;g2.gain.value=.27;const osc1=c.createOscillator(),osc2=c.createOscillator();for(const [osc,wave] of [[osc1,s.wave1],[osc2,s.wave2]]){if(wave==='pulse')osc.setPeriodicWave(pulseWave(c,s.pulseWidth));else osc.type=wave}osc1.frequency.setValueAtTime(f,when);osc2.frequency.setValueAtTime(f*Math.pow(2,s.detune/1200),when);osc1.connect(g1).connect(filt);osc2.connect(g2).connect(filt);filt.connect(out).connect(modGain).connect(audio.trackGains[state.tracks.indexOf(track)]);gainEnv(out.gain,when,velocity,s.attack,s.decay,s.sustain);osc1.start(when);osc2.start(when);const v={env:out,oscs:[osc1,osc2],pitchParams:[osc1.detune,osc2.detune],modGain,release:Math.max(.02,s.release),released:false,trackIndex,filter:filt};scheduledVoices.add(v);osc2.onended=()=>{scheduledVoices.delete(v);try{osc1.disconnect();osc2.disconnect();if(trackIndex===3||trackIndex===4)audio.cutoffBuses[trackIndex].disconnect(filt.frequency);filt.disconnect();out.disconnect();modGain.disconnect()}catch(e){}};if(gate!==null){const off=when+Math.max(.035,gate);const p=out.gain;p.setValueAtTime(Math.max(.0001,velocity/127*.5*Math.max(s.sustain,.002)),Math.max(when+s.attack+s.decay,off));releaseVoiceScheduled(v,off)}return v}
-function releaseVoiceScheduled(v,when){if(v.released)return;v.released=true;const p=v.env.gain;const val=Math.max(.0002,p.value);p.setValueAtTime(val,when);p.exponentialRampToValueAtTime(.0001,when+v.release);v.oscs.forEach(o=>o.stop(when+v.release+.04))}
+function releaseVoiceScheduled(v,when){if(v.released)return;v.released=true;v.releaseScheduled=when;const p=v.env.gain;const val=Math.max(.0002,p.value);p.setValueAtTime(val,when);p.exponentialRampToValueAtTime(.0001,when+v.release);v.oscs.forEach(o=>o.stop(when+v.release+.04))}
 function oneShot(type,track,velocity,when,pitch=0){const c=audio.ctx,vol=clamp(velocity/127,0,1),ratio=Math.pow(2,pitch/12),modGain=c.createGain();modGain.gain.value=1;modGain.connect(audio.trackGains[state.tracks.indexOf(track)]);if(type==='kick'){const osc=c.createOscillator(),gain=c.createGain();osc.type='sine';osc.frequency.setValueAtTime(165*ratio,when);osc.frequency.exponentialRampToValueAtTime(49*ratio,when+.09);osc.frequency.exponentialRampToValueAtTime(42*ratio,when+.26);gain.gain.setValueAtTime(.0001,when);gain.gain.exponentialRampToValueAtTime(vol*.95+.0001,when+.003);gain.gain.exponentialRampToValueAtTime(.0001,when+.4);osc.connect(gain).connect(modGain);osc.start(when);osc.stop(when+.42);osc.onended=()=>{osc.disconnect();gain.disconnect();modGain.disconnect()};return [{pitchParams:[osc.detune],modGain,released:false,drum:true}]}
  const src=c.createBufferSource(),filter=c.createBiquadFilter(),gn=c.createGain();src.buffer=getNoise();src.playbackRate.value=ratio;filter.type='highpass';filter.frequency.value=clamp((type==='hat'?6200:1300)*ratio,200,15000);gn.gain.setValueAtTime(.0001,when);gn.gain.exponentialRampToValueAtTime(Math.max(.0002,(type==='hat'?.37:.6)*vol),when+.004);gn.gain.exponentialRampToValueAtTime(.0001,when+(type==='hat'?.11:.20));src.connect(filter).connect(gn).connect(modGain);src.start(when);src.stop(when+(type==='hat'?.13:.23));src.onended=()=>{src.disconnect();filter.disconnect();gn.disconnect()};let tone=null;if(type==='snare'){tone=c.createOscillator();const tg=c.createGain();tone.type='triangle';tone.frequency.value=175*ratio;tg.gain.setValueAtTime(.18*vol,when);tg.gain.exponentialRampToValueAtTime(.0001,when+.13);tone.connect(tg).connect(modGain);tone.start(when);tone.stop(when+.15);tone.onended=()=>{tone.disconnect();tg.disconnect()}}src.onended=()=>{src.disconnect();filter.disconnect();gn.disconnect();modGain.disconnect()};return [{pitchParams:[src.detune,...(type==='snare'?[tone.detune]:[])],modGain,released:false,drum:true}]}
 function playTrack(t,note,velocity,when,gate=null,pitch=0){if(!audio)return null;const track=state.tracks[t];if(track.muted||(state.tracks.some(x=>x.solo)&&!track.solo))return null;if(track.type==='kick'||track.type==='snare'||track.type==='hat'){return oneShot(track.type,track,velocity,when,pitch)}if(track.type==='chord'){let voices=[];for(const semis of (track.sound.chord==='minor'?[0,3,7]:[0,4,7]))voices.push(synthVoice(track,clamp(note+semis+pitch,24,108),velocity*.77,when,gate));return voices}return [synthVoice(track,clamp(note+pitch,24,108),velocity,when,gate)]}
@@ -354,7 +383,7 @@ function stepDuration(){return 60/state.bpm/4}
 function shouldHoldFXVoice(trackIndex, stepIndex){
  const lane=state.patterns[state.pattern][trackIndex];
  if(isContinuousFX(lane[stepIndex].fx))return true;
- for(let i=stepIndex+1;i<16;i++){
+ for(let i=stepIndex+1;i<patternLength();i++){
   if(lane[i].on)break;
   if(lane[i].fx!==0)return true;
  }
@@ -374,7 +403,18 @@ function scheduleStep(idx,when){
    // Blijf een voice vasthouden tot de volgende noot als een latere step
    // (eventueel na lege steps) een effect op diezelfde noot gaat uitvoeren.
    const hold=(track.type==='synth'||track.type==='chord') && shouldHoldFXVoice(t,idx);
-   rt.voices=playTrack(t,step.note,step.velocity,when,hold?null:clamp(step.gate/100*dur,.025,.8))||[];
+   const hits=clamp(step.ratchet||1,1,6);
+   const swingStep=dur*(idx%2===0?1+state.swing/200:1-state.swing/200);
+   const subDuration=swingStep/hits;
+   for(let hit=0;hit<hits;hit++){
+    const hitTime=when+hit*subDuration;
+    // Earlier ratchets are short retriggers. The last hit can be held
+    // for a subsequent tracker FX step, preserving note/pitch continuity.
+    const hitHold=hold&&hit===hits-1;
+    const gateDuration=hits===1?clamp(step.gate/100*dur,.025,.8):clamp(subDuration*step.gate/100,.004,subDuration*.94);
+    const voices=playTrack(t,step.note,step.velocity,hitTime,hitHold?null:gateDuration)||[];
+    rt.voices.push(...voices);
+   }
   }
   applyFXCommand(rt,step);
   // De vorige period en het volume blijven staan; de slide zelf werkt alleen
@@ -390,30 +430,70 @@ function scheduleStep(idx,when){
  }
  playheadQueue.push({step:idx,time:when});
 }
-function scheduler(){if(!audio||!playing)return;const horizon=audio.ctx.currentTime+.115;let safety=0;while(nextNoteTime<horizon&&safety++<30){scheduleStep(currentStep,nextNoteTime);const amount=state.swing/100*.5;nextNoteTime+=stepDuration()*(currentStep%2===0?1+amount:1-amount);currentStep=(currentStep+1)%16}}
-function stopTransport(){playing=false;recording=false;clearInterval(timer);timer=null;playheadQueue=[];lastVisualStep=-1;currentStep=0;resetFXRuntime();$('playBtn').classList.remove('playing');$('playBtn').textContent='▶ PLAY';$('recBtn').classList.remove('recording');$('lcdMode').textContent='● READY';renderPlayhead(-1);for(const v of [...scheduledVoices])releaseVoice(v,audio?.ctx.currentTime||0)}
-async function togglePlay(){if(playing){stopTransport();return}if(!await initAudio())return;currentStep=0;lastVisualStep=-1;playheadQueue=[];resetFXRuntime();nextNoteTime=audio.ctx.currentTime+.06;playing=true;$('playBtn').classList.add('playing');$('playBtn').textContent='❚❚ PAUZE';$('lcdMode').textContent='▶ PLAYING';scheduler();timer=setInterval(scheduler,25)}
+function scheduler(){if(!audio||!playing)return;const horizon=audio.ctx.currentTime+.115;let safety=0;while(nextNoteTime<horizon&&safety++<30){scheduleStep(currentStep,nextNoteTime);const amount=state.swing/100*.5;nextNoteTime+=stepDuration()*(currentStep%2===0?1+amount:1-amount);currentStep=(currentStep+1)%patternLength()}}
+function stopTransport(){playing=false;recording=false;clearInterval(timer);timer=null;playheadQueue=[];lastVisualStep=-1;currentStep=0;resetFXRuntime();$('playBtn').classList.remove('playing');$('playBtn').textContent='▶ PLAY';$('recBtn').classList.remove('recording');renderPlayhead(-1);for(const v of [...scheduledVoices])releaseVoice(v,audio?.ctx.currentTime||0)}
+async function togglePlay(){if(playing){stopTransport();return}if(!await initAudio())return;currentStep=0;lastVisualStep=-1;playheadQueue=[];resetFXRuntime();nextNoteTime=audio.ctx.currentTime+.06;playing=true;$('playBtn').classList.add('playing');$('playBtn').textContent='❚❚ PAUZE';scheduler();timer=setInterval(scheduler,25)}
 function toggleRecord(){recording=!recording;$('recBtn').classList.toggle('recording',recording);if(recording&&!playing)notify('REC klaar: druk PLAY en speel noten via MIDI.');else notify(recording?'MIDI-opname ingeschakeld.':'MIDI-opname uitgeschakeld.')}
-function renderPlayhead(i){document.querySelectorAll('.pad.playhead,.fx-pad.playhead').forEach(x=>x.classList.remove('playhead'));document.querySelectorAll('.grid-head .beat').forEach(x=>x.classList.remove('beat'));if(i>=0){document.querySelectorAll('.pad[data-step="'+i+'"],.fx-pad[data-step="'+i+'"]').forEach(p=>p.classList.add('playhead'))}$('lcdStep').textContent='STEP '+String(i>=0?i+1:state.selectedStep+1).padStart(2,'0')}
+function renderPlayhead(i){document.querySelectorAll('.pad.playhead,.fx-pad.playhead').forEach(x=>x.classList.remove('playhead'));document.querySelectorAll('.grid-head .beat').forEach(x=>x.classList.remove('beat'));if(i>=0){document.querySelectorAll('.pad[data-step="'+i+'"],.fx-pad[data-step="'+i+'"]').forEach(p=>p.classList.add('playhead'))}$('transportStep').textContent='STEP '+String(i>=0?i+1:state.selectedStep+1).padStart(2,'0')}
 function uiTick(){if(audio){if(playing){while(playheadQueue.length&&playheadQueue[0].time<=audio.ctx.currentTime+.012){const e=playheadQueue.shift();if(e.step!==lastVisualStep){lastVisualStep=e.step;renderPlayhead(e.step);lastBeatAt=performance.now()}}}const a=new Uint8Array(audio.analyser.fftSize);audio.analyser.getByteTimeDomainData(a);let sum=0;for(let i=0;i<a.length;i++){const x=(a[i]-128)/128;sum+=x*x}const rms=Math.sqrt(sum/a.length);document.querySelectorAll('.meter-fill').forEach((el,i)=>{const on=!(state.tracks[i].muted);el.style.height=(on?Math.min(100,Math.max(3,rms*260+((performance.now()-lastBeatAt<120&&playing)?18:0))):2)+'%'})}requestAnimationFrame(uiTick)}
-function renderHardware(){const el=$('unitTracks'),lcd=$('lcdTracks');el.innerHTML='';lcd.innerHTML='';state.tracks.forEach((t,i)=>{const b=document.createElement('button');b.className='unit-track'+(i===state.selectedTrack?' active':'');b.innerHTML='<strong><span class="dot"></span>'+String(i+1).padStart(2,'0')+' '+t.name+'</strong><small>'+t.type.toUpperCase()+' · CH '+t.channel+'</small>';b.onclick=()=>selectTrack(i);el.appendChild(b);const row=document.createElement('div');row.className='lcd-track'+(i===state.selectedTrack?' lit':'');row.innerHTML='<span>'+String(i+1)+' '+t.name+'</span><div class="lcd-pulse"></div>';lcd.appendChild(row)});$('lcdPattern').textContent='PAT '+('ABCD'[state.pattern])+' · '+state.bpm+' BPM';$('lcdNote').textContent=noteName(selectedStep().note);$('soundTrackLabel').textContent=state.tracks[state.selectedTrack].name}
-function renderGrid(){const board=$('gridBoard');board.replaceChildren();const head=document.createElement('div');head.className='grid-head';const blank=document.createElement('span');blank.textContent='TRACK / STEP';head.appendChild(blank);for(let i=0;i<16;i++){const n=document.createElement('span');n.textContent=String(i+1).padStart(2,'0');head.appendChild(n)}board.appendChild(head);
- state.tracks.forEach((t,track)=>{const row=document.createElement('div');row.className='seq-row';const lane=document.createElement('div');lane.className='lane-name';const choose=document.createElement('button');choose.className='lane-main'+(state.selectedTrack===track?' selected':'');choose.innerHTML='<span class="lane-index">'+String(track+1).padStart(2,'0')+'</span><strong>'+t.name+'</strong>';choose.onclick=()=>selectTrack(track);const controls=document.createElement('div');controls.className='lane-controls';for(const action of ['M','S']){const b=document.createElement('button');b.className='lane-toggle'+(action==='M'&&t.muted?' muted':'')+(action==='S'&&t.solo?' solo':'');b.textContent=action;b.onclick=()=>{if(action==='M')t.muted=!t.muted;else t.solo=!t.solo;applyTrackMix();persist();renderAll()};controls.appendChild(b)}lane.append(choose,controls);row.appendChild(lane);
- for(let i=0;i<16;i++){const step=state.patterns[state.pattern][track][i],pad=document.createElement('button');pad.type='button';pad.className='pad'+(step.on?' on':'')+(step.on&&step.velocity<75?' low':'')+(step.on&&step.velocity>115?' high':'')+(state.selectedTrack===track&&state.selectedStep===i?' selected':'')+(i===lastVisualStep?' playhead':'');pad.setAttribute('data-track',String(track));pad.setAttribute('data-step',String(i));pad.tabIndex=(state.selectedTrack===track&&state.selectedStep===i)?0:-1;pad.setAttribute('aria-pressed',String(step.on));if(state.selectedTrack===track&&state.selectedStep===i)pad.setAttribute('aria-current','location');pad.setAttribute('aria-label',t.name+' stap '+(i+1)+(step.on?' aan':' uit'));const label=document.createElement('span');label.className='note-label';label.textContent=step.on?(t.type==='synth'||t.type==='chord'?noteName(step.note):'●'):'';pad.appendChild(label);if(step.on){const bar=document.createElement('i');bar.className='mini-bar';bar.style.width=(step.velocity/127*65)+'%';pad.appendChild(bar)}pad.addEventListener('click',e=>{fxEditMode=false;fxDigitBuffer='';state.selectedTrack=track;state.selectedStep=i;if(!e.altKey)step.on=!step.on;persist();renderAll();focusSelectedPad(false);if(step.on&&!playing)playPreview(track,step.note,step.velocity)});row.appendChild(pad)}board.appendChild(row);
+function renderGrid(){
+ const board=$('gridBoard');board.replaceChildren();
+ const length=patternLength();
+ const head=document.createElement('div');head.className='grid-head';
+ const blank=document.createElement('span');blank.textContent='TRACK / STEP';head.appendChild(blank);
+ for(let i=0;i<MAX_STEPS;i++){
+  const n=document.createElement('span');n.textContent=String(i+1).padStart(2,'0');
+  if(i>=length)n.className='inactive-step';head.appendChild(n);
+ }
+ board.appendChild(head);
+ state.tracks.forEach((t,track)=>{
+  const row=document.createElement('div');row.className='seq-row';
+  const lane=document.createElement('div');lane.className='lane-name';
+  const choose=document.createElement('button');choose.type='button';
+  choose.className='lane-main'+(state.selectedTrack===track?' selected':'');
+  choose.innerHTML='<span class="lane-index">'+String(track+1).padStart(2,'0')+'</span><strong>'+t.name+'</strong>';
+  choose.onclick=()=>selectTrack(track);
+  const controls=document.createElement('div');controls.className='lane-controls';
+  for(const action of ['M','S']){
+   const b=document.createElement('button');b.type='button';
+   b.className='lane-toggle'+(action==='M'&&t.muted?' muted':'')+(action==='S'&&t.solo?' solo':'');
+   b.textContent=action;
+   b.onclick=()=>{if(action==='M')t.muted=!t.muted;else t.solo=!t.solo;applyTrackMix();persist();renderAll()};
+   controls.appendChild(b);
+  }
+  lane.append(choose,controls);row.appendChild(lane);
+  for(let i=0;i<MAX_STEPS;i++){
+   const step=state.patterns[state.pattern][track][i],inactive=i>=length;
+   const pad=document.createElement('button');pad.type='button';
+   pad.className='pad'+(step.on?' on':'')+(step.on&&step.velocity<75?' low':'')+(step.on&&step.velocity>115?' high':'')+(state.selectedTrack===track&&state.selectedStep===i?' selected':'')+(i===lastVisualStep?' playhead':'')+(inactive?' inactive-step':'');
+   pad.dataset.track=String(track);pad.dataset.step=String(i);pad.disabled=inactive;
+   pad.tabIndex=(state.selectedTrack===track&&state.selectedStep===i)?0:-1;
+   pad.setAttribute('aria-pressed',String(step.on));
+   if(state.selectedTrack===track&&state.selectedStep===i)pad.setAttribute('aria-current','location');
+   pad.setAttribute('aria-label',t.name+' stap '+(i+1)+(inactive?' niet actief':step.on?' aan':' uit'));
+   const label=document.createElement('span');label.className='note-label';
+   label.textContent=step.on?(t.type==='synth'||t.type==='chord'?noteName(step.note):'●'):'';
+   pad.appendChild(label);
+   if(step.on){const bar=document.createElement('i');bar.className='mini-bar';bar.style.width=(step.velocity/127*65)+'%';pad.appendChild(bar)}
+   pad.addEventListener('click',e=>{if(inactive)return;fxEditMode=false;fxDigitBuffer='';state.selectedTrack=track;state.selectedStep=i;if(!e.altKey)step.on=!step.on;persist();renderAll();focusSelectedPad(false);if(step.on&&!playing)playPreview(track,step.note,step.velocity)});
+   row.appendChild(pad);
+  }
+  board.appendChild(row);
   const fxRow=document.createElement('div');fxRow.className='seq-row fx-row';
   const fxLabel=document.createElement('button');fxLabel.type='button';fxLabel.className='fx-lane-label'+(state.selectedTrack===track?' active':'');fxLabel.textContent='FX · '+t.name;fxLabel.onclick=()=>selectTrack(track);fxRow.appendChild(fxLabel);
-  for(let i=0;i<16;i++){
-    const step=state.patterns[state.pattern][track][i],button=document.createElement('button');button.type='button';
-    button.className='fx-pad'+(step.fx?' has-fx':'')+(state.selectedTrack===track&&state.selectedStep===i?' selected':'')+(fxEditMode&&state.selectedTrack===track&&state.selectedStep===i?' editing':'')+(i===lastVisualStep?' playhead':'');
-    button.dataset.track=String(track);button.dataset.step=String(i);
-    button.textContent=step.fx?fxCode(step.fx)+fxHex(step.fxAmount):'·';
-    button.title=t.name+' · Step '+String(i+1).padStart(2,'0')+' · '+FX_OPTIONS.find(f=>f.id===step.fx).label+' '+fxHex(step.fxAmount);
-    button.setAttribute('aria-label',button.title);
-    button.onclick=()=>{fxEditMode=true;fxDigitBuffer='';state.selectedTrack=track;state.selectedStep=i;persist();renderAll();focusSelectedPad(false)};
-    fxRow.appendChild(button);
+  for(let i=0;i<MAX_STEPS;i++){
+   const step=state.patterns[state.pattern][track][i],inactive=i>=length,button=document.createElement('button');button.type='button';
+   button.className='fx-pad'+(step.fx?' has-fx':'')+(state.selectedTrack===track&&state.selectedStep===i?' selected':'')+(fxEditMode&&state.selectedTrack===track&&state.selectedStep===i?' editing':'')+(i===lastVisualStep?' playhead':'')+(inactive?' inactive-step':'');
+   button.dataset.track=String(track);button.dataset.step=String(i);button.disabled=inactive;
+   button.textContent=step.fx?fxCode(step.fx)+fxHex(step.fxAmount):'·';
+   button.title=t.name+' · Step '+String(i+1).padStart(2,'0')+(inactive?' · NIET ACTIEF':' · '+FX_OPTIONS.find(f=>f.id===step.fx).label+' '+fxHex(step.fxAmount));
+   button.setAttribute('aria-label',button.title);
+   button.onclick=()=>{if(inactive)return;fxEditMode=true;fxDigitBuffer='';state.selectedTrack=track;state.selectedStep=i;persist();renderAll();focusSelectedPad(false)};
+   fxRow.appendChild(button);
   }
   board.appendChild(fxRow);
- });}
+ });
+}
 // Pijltjes bewegen uitsluitend de selectie, nooit de aan/uit-status van een step.
 // Bij de rand blijft de selectie op de laatste step/track staan.
 function focusSelectedPad(scroll=true){
@@ -426,8 +506,8 @@ function focusSelectedPad(scroll=true){
 function moveGridSelection(key){
  const prevTrack=state.selectedTrack,prevStep=state.selectedStep;
  switch(key){
-  case 'ArrowLeft':state.selectedStep=clamp(prevStep-1,0,15);break;
-  case 'ArrowRight':state.selectedStep=clamp(prevStep+1,0,15);break;
+  case 'ArrowLeft':state.selectedStep=clamp(prevStep-1,0,patternLength()-1);break;
+  case 'ArrowRight':state.selectedStep=clamp(prevStep+1,0,patternLength()-1);break;
   case 'ArrowUp':state.selectedTrack=clamp(prevTrack-1,0,state.tracks.length-1);break;
   case 'ArrowDown':state.selectedTrack=clamp(prevTrack+1,0,state.tracks.length-1);break;
  }
@@ -435,7 +515,7 @@ function moveGridSelection(key){
  focusSelectedPad();
 }
 function selectTrack(n){fxEditMode=false;fxDigitBuffer='';state.selectedTrack=n;persist();renderAll()}
-function renderStepEditor(){const step=selectedStep(),t=state.tracks[state.selectedTrack];$('stepEditorTitle').textContent='TRACK '+(state.selectedTrack+1)+' '+t.name+' · STEP '+String(state.selectedStep+1).padStart(2,'0');$('stepOnLabel').textContent=step.on?'STEP AAN':'STEP UIT';$('stepNoteField').classList.toggle('hidden',t.type!=='synth'&&t.type!=='chord');$('stepNote').value=String(step.note);$('stepNoteOut').textContent=noteName(step.note);$('velocity').value=step.velocity;$('velocityOut').textContent=step.velocity;$('gate').value=step.gate;$('gateOut').textContent=step.gate+'%';$('chance').value=step.chance;$('chanceOut').textContent=step.chance+'%';}
+function renderStepEditor(){const step=selectedStep(),t=state.tracks[state.selectedTrack];$('stepEditorTitle').textContent='TRACK '+(state.selectedTrack+1)+' '+t.name+' · STEP '+String(state.selectedStep+1).padStart(2,'0');$('stepOnLabel').textContent=step.on?'STEP AAN':'STEP UIT';$('stepNoteField').classList.toggle('hidden',t.type!=='synth'&&t.type!=='chord');$('stepNote').value=String(step.note);$('stepNoteOut').textContent=noteName(step.note);$('velocity').value=step.velocity;$('velocityOut').textContent=step.velocity;$('gate').value=step.gate;$('gateOut').textContent=step.gate+'%';$('ratchet').value=step.ratchet||1;$('ratchetOut').textContent=(step.ratchet||1)+'×';$('chance').value=step.chance;$('chanceOut').textContent=step.chance+'%';}
 function renderFXEditor(){
  const step=selectedStep(),t=state.tracks[state.selectedTrack];
  $('fxEditorTitle').textContent='TRACK '+(state.selectedTrack+1)+' '+t.name+' · STEP '+String(state.selectedStep+1).padStart(2,'0');
@@ -486,20 +566,41 @@ function renderSendFX(){
   slider.onchange=()=>{if(field==='reverbDecay')updateSendEngine()};f.append(title,slider);global.append(f);
  }
 }
-function renderAll(){renderHardware();renderGrid();renderStepEditor();renderFXEditor();if(view==='sound')renderSound();if(view==='mixer')renderMixer();if(view==='lfo')renderLFO();if(view==='send')renderSendFX();$('bpmInput').value=state.bpm;$('swingInput').value=state.swing;$('swingOut').textContent=state.swing+'%';$('masterInput').value=state.master;$('masterOut').textContent=state.master+'%';document.querySelectorAll('[data-bank]').forEach((b,i)=>b.classList.toggle('active',i===state.pattern))}
-function switchView(to){if(to!=='seq'){fxEditMode=false;fxDigitBuffer=''}view=to;for(const id of ['seq','sound','mixer','lfo','send','setup'])$('view-'+id).classList.toggle('hidden',id!==to);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===to));if(to==='sound')renderSound();if(to==='mixer')renderMixer();if(to==='lfo')renderLFO();if(to==='send')renderSendFX()}
+function setPatternLength(bank,value){
+ const newLength=clamp(Math.round(Number(value)||16),1,MAX_STEPS);
+ state.patternLengths[bank]=newLength;
+ if(bank===state.pattern){
+  state.selectedStep=Math.min(state.selectedStep,newLength-1);
+  if(currentStep>=newLength)currentStep=0;playheadQueue=playheadQueue.filter(ev=>ev.step<newLength);
+  if(lastVisualStep>=newLength){lastVisualStep=-1;renderPlayhead(-1)}
+ }
+ persist();renderAll();
+}
+function renderOptions(){
+ const grid=$('optionsPatterns');grid.replaceChildren();
+ state.patternLengths.forEach((length,bank)=>{
+  const section=document.createElement('div');section.className='option-pattern'+(bank===state.pattern?' current':'');
+  const label=document.createElement('label'),name=document.createElement('strong'),sel=document.createElement('select');
+  name.textContent='PATROON '+('ABCD'[bank]);sel.setAttribute('aria-label','Aantal steps patroon '+('ABCD'[bank]));
+  for(let n=1;n<=MAX_STEPS;n++){const opt=document.createElement('option');opt.value=n;opt.textContent=n+' STEPS';sel.appendChild(opt)}
+  sel.value=String(length);sel.onchange=()=>setPatternLength(bank,sel.value);
+  label.append(name,sel);section.appendChild(label);grid.appendChild(section);
+ });
+}
+function renderAll(){renderGrid();renderStepEditor();renderFXEditor();if(view==='sound')renderSound();if(view==='mixer')renderMixer();if(view==='lfo')renderLFO();if(view==='send')renderSendFX();if(view==='options')renderOptions();$('bpmInput').value=state.bpm;$('swingInput').value=state.swing;$('swingOut').textContent=state.swing+'%';$('masterInput').value=state.master;$('masterOut').textContent=state.master+'%';document.querySelectorAll('[data-bank]').forEach((b,i)=>b.classList.toggle('active',i===state.pattern))}
+function switchView(to){if(to!=='seq'){fxEditMode=false;fxDigitBuffer=''}view=to;for(const id of ['seq','sound','mixer','lfo','send','options','setup'])$('view-'+id).classList.toggle('hidden',id!==to);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===to));if(to==='sound')renderSound();if(to==='mixer')renderMixer();if(to==='lfo')renderLFO();if(to==='send')renderSendFX();if(to==='options')renderOptions()}
 function installNotes(){const el=$('stepNote');for(let n=24;n<=95;n++){const o=document.createElement('option');o.value=n;o.textContent=noteName(n);el.appendChild(o)}const preview=$('previewKeys');for(let i=0;i<12;i++){const btn=document.createElement('button');btn.className='key'+(NAMES[i].includes('#')?' black':'');btn.textContent=noteName(60+i);btn.onpointerdown=e=>{e.preventDefault();playPreview(state.selectedTrack,60+i)};preview.appendChild(btn)}}
 async function connectMidi(){if(!('requestMIDIAccess' in navigator)){notify('Web MIDI is hier niet beschikbaar. Gebruik Edge/Chrome via http://localhost.',true);return}try{midiAccess=await navigator.requestMIDIAccess({sysex:false});midiAccess.onstatechange=updateMidiPorts;updateMidiPorts();notify('Web MIDI geactiveerd. Kies je MIDI-controller in de lijst.')}catch(e){notify('Geen MIDI-toegang: '+e.message,true)}}
 function updateMidiPorts(){if(!midiAccess)return;const select=$('midiInput'),old=select.value;select.replaceChildren(new Option('Geen MIDI-poort gekozen',''));for(const port of midiAccess.inputs.values())select.add(new Option((port.name||'Onbekend')+' ('+port.state+')',port.id));select.value=[...select.options].some(o=>o.value===old)?old:([].slice.call(select.options).find(o=>o.value!==''&&o.textContent.includes('connected'))?.value||'');selectMidiInput();}
 function selectMidiInput(){if(selectedInput)selectedInput.onmidimessage=null;selectedInput=midiAccess?.inputs.get($('midiInput').value)||null;if(selectedInput){selectedInput.onmidimessage=onMidiMessage;$('midiLed').className='led on';$('midiStatus').textContent=(selectedInput.name||'MIDI').toUpperCase()}else{$('midiLed').className='led';$('midiStatus').textContent='MIDI NIET VERBONDEN'}}
 function targetFromChannel(ch){return $('midiRouting').value==='channels'?clamp(ch,0,5):state.selectedTrack}
 function onMidiMessage(e){const [cmd,d1=0,d2=0]=e.data;const status=cmd&0xf0,ch=cmd&0x0f,t=targetFromChannel(ch);if($('midiRouting').value==='channels'&&ch>=6)return;if(status===0x90&&d2>0){liveNoteOn(t,d1,d2,ch)}else if(status===0x80||(status===0x90&&d2===0)){liveNoteOff(t,d1,ch)}else if(status===0xb0){if(d1===74){const s=state.tracks[t].sound;s.cutoff=Math.round(100*Math.pow(120,d2/127));updateLiveCutoff(t);if(view==='sound')renderSound();persist()}if(d1===7){state.tracks[t].volume=Math.round(d2/127*100);applyTrackMix();if(view==='seq')renderStepEditor();if(view==='mixer')renderMixer();persist()}}}
-function liveNoteOn(t,note,velocity,ch=0){if(!audio){initAudio().then(ok=>{if(ok)liveNoteOn(t,note,velocity,ch)});return}const key=t+':'+ch+':'+note;liveNoteOff(t,note,ch);const voices=playTrack(t,note,velocity,audio.ctx.currentTime+.005,null);if(voices)activeLive.set(key,voices);$('lcdNote').textContent=noteName(note);if(recording&&playing){const step=playheadQueue.length?playheadQueue[0].step:lastVisualStep>=0?lastVisualStep:currentStep;const target=state.patterns[state.pattern][t][step];target.on=true;target.note=note;target.velocity=velocity;persist();renderGrid();renderStepEditor()}}
+function liveNoteOn(t,note,velocity,ch=0){if(!audio){initAudio().then(ok=>{if(ok)liveNoteOn(t,note,velocity,ch)});return}const key=t+':'+ch+':'+note;liveNoteOff(t,note,ch);const voices=playTrack(t,note,velocity,audio.ctx.currentTime+.005,null);if(voices)activeLive.set(key,voices);if(recording&&playing){const step=clamp(playheadQueue.length?playheadQueue[0].step:lastVisualStep>=0?lastVisualStep:currentStep,0,patternLength()-1);const target=state.patterns[state.pattern][t][step];target.on=true;target.note=note;target.velocity=velocity;persist();renderGrid();renderStepEditor()}}
 function liveNoteOff(t,note,ch=0){if(!audio)return;const key=t+':'+ch+':'+note;const vs=activeLive.get(key);if(vs){vs.forEach(v=>releaseVoice(v,audio.ctx.currentTime));activeLive.delete(key)}}
 async function refreshOutputs(){const s=$('audioOutput'),prev=s.value;s.replaceChildren(new Option('Standaard audio-uitgang (Windows)','default'));if(!navigator.mediaDevices?.enumerateDevices){$('outputHelp').textContent='Deze browser kan audio-uitgangen niet weergeven. Kies Focusrite als standaard in Windows.';return}try{const dev=await navigator.mediaDevices.enumerateDevices();for(const d of dev.filter(x=>x.kind==='audiooutput')){if(d.deviceId==='default')continue;s.add(new Option(d.label||'Audio-uitgang '+(s.options.length),d.deviceId))}s.value=Array.from(s.options).some(o=>o.value===prev)?prev:'default'}catch(e){notify('Audioapparaten ophalen mislukt: '+e.message,true)}}
 async function applyOutput(){if(!await initAudio())return;const id=$('audioOutput').value;if(id==='default'){try{if(audio.outputElement){audio.outputElement.pause();audio.outputElement.srcObject=null}audio.analyser.disconnect();audio.analyser.connect(audio.ctx.destination);audioSink=id;notify('Audio naar Windows standaardafspeelapparaat.')}catch(e){notify('Audio reset mislukt: '+e.message,true)}return}try{if(typeof audio.ctx.setSinkId==='function'){if(audio.outputElement){audio.outputElement.pause();audio.outputElement.srcObject=null}audio.analyser.disconnect();audio.analyser.connect(audio.ctx.destination);await audio.ctx.setSinkId(id);audioSink=id;notify('Audio-uitgang ingesteld: '+$('audioOutput').selectedOptions[0].textContent);return}if(!HTMLMediaElement.prototype.setSinkId)throw Error('Deze browser ondersteunt geen specifieke audio-uitgang.');if(!audio.streamDest)audio.streamDest=audio.ctx.createMediaStreamDestination();if(!audio.outputElement){audio.outputElement=document.createElement('audio');audio.outputElement.autoplay=true;audio.outputElement.srcObject=audio.streamDest.stream}await audio.outputElement.setSinkId(id);audio.analyser.disconnect();audio.analyser.connect(audio.streamDest);await audio.outputElement.play();audioSink=id;notify('Audio-uitgang ingesteld via MediaStream: '+$('audioOutput').selectedOptions[0].textContent)}catch(e){audio.analyser.disconnect();audio.analyser.connect(audio.ctx.destination);notify('Selecteren van deze audio-uitgang is mislukt: '+e.message,true)}}
 async function chooseOutput(){if(!navigator.mediaDevices?.selectAudioOutput){notify('Selecteer je Focusrite via Windows Geluidsinstellingen; apparaatselectie niet ondersteund.',true);return}try{const x=await navigator.mediaDevices.selectAudioOutput();await refreshOutputs();if(x?.deviceId&&![...$('audioOutput').options].some(o=>o.value===x.deviceId))$('audioOutput').add(new Option(x.label||'Gekozen uitvoer',x.deviceId));if(x?.deviceId)$('audioOutput').value=x.deviceId;notify('Audioapparaat gekozen. Klik op UITGANG INSTELLEN.')}catch(e){notify('Geen apparaat geselecteerd: '+e.message,true)}}
-function saveProject(){const project=JSON.stringify({...state,savedAt:new Date().toISOString(),app:'Squirrel Studio'},null,2);const url=URL.createObjectURL(new Blob([project],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='SquirrelStudio_0.1.7_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),800);notify('Project als JSON gedownload.')}
+function saveProject(){const project=JSON.stringify({...state,savedAt:new Date().toISOString(),app:'Squirrel Studio'},null,2);const url=URL.createObjectURL(new Blob([project],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='SquirrelStudio_0.1.8_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),800);notify('Project als JSON gedownload.')}
 function typeFXDigit(key){
  const digit=key.toUpperCase();if(!/^[0-9A-F]$/.test(digit))return false;
  if(fxDigitBuffer.length===0&&!FX_OPTIONS.some(x=>fxCode(x.id)===digit))return true;
@@ -508,12 +609,12 @@ function typeFXDigit(key){
  step.fxAmount=fxDigitBuffer.length>1?parseInt(fxDigitBuffer.slice(1).padEnd(2,'0'),16):0;
  if(step.fx===10||step.fx===11)step.fxAmount=Math.min(step.fxAmount,15);
  const finished=fxDigitBuffer.length===3;
- if(finished){fxDigitBuffer='';if(state.selectedStep<15)state.selectedStep++}
+ if(finished){fxDigitBuffer='';if(state.selectedStep<patternLength()-1)state.selectedStep++}
  persist();renderAll();focusSelectedPad(false);return true;
 }
 function bindings(){document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>switchView(b.dataset.view));$('audioBtn').onclick=initAudio;$('playBtn').onclick=togglePlay;$('stopBtn').onclick=stopTransport;$('recBtn').onclick=toggleRecord;
- $('bpmInput').onchange=()=>{state.bpm=clamp(Math.round(Number($('bpmInput').value)||120),50,240);persist();renderAll()};$('swingInput').oninput=()=>{state.swing=Number($('swingInput').value);$('swingOut').textContent=state.swing+'%';persist()};$('masterInput').oninput=()=>{state.master=Number($('masterInput').value);$('masterOut').textContent=state.master+'%';applyTrackMix();persist()};document.querySelectorAll('[data-bank]').forEach(b=>b.onclick=()=>{state.pattern=Number(b.dataset.bank);persist();renderAll()});$('copyPatternBtn').onclick=()=>{clipboard=structuredClone(state.patterns[state.pattern]);notify('Patroon '+('ABCD'[state.pattern])+' gekopieerd. Kies een ander patroon en klik PLAK.')};$('pastePatternBtn').onclick=()=>{if(!clipboard){notify('Kopieer eerst een patroon.',true);return}state.patterns[state.pattern]=structuredClone(clipboard);persist();renderAll();notify('Patroon geplakt.')};
- $('stepNote').onchange=()=>{selectedStep().note=Number($('stepNote').value);persist();renderAll();focusSelectedPad(false)};for(const [id,k] of [['velocity','velocity'],['gate','gate'],['chance','chance']])$(id).oninput=()=>{selectedStep()[k]=Number($(id).value);$(id==='velocity'?'velocityOut':id==='gate'?'gateOut':'chanceOut').textContent=$(id).value+(id==='velocity'?'':'%');persist();renderGrid()};$('toggleStepBtn').onclick=()=>{const s=selectedStep();s.on=!s.on;persist();renderAll()};$('auditionStepBtn').onclick=()=>playPreview(state.selectedTrack,selectedStep().note,selectedStep().velocity);
+ $('bpmInput').onchange=()=>{state.bpm=clamp(Math.round(Number($('bpmInput').value)||120),50,240);persist();renderAll()};$('swingInput').oninput=()=>{state.swing=Number($('swingInput').value);$('swingOut').textContent=state.swing+'%';persist()};$('masterInput').oninput=()=>{state.master=Number($('masterInput').value);$('masterOut').textContent=state.master+'%';applyTrackMix();persist()};document.querySelectorAll('[data-bank]').forEach(b=>b.onclick=()=>{state.pattern=Number(b.dataset.bank);state.selectedStep=Math.min(state.selectedStep,patternLength()-1);currentStep=0;lastVisualStep=-1;resetFXRuntime();persist();renderAll()});$('copyPatternBtn').onclick=()=>{clipboard={lanes:structuredClone(state.patterns[state.pattern]),length:patternLength()};notify('Patroon '+('ABCD'[state.pattern])+' gekopieerd.')};$('pastePatternBtn').onclick=()=>{if(!clipboard){notify('Kopieer eerst een patroon.',true);return}state.patterns[state.pattern]=structuredClone(clipboard.lanes);setPatternLength(state.pattern,clipboard.length);notify('Patroon en patroonlengte geplakt.')};
+ $('stepNote').onchange=()=>{selectedStep().note=Number($('stepNote').value);persist();renderAll();focusSelectedPad(false)};for(const [id,k] of [['velocity','velocity'],['gate','gate'],['chance','chance'],['ratchet','ratchet']])$(id).oninput=()=>{selectedStep()[k]=Number($(id).value);$(id+'Out').textContent=$(id).value+(id==='velocity'?'':id==='ratchet'?'×':'%');persist();renderGrid()};$('toggleStepBtn').onclick=()=>{const s=selectedStep();s.on=!s.on;persist();renderAll()};$('auditionStepBtn').onclick=()=>playPreview(state.selectedTrack,selectedStep().note,selectedStep().velocity);
  $('stepFx').onchange=()=>{const step=selectedStep(),prev=step.fx;step.fx=Number($('stepFx').value);if(step.fx===4&&prev!==4)step.fxAmount=0x47;else if([10,11].includes(step.fx)&&![10,11].includes(prev))step.fxAmount=0x02;else if([1,2].includes(step.fx)&&![1,2].includes(prev))step.fxAmount=0x02;persist();renderAll();focusSelectedPad(false)};
  $('fxAmount').oninput=()=>{selectedStep().fxAmount=Number($('fxAmount').value);$('fxAmountOut').textContent=fxHex(selectedStep().fxAmount);$('fxHex').value=fxHex(selectedStep().fxAmount);$('fxStatus').textContent=fxCode(selectedStep().fx)+fxHex(selectedStep().fxAmount);persist();renderGrid()};
  $('fxHex').oninput=()=>{const raw=$('fxHex').value.trim();if(!/^[0-9a-f]{1,2}$/i.test(raw))return;selectedStep().fxAmount=clamp(parseInt(raw,16),0,selectedStep().fx===10||selectedStep().fx===11?15:255);$('fxAmount').value=selectedStep().fxAmount;$('fxAmountOut').textContent=fxHex(selectedStep().fxAmount);$('fxStatus').textContent=fxCode(selectedStep().fx)+fxHex(selectedStep().fxAmount);persist();renderGrid()};
