@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(SquirrelStudioDesktop VERSION 0.1.4 LANGUAGES C CXX)
+project(SquirrelStudioDesktop VERSION 0.1.6 LANGUAGES C CXX)
 
 if (NOT WIN32)
     message(FATAL_ERROR "Deze desktop-build is bedoeld voor Windows 10/11 x64. Gebruik de webversie op andere platforms.")
@@ -40,7 +40,7 @@ target_compile_definitions(SquirrelStudioDesktop PRIVATE
     JUCE_ASIO=1
     JUCE_ASIO_USE_EXTERNAL_SDK=0
     JUCE_APPLICATION_NAME_STRING="Squirrel Studio Desktop"
-    JUCE_APPLICATION_VERSION_STRING="0.1.4")
+    JUCE_APPLICATION_VERSION_STRING="0.1.6")
 
 target_link_libraries(SquirrelStudioDesktop PRIVATE
     SquirrelWebResources
