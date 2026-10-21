@@ -412,7 +412,7 @@
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark" aria-hidden="true">S</div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO UIT</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI NIET VERBONDEN</span></span><span class="version">BUILD 0.1.20</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark" aria-hidden="true">S</div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO UIT</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI NIET VERBONDEN</span></span><span class="version">BUILD 0.1.21</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ AUDIO STARTEN</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Afspelen">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="EDIT aan: noten typen in het sequencergrid">✎ EDIT UIT</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octaaf"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" value="120" aria-label="Tempo in BPM"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Mastervolume"><output id="masterOut">75%</output></label></div></section>
@@ -453,7 +453,7 @@
 </div>
 <script>
 'use strict';
-// Squirrel Studio 0.1.15 — complete web synth + waveform playhead and MIDI OUT.
+// Squirrel Studio Web 0.1.21 — shared UI, optional native JUCE VA audio bridge.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 const NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -580,6 +580,11 @@ function advanceFXTick(rt){
 }
 function applyFXVoice(voices, when, result){
  for(const voice of voices){
+  if(voice.nativeId){
+   if(!voice.released || (voice.releaseScheduled&&when<voice.releaseScheduled))
+    nativeVAMessage('pitch',{id:voice.nativeId,cents:result.cents,level:result.level},when);
+   continue;
+  }
   if(voice.released && (!voice.releaseScheduled || when>=voice.releaseScheduled))continue;
   for(const pitch of voice.pitchParams||[])pitch.setValueAtTime(result.cents,when);
   if(voice.modGain)voice.modGain.gain.setValueAtTime(result.level,when);
@@ -617,6 +622,33 @@ function fresh(withDemo=true){const tracks=bases.map(b=>({...b,muted:false,solo:
 let state=fresh();try{const raw=localStorage.getItem('squirrel-studio-0.1');if(raw)state=validate(JSON.parse(raw));}catch(e){console.warn('Ongeldige lokale opslag:',e)}
 let audio=null,midiAccess=null,selectedInput=null,selectedOutput=null,midiOutEnabled=false,midiHeld=new Map(),clipboard=null,playing=false,recording=false,currentStep=0,lastVisualStep=-1,nextNoteTime=0,timer=null,view='seq',audioSink='default',messageTimeout=null;
 let activeLive=new Map(),scheduledVoices=new Set(),playheadQueue=[],lastBeatAt=0;
+// The desktop shell injects this optional bridge before application startup.
+// No native code or privileges are required by the standalone web application.
+let nativeVoiceSerial=0;
+function nativeVAEnabled(){return typeof window.squirrelNativeAudioSend==='function'}
+function nativeVAMessage(action,payload={},when=null){
+ if(!nativeVAEnabled())return;
+ const delayMs=when!==null&&audio?Math.max(0,(when-audio.ctx.currentTime)*1000):0;
+ window.squirrelNativeAudioSend({action,...payload,delayMs});
+}
+function nativeVAPatch(i){
+ const tr=state.tracks[i],s=tr.sound||{};
+ const solo=state.tracks.some(t=>t.solo),active=!tr.muted&&(!solo||tr.solo);
+ return {
+  wave1:s.wave1||'sawtooth',wave2:s.wave2||'sine',subWave:s.subWave||'sine',
+  level1:s.osc1On===false?0:.46*clamp(s.osc1Level??100,0,100)/100,
+  level2:s.osc2On===false?0:.27*clamp(s.osc2Level??100,0,100)/100,
+  subLevel:s.subOn===false?0:.25*clamp(s.subLevel??35,0,100)/100,
+  subOctave:s.subOctave===-24?-24:-12,detune2:s.detune||0,subDetune:s.subDetune||0,
+  pulseWidth:clamp(s.pulseWidth??50,5,95)/100,
+  cutoff:s.cutoff||4000,resonance:s.resonance||.7,
+  attack:s.attack||.01,decay:s.decay||.2,sustain:s.sustain??.6,release:s.release||.2,
+  trackGain:active?Math.pow(tr.volume/100,1.4):0,
+  master:Math.pow(state.master/100,1.0)*.84,pan:tr.pan/100
+ };
+}
+function nativeUpdateVAMix(i){if(nativeVAEnabled()&&i>=3&&i<=5)nativeVAMessage('mix',{track:i,patch:nativeVAPatch(i)})}
+
 const sampleBuffers=new Map();
 // Visual sample cursor: record the BufferSource playback start, rate and loop points.
 // The draw loop uses AudioContext.currentTime rather than the sequencer step
@@ -807,11 +839,11 @@ function applyLFOs(){if(!audio)return;const now=audio.ctx.currentTime;
   node.depthNode.gain.setTargetAtTime(lfoModulationAmount(l,target,normalizer),now,.02);
  });
 }
-function updateLiveCutoff(trackIndex){if(!audio)return;const now=audio.ctx.currentTime;
+function updateLiveCutoff(trackIndex){nativeUpdateVAMix(trackIndex);if(!audio)return;const now=audio.ctx.currentTime;
  for(const voice of scheduledVoices){if(voice.trackIndex===trackIndex&&voice.filter&&!voice.released)voice.filter.frequency.setTargetAtTime(filterBaseCutoff(trackIndex),now,.02)}
  applyLFOs();
 }
-function applyTrackMix(){if(!audio)return;const solo=state.tracks.some(t=>t.solo);state.tracks.forEach((t,i)=>{const isOn=!t.muted&&(!solo||t.solo);audio.trackGains[i].gain.setTargetAtTime(isOn?(t.volume/100)**1.4:0,audio.ctx.currentTime,.018);audio.trackPans[i].pan.setTargetAtTime(t.pan/100,audio.ctx.currentTime,.02);
+function applyTrackMix(){for(const i of [3,4,5])nativeUpdateVAMix(i);if(!audio)return;const solo=state.tracks.some(t=>t.solo);state.tracks.forEach((t,i)=>{const isOn=!t.muted&&(!solo||t.solo);audio.trackGains[i].gain.setTargetAtTime(isOn?(t.volume/100)**1.4:0,audio.ctx.currentTime,.018);audio.trackPans[i].pan.setTargetAtTime(t.pan/100,audio.ctx.currentTime,.02);
  audio.delaySends[i].gain.setTargetAtTime((t.delaySend/100)*.7,audio.ctx.currentTime,.03);
  audio.reverbSends[i].gain.setTargetAtTime((t.reverbSend/100)*.85,audio.ctx.currentTime,.03)});audio.masterGain.gain.setTargetAtTime((state.master/100)*.84,audio.ctx.currentTime,.018);applyLFOs()}
 function getNoise(){if(audio.noise)return audio.noise;const length=Math.round(audio.ctx.sampleRate*1.5),arr=new Float32Array(length);for(let i=0;i<length;i++)arr[i]=(Math.random()*2-1);const b=audio.ctx.createBuffer(1,length,audio.ctx.sampleRate);b.getChannelData(0).set(arr);audio.noise=b;return b}
@@ -881,7 +913,8 @@ function voiceGainAt(v,t){
  if(age<e.attack+e.decay)return Math.max(.0002,peak+(sustain-peak)*(age-e.attack)/e.decay);
  return Math.max(.0002,sustain);
 }
-function releaseVoice(v,when){if(v.released)return;v.released=true;const t=Math.max(audio.ctx.currentTime,when);try{const p=v.env.gain;const level=voiceGainAt(v,t);p.cancelScheduledValues(t);p.setValueAtTime(level,t);p.exponentialRampToValueAtTime(.0001,t+v.release);releaseFilterEnvelopes(v,t);v.oscs.forEach(o=>o.stop(t+v.release+.04));setTimeout(()=>scheduledVoices.delete(v),Math.max(50,(t+v.release+.2-audio.ctx.currentTime)*1000))}catch(e){scheduledVoices.delete(v)}}
+function releaseVoice(v,when){if(v.released)return;
+ if(v.nativeId){v.released=true;nativeVAMessage('off',{id:v.nativeId},when);scheduledVoices.delete(v);return;}v.released=true;const t=Math.max(audio.ctx.currentTime,when);try{const p=v.env.gain;const level=voiceGainAt(v,t);p.cancelScheduledValues(t);p.setValueAtTime(level,t);p.exponentialRampToValueAtTime(.0001,t+v.release);releaseFilterEnvelopes(v,t);v.oscs.forEach(o=>o.stop(t+v.release+.04));setTimeout(()=>scheduledVoices.delete(v),Math.max(50,(t+v.release+.2-audio.ctx.currentTime)*1000))}catch(e){scheduledVoices.delete(v)}}
 const pulseCache=new Map();function pulseWave(ctx,duty){const key=Math.round(duty);if(pulseCache.has(key))return pulseCache.get(key);const d=key/100,len=65,re=new Float32Array(len),im=new Float32Array(len);for(let n=1;n<len;n++){re[n]=2*Math.sin(Math.PI*n*d)**2/(Math.PI*n);im[n]=Math.sin(2*Math.PI*n*d)/(Math.PI*n)}const wave=ctx.createPeriodicWave(re,im,{disableNormalization:false});pulseCache.set(key,wave);return wave}
 function oscillatorMixGain(s,osc){
  if(osc===0)return s.osc1On===false?0:.46*clamp(s.osc1Level??100,0,100)/100;
@@ -889,6 +922,7 @@ function oscillatorMixGain(s,osc){
  return s.subOn===false?0:.25*clamp(s.subLevel??35,0,100)/100;
 }
 function updateLiveOscillatorMix(trackIndex){
+ nativeUpdateVAMix(trackIndex);
  if(!audio||trackIndex<0||trackIndex>=TRACK_COUNT)return;
  const sound=state.tracks[trackIndex]?.sound;
  if(!sound)return;
@@ -903,6 +937,17 @@ function updateLiveOscillatorMix(trackIndex){
 }
 function synthVoice(track,note,velocity,when,gate=null){
  const c=audio.ctx,s=track.sound,f=hz(note),trackIndex=state.tracks.indexOf(track);
+ // Windows native mode: JUCE renders this VA voice through ASIO/WASAPI.
+ // Web mode falls back to the original Web Audio synthesis below unchanged.
+ if(nativeVAEnabled() && trackIndex>=3 && trackIndex<=5){
+  const nativeId=++nativeVoiceSerial;
+  nativeVAMessage('on',{id:nativeId,track:trackIndex,note,velocity,patch:nativeVAPatch(trackIndex)},when);
+  const voice={nativeId,trackIndex,released:false,release:Math.max(.02,s.release),oscs:[],pitchParams:[],drum:false};
+  scheduledVoices.add(voice);
+  if(gate!==null)releaseVoiceScheduled(voice,when+Math.max(.035,gate));
+  return voice;
+ }
+
  const out=c.createGain(),modGain=c.createGain(),filt=c.createBiquadFilter();
  const g1=c.createGain(),g2=c.createGain(),subGain=c.createGain();
  modGain.gain.value=1;
@@ -944,7 +989,8 @@ function synthVoice(track,note,velocity,when,gate=null){
  }
  return v;
 }
-function releaseVoiceScheduled(v,when){if(v.released)return;v.released=true;v.releaseScheduled=when;const p=v.env.gain;const val=voiceGainAt(v,when);p.cancelScheduledValues(when);p.setValueAtTime(val,when);p.exponentialRampToValueAtTime(.0001,when+v.release);releaseFilterEnvelopes(v,when);v.oscs.forEach(o=>o.stop(when+v.release+.04))}
+function releaseVoiceScheduled(v,when){if(v.released)return;
+ if(v.nativeId){v.released=true;v.releaseScheduled=when;nativeVAMessage('off',{id:v.nativeId},when);return;}v.released=true;v.releaseScheduled=when;const p=v.env.gain;const val=voiceGainAt(v,when);p.cancelScheduledValues(when);p.setValueAtTime(val,when);p.exponentialRampToValueAtTime(.0001,when+v.release);releaseFilterEnvelopes(v,when);v.oscs.forEach(o=>o.stop(when+v.release+.04))}
 function oneShot(type,track,velocity,when,pitch=0){const c=audio.ctx,vol=clamp(velocity/127,0,1),ratio=Math.pow(2,pitch/12),modGain=c.createGain();modGain.gain.value=1;modGain.connect(audio.trackGains[state.tracks.indexOf(track)]);if(type==='kick'){const osc=c.createOscillator(),gain=c.createGain();osc.type='sine';osc.frequency.setValueAtTime(165*ratio,when);osc.frequency.exponentialRampToValueAtTime(49*ratio,when+.09);osc.frequency.exponentialRampToValueAtTime(42*ratio,when+.26);gain.gain.setValueAtTime(.0001,when);gain.gain.exponentialRampToValueAtTime(vol*.95+.0001,when+.003);gain.gain.exponentialRampToValueAtTime(.0001,when+.4);osc.connect(gain).connect(modGain);osc.start(when);osc.stop(when+.42);osc.onended=()=>{osc.disconnect();gain.disconnect();modGain.disconnect()};return [{pitchParams:[osc.detune],modGain,released:false,drum:true}]}
  const src=c.createBufferSource(),filter=c.createBiquadFilter(),gn=c.createGain();src.buffer=getNoise();src.playbackRate.value=ratio;filter.type='highpass';filter.frequency.value=clamp((type==='hat'?6200:1300)*ratio,200,15000);gn.gain.setValueAtTime(.0001,when);gn.gain.exponentialRampToValueAtTime(Math.max(.0002,(type==='hat'?.37:.6)*vol),when+.004);gn.gain.exponentialRampToValueAtTime(.0001,when+(type==='hat'?.11:.20));src.connect(filter).connect(gn).connect(modGain);src.start(when);src.stop(when+(type==='hat'?.13:.23));src.onended=()=>{src.disconnect();filter.disconnect();gn.disconnect()};let tone=null;if(type==='snare'){tone=c.createOscillator();const tg=c.createGain();tone.type='triangle';tone.frequency.value=175*ratio;tg.gain.setValueAtTime(.18*vol,when);tg.gain.exponentialRampToValueAtTime(.0001,when+.13);tone.connect(tg).connect(modGain);tone.start(when);tone.stop(when+.15);tone.onended=()=>{tone.disconnect();tg.disconnect()}}src.onended=()=>{src.disconnect();filter.disconnect();gn.disconnect();modGain.disconnect()};return [{pitchParams:[src.detune,...(type==='snare'?[tone.detune]:[])],modGain,released:false,drum:true}]}
 function sampleVoice(t,note,velocity,when,pitch=0){
@@ -1047,7 +1093,7 @@ function scheduleStep(idx,when){
  playheadQueue.push({step:idx,time:when});
 }
 function scheduler(){if(!audio||!playing)return;const horizon=audio.ctx.currentTime+.115;let safety=0;while(nextNoteTime<horizon&&safety++<30){scheduleStep(currentStep,nextNoteTime);const amount=state.swing/100*.5;nextNoteTime+=stepDuration()*(currentStep%2===0?1+amount:1-amount);currentStep=(currentStep+1)%patternLength()}}
-function stopTransport(){midiAllNotesOff();playing=false;recording=false;clearInterval(timer);timer=null;playheadQueue=[];lastVisualStep=-1;currentStep=0;resetFXRuntime();$('playBtn').classList.remove('playing');$('playBtn').textContent='▶ PLAY';$('recBtn').classList.remove('recording');renderPlayhead(-1);for(const v of [...scheduledVoices])releaseVoice(v,audio?.ctx.currentTime||0)}
+function stopTransport(){nativeVAMessage('panic');midiAllNotesOff();playing=false;recording=false;clearInterval(timer);timer=null;playheadQueue=[];lastVisualStep=-1;currentStep=0;resetFXRuntime();$('playBtn').classList.remove('playing');$('playBtn').textContent='▶ PLAY';$('recBtn').classList.remove('recording');renderPlayhead(-1);for(const v of [...scheduledVoices])releaseVoice(v,audio?.ctx.currentTime||0)}
 async function togglePlay(){if(playing){stopTransport();return}if(!await initAudio())return;currentStep=0;lastVisualStep=-1;playheadQueue=[];resetFXRuntime();nextNoteTime=audio.ctx.currentTime+.06;playing=true;$('playBtn').classList.add('playing');$('playBtn').textContent='❚❚ PAUZE';scheduler();timer=setInterval(scheduler,25)}
 function toggleRecord(){recording=!recording;$('recBtn').classList.toggle('recording',recording);if(recording&&!playing)notify('REC klaar: druk PLAY en speel noten via MIDI.');else notify(recording?'MIDI-opname ingeschakeld.':'MIDI-opname uitgeschakeld.')}
 function renderPlayhead(i){document.querySelectorAll('.pad.playhead,.fx-pad.playhead').forEach(x=>x.classList.remove('playhead'));document.querySelectorAll('.grid-head .beat').forEach(x=>x.classList.remove('beat'));if(i>=0){document.querySelectorAll('.pad[data-step="'+i+'"],.fx-pad[data-step="'+i+'"]').forEach(p=>p.classList.add('playhead'))}$('transportStep').textContent='STEP '+String(i>=0?i+1:state.selectedStep+1).padStart(2,'0')}
