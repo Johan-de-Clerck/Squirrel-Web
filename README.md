@@ -1,80 +1,24 @@
-# Squirrel Studio 0.1.3
+# Squirrel Studio 0.1.4
 
-Standalone web synthesizer en grafische 16-step groovebox.
+Websynthesizer met een grafische 16-stepsequencer voor zes onafhankelijke tracks en vier patronen (A–D).
 
+## Nieuw in 0.1.4
 
-SNEL STARTEN (WINDOWS)
-1. Pak de ZIP uit in een eigen map.
-2. Dubbelklik START_STUDIO.cmd (Python 3 is nodig voor de lokale server).
-3. Open http://localhost:8765 in Microsoft Edge of Google Chrome.
-4. Klik AUDIO STARTEN en daarna PLAY. Je hoort het demo-patroon.
-   Je kunt index.html ook direct openen voor een snelle test; voor MIDI
-   adviseren we http://localhost.
+- Compactere notepads
+- Onder elke track 16 FX-pads, uitgelijnd met de notepads
+- `Track tools` is vervangen door `Step FX`, met een dropdown per geselecteerde step
+- `00` geen effect; `01` pitch up; `02` pitch down; `03` octave up; `04` octave down
+- Pitch up/down instelbaar van 1 tot 12 semitones
+- Pitch-effecten worden tijdens het afspelen verwerkt, ook voor kick/snare/hi-hat
+- FX-gegevens worden opgeslagen in projecten en meegenomen bij patroon kopiëren/plakken
+- De oude 0.1.3-projecten blijven compatibel
 
-## SCHERMWEERGAVE
-- Ontworpen voor 1920 x 1080 en kleinere desktop-browserversies.
-- UI zonder zichtbare helpteksten of handleidingregels.
-- Op smaller scherm blijft de interface responsief.
-- Een mobiele browser gebruikt een gestapelde layout.
+## Starten
 
-## FUNCTIES
-- Grafische 16-step sequencer, 6 onafhankelijke lanes
-- Pattern banks A, B, C, D; kopiëren en plakken
-- Drumklanken: kick / snare / hi-hat
-- Bass, lead en chord: dubbele oscillator, filter, ADSR, pulse width
-- Per step: noot (C-1 t/m B-6), velocity, gate en chance
-- 6-part mixer met volume, pan, mute en solo
-- Swing, BPM (50-240), mastervolume
-- USB MIDI via Web MIDI (Edge of Chrome)
-- MIDI CC74 filter, CC7 trackvolume
-- MIDI opname naar de actieve step tijdens afspelen (REC)
-- Optie voor audioapparaatkeuze waar browser dit toestaat
-- Project exporteren/importeren als JSON en automatische lokale opslag
-- Geen cloud, libraries of internet nodig
+Start `START_STUDIO.cmd` onder Windows (Python 3 nodig), open `http://localhost:8765` in Edge of Chrome en klik **AUDIO STARTEN** en **PLAY**. De losse `index.html` kan ook worden geopend voor lokale audiotests.
 
-## BEDIENING
-- Klik op een pad: aan / uit + geselecteerde step
-- Pijltje links/rechts: vorige/volgende step (1-16)
-- Pijltje omhoog/omlaag: vorige/volgende track (1-6)
-- Aan de buitenste rand blijft de selectie staan
-- Enter: aan/uit van geselecteerde pad (na pijltjestoetsnavigatie)
-- Pijltjes werken niet tijdens bewerken van invoervelden, of in andere tabs
-- ALT + klik: selecteer step zonder aan/uit te wijzigen
-- 1-6: selecteer instrumenttrack
-- Spatie: start/pauze
-- A W S E D F T G Y H U J: noten spelen op de geselecteerde track
-- KLIK op een instrument links om de juiste track te kiezen
-- EDIT SOUND / SYNTH: oscillator, filter en ADSR
-- Mixer: volume, pan, mute en solo
+In de sequencer selecteer je een FX-pad onder een notepad om de bijbehorende step in de FX-editor te bewerken. Met de pijltjestoetsen verplaats je de selectie. **Enter** schakelt de geselecteerde nootstep aan/uit.
 
-## MIDI-CONTROLLER
-1. Sluit je USB-MIDI-controller aan.
-2. Klik de tab MIDI / AUDIO.
-3. Klik MIDI VERBINDEN en geef toestemming.
-4. Kies de MIDI-input. Kies 'geselecteerde track' of 'per MIDI-kanaal'.
-5. Speel noten. Bij kanaalrouting zijn kanalen 1-6 gekoppeld
-   aan track 1-6. Andere kanalen worden genegeerd.
-6. REC + PLAY: nieuwe noten worden op de lopende sequencer opgenomen.
+## MIDI en Focusrite
 
-## FOCUSRITE EN ASIO
-- Om geluid via de Focusrite te horen, stel hem eerst in als standaard
-  Windows-afspeelapparaat. Edge/Chrome kunnen je Focusrite soms ook
-  rechtstreeks als uitvoerapparaat kiezen in MIDI / AUDIO.
-- BROWSERS HEBBEN GEEN NATIVE ASIO API. Daarom is versie 0.1 Web Audio,
-  niet Focusrite ASIO. Voor echte ASIO is een Windows-host nodig.
-- Voorkom dubbel monitoren via Windows en audio-interface indien relevant.
-
-## OPMERKINGEN OVER V0.1
-- Dit is een zelfstandige desktop-browser groovebox, GEEN FM1-firmware.
-- Deze versie heeft 16 steps per pattern (vier afzonderlijke patterns).
-- Er worden geen WAV-samples geladen: drumgeluiden worden gegenereerd.
-- Chord part speelt een drieklank. Klanken zijn bewust basic v0.1.
-- MIDI is invoer; MIDI export of MIDI clock sync komt later.
-- Een apart native Windows ASIO programma komt in een volgende fase.
-
-VERSIE 0.1.3 — BEDIENING
-- Na het slepen van Velocity, Gate, Chance, Track Volume, Pan, Swing of Master
-  gaat de focus automatisch terug naar het geselecteerde step-pad.
-- Pijltjes toetsen navigeren dan direct weer door het sequencergrid.
-- Na het wijzigen van de step-noot via de dropdown keert de focus ook terug.
-- Sliders blijven via Tab en pijltjestoetsen toegankelijk voor keyboard-only bediening.
+Web MIDI ondersteunt compatibele USB-MIDI-controllers in Edge en Chrome. De audio-uitgang kan via je Focusrite lopen als Windows-afspeelapparaat. Browsers bieden **geen native ASIO**; dit vereist een aparte Windows-audioengine.
