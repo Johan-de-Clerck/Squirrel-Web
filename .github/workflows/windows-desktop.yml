@@ -20,7 +20,9 @@ jobs:
           nuget install Microsoft.Web.WebView2 -OutputDirectory windows/third_party -NonInteractive -ExcludeVersion
       - name: Copy latest web UI into desktop build
         shell: pwsh
-        run: Copy-Item index.html windows/web/index.html -Force
+        run: |
+          New-Item -ItemType Directory -Force windows/web | Out-Null
+          Copy-Item index.html windows/web/index.html -Force
       - name: Configure CMake (Windows x64, ASIO)
         shell: pwsh
         run: |
