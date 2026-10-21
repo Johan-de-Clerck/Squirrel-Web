@@ -86,3 +86,35 @@ Het JUCE Windows-project staat in [`windows/`](windows/README.md). Het opent gem
 - De overige functies van 0.1.15 blijven behouden, inclusief MIDI OUT en waveform-playhead.
 
 Start in Chrome/Edge met een lokale server, of gebruik de gedeelde `index.html` via JUCE/WebView2.
+
+---
+
+# Squirrel Studio Web 0.1.17
+
+## Nieuw: effecten op track 7 en 8
+
+- SEND FX toont alle 8 tracks. Iedere track heeft een eigen Delay Send en Reverb Send van 0–100%.
+- Samplers 7 en 8 hebben nu een eigen lowpass-filter met Cutoff (80–12.000 Hz) en Resonance (Q 0,1–18). Te vinden onder SAMPLE EDITOR.
+- LFO-routing uitgebreid met Sampler 7/8 Volume, Filter Cutoff en Panning.
+- Beide filter-envelopes kunnen ook naar Sampler 7/8 Filter Cutoff of Resonance worden gerouteerd.
+- Per-step tracker-FX blijven werken op de samplertracks: 1xx/2xx pitch slide, 4xy vibrato, Axx/Bxx volume slide en C00 NOTE OFF. Ook ratchets blijven ondersteund.
+- Delay/Reverb Sends en sampler-filterinstellingen van tracks 7/8 worden bewaard in song-JSON en hersteld bij het openen van oudere songs (standaard send 0%).
+- De SEND FX-pagina is compacter gemaakt voor kleinere Windows/WebView2-vensters.
+
+## Web starten
+
+Start `START_STUDIO.cmd` (Python 3 nodig) en open http://localhost:8765 in Microsoft Edge of Chrome. Klik AUDIO STARTEN en dan PLAY. Je kunt ook `index.html` rechtstreeks openen; voor Web MIDI is localhost aanbevolen.
+
+## Windows-versie
+
+De JUCE-desktopbuild wordt automatisch bijgewerkt via de gedeelde `index.html` in de GitHub-repository. De Windows-app gebruikt op dit moment Web Audio voor het synthesizergeluid; native ASIO wordt alleen gebruikt voor de testtoon. De volledige synthese-engine is nog niet op JUCE/ASIO aangesloten.
+
+## Testen
+
+- Stel track 7/8 in OPTIONS op SAMPLER, laad een WAV, en programmeer noten.
+- Ga naar SEND FX, zet Delay Send en Reverb Send voor track 7 of 8 hoger dan nul en druk op PLAY.
+- Ga naar SAMPLE EDITOR en verander FILTER CUTOFF / RESONANCE.
+- Routeer een LFO naar SAMPLER 7 · PANNING en luister naar de stereobeweging.
+- Exporteer en importeer een project om instellingen te behouden.
+
+Voorbeeldinstelling: Sampler 7 Delay Send 45%, Reverb Send 25%, Filter Cutoff 2200 Hz, Resonance 2.0.
