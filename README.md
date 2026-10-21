@@ -1,10 +1,7 @@
-# Squirrel Studio 0.1
+# Squirrel Studio 0.1.2
 
-Web synthesizer en grafische 16-step groovebox in Squirrel-stijl.
+Standalone web synthesizer en grafische 16-step groovebox.
 
-```text
-SQUIRREL STUDIO 0.1.0 — WEB SYNTH + GROOVEBOX
-==============================================
 
 SNEL STARTEN (WINDOWS)
 1. Pak de ZIP uit in een eigen map.
@@ -14,7 +11,13 @@ SNEL STARTEN (WINDOWS)
    Je kunt index.html ook direct openen voor een snelle test; voor MIDI
    adviseren we http://localhost.
 
-FUNCTIES
+## SCHERMWEERGAVE
+- Ontworpen voor 1920 x 1080 en kleinere desktop-browserversies.
+- UI zonder zichtbare helpteksten of handleidingregels.
+- Op smaller scherm blijft de interface responsief.
+- Een mobiele browser gebruikt een gestapelde layout.
+
+## FUNCTIES
 - Grafische 16-step sequencer, 6 onafhankelijke lanes
 - Pattern banks A, B, C, D; kopiëren en plakken
 - Drumklanken: kick / snare / hi-hat
@@ -29,8 +32,13 @@ FUNCTIES
 - Project exporteren/importeren als JSON en automatische lokale opslag
 - Geen cloud, libraries of internet nodig
 
-BEDIENING
+## BEDIENING
 - Klik op een pad: aan / uit + geselecteerde step
+- Pijltje links/rechts: vorige/volgende step (1-16)
+- Pijltje omhoog/omlaag: vorige/volgende track (1-6)
+- Aan de buitenste rand blijft de selectie staan
+- Enter: aan/uit van geselecteerde pad (na pijltjestoetsnavigatie)
+- Pijltjes werken niet tijdens bewerken van invoervelden, of in andere tabs
 - ALT + klik: selecteer step zonder aan/uit te wijzigen
 - 1-6: selecteer instrumenttrack
 - Spatie: start/pauze
@@ -39,7 +47,7 @@ BEDIENING
 - EDIT SOUND / SYNTH: oscillator, filter en ADSR
 - Mixer: volume, pan, mute en solo
 
-MIDI-CONTROLLER
+## MIDI-CONTROLLER
 1. Sluit je USB-MIDI-controller aan.
 2. Klik de tab MIDI / AUDIO.
 3. Klik MIDI VERBINDEN en geef toestemming.
@@ -48,7 +56,7 @@ MIDI-CONTROLLER
    aan track 1-6. Andere kanalen worden genegeerd.
 6. REC + PLAY: nieuwe noten worden op de lopende sequencer opgenomen.
 
-FOCUSRITE EN ASIO
+## FOCUSRITE EN ASIO
 - Om geluid via de Focusrite te horen, stel hem eerst in als standaard
   Windows-afspeelapparaat. Edge/Chrome kunnen je Focusrite soms ook
   rechtstreeks als uitvoerapparaat kiezen in MIDI / AUDIO.
@@ -56,10 +64,10 @@ FOCUSRITE EN ASIO
   niet Focusrite ASIO. Voor echte ASIO is een Windows-host nodig.
 - Voorkom dubbel monitoren via Windows en audio-interface indien relevant.
 
-OPMERKINGEN OVER V0.1
+## OPMERKINGEN OVER V0.1
 - Dit is een zelfstandige desktop-browser groovebox, GEEN FM1-firmware.
 - Deze versie heeft 16 steps per pattern (vier afzonderlijke patterns).
 - Er worden geen WAV-samples geladen: drumgeluiden worden gegenereerd.
 - Chord part speelt een drieklank. Klanken zijn bewust basic v0.1.
 - MIDI is invoer; MIDI export of MIDI clock sync komt later.
-- Een apart native Windows ASIO programma komt in een volgende fase.```
+- Een apart native Windows ASIO programma komt in een volgende fase.
