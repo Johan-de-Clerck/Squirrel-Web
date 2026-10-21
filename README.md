@@ -166,3 +166,7 @@ Andere functies blijven behouden: acht tracks, 16 patronen, samples, per-step CH
 3. Klik AUDIO AAN en open SYNTH; selecteer Bass, Lead of Chord.
 
 Windows desktop gebruikt de actuele `index.html` uit GitHub bij het bouwen. Focusrite ASIO is in de desktopbasis nog een aparte native testuitgang; de synth zelf draait via Web Audio.
+
+## Web 0.1.21 / Windows 0.1.6 — native VA-mijlpaal
+
+De webversie behoudt Web Audio voor alle tracks. Wanneer dezelfde interface in de Windows-desktopapp draait, worden Bass, Lead en Chord via een optionele bridge naar JUCE native audio gestuurd. OSC 1/2/SUB, amplitude-ADSR, filter, pitch/volume FX en akkoordnoten werken daar native. Drums, WAV-samplers en send effects draaien nog Web Audio. De Windows-source staat onder [`windows/`](windows/README.md).
