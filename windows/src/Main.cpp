@@ -5,9 +5,9 @@
 
 namespace
 {
-    constexpr auto background = juce::Colour (0xff201a16);
-    constexpr auto panel      = juce::Colour (0xff32271f);
-    constexpr auto highlight  = juce::Colour (0xffe2af7a);
+    const juce::Colour background {0xff201a16};
+    const juce::Colour panel      {0xff32271f};
+    const juce::Colour highlight  {0xffe2af7a};
 
     juce::WebBrowserComponent::Options browserOptions()
     {
@@ -153,10 +153,12 @@ private:
             setContentOwned (new SquirrelMainComponent(), true);
             setResizable (true, true);
             setResizeLimits (1100, 680, 8192, 8192);
-            centreWithSize (getWidth(), getHeight());
+            // Fill the usable desktop area without covering the Windows taskbar.
+            if (const auto* display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay())
+                setBounds (display->userArea);
+            else
+                centreWithSize (getWidth(), getHeight());
             setVisible (true);
-            // Native maximized window uses the available desktop work area (taskbar respected).
-            setMaximised (true);
         }
 
         void closeButtonPressed() override { juce::JUCEApplication::getInstance()->systemRequestedQuit(); }
