@@ -118,3 +118,7 @@ De JUCE-desktopbuild wordt automatisch bijgewerkt via de gedeelde `index.html` i
 - Exporteer en importeer een project om instellingen te behouden.
 
 Voorbeeldinstelling: Sampler 7 Delay Send 45%, Reverb Send 25%, Filter Cutoff 2200 Hz, Resonance 2.0.
+
+## Web 0.1.18 — CHORD per step
+
+De CHORD-track gebruikt dezelfde dual-oscillatorparameters als BASS/LEAD (OSC 1/2, detune, pulse width, filter en ADSR). De akkoordkwaliteit wordt **per step** ingesteld in SEQUENCER → Step FX → **CHORD MODE** (rechts naast FX COMMANDO), onafhankelijk van het tracker-effect. Keuzes: MAJ, MIN, SUS2, SUS4, DIM, AUG, 7, MAJ7, MIN7, M7b5, DIM7, ADD9, MIN9, MAJ9 en POWER. MIDI OUT stuurt alle akkoordnoten inclusief Note Off. Oude songs behouden hun major/minor-voicing. De Windows-build neemt automatisch de nieuwste web-UI mee.
