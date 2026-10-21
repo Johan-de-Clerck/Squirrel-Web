@@ -1,14 +1,34 @@
-# Squirrel Studio 0.1.10
+# Squirrel Studio 0.1.11
 
-Websynthesizer met 32-step sequencer, keyboard note editor en Note Off.
+Websynthesizer en grafische groovebox met vier routeerbare LFO's.
 
 ## Nieuw
 
-EDIT aan/uit met toetsen A W S E D F T G Y H U J, octave C-1 t/m C-6, compactere Bass/Lead stepeditor zonder verticale scroll, en effect **C00 NOTE OFF** voor gehouden Bass/Lead-noten met ADSR release.
+Drie nieuwe bestemmingen: Bass Panning, Lead Panning en Chord Panning. De LFO beweegt rondom de mixerpanning, met instelbare golfvorm, snelheid en diepte. Routing wordt opgeslagen in projecten.
 
-## Handleiding
+## Installatie en bediening
 
-```text
+```
+SQUIRREL STUDIO 0.1.11 — WEB SYNTH + GROOVEBOX
+================================================
+
+NIEUW IN 0.1.11 — LFO PANNING
+- Vier bestaande LFO's kunnen nu óók naar BASS PANNING,
+  LEAD PANNING en CHORD PANNING worden gerouteerd.
+- Kies in LFO > ROUTING een van de drie bestemmingen, zet ACTIEF aan,
+  en stel WAVEFORM, RATE en DEPTH in.
+- De Pan-knop in MIXER bepaalt het centrum van de modulatie.
+  Bij Pan=0 en Depth=100% beweegt een sine-LFO tussen volledig links
+  en rechts. Bij een afwijkende Pan-waarde blijft de modulatie binnen
+  het stereobereik.
+- Meerdere LFO's mogen naar dezelfde panning worden gestuurd.
+  Hun gezamenlijke diepte wordt genormaliseerd om de panrange te bewaken.
+- Bij uitschakelen of een nieuwe routing wordt de vorige bestemming
+  ontkoppeld; de vaste mixerpanning blijft behouden.
+- LFO-routing wordt meegenomen in projectopslag. Bestaande projecten
+  blijven inleesbaar zonder conversie.
+- Overige LFO-routes naar Lead/Bass Volume en Cutoff blijven intact.
+
 SQUIRREL STUDIO 0.1.10 — WEB SYNTH + GROOVEBOX
 ================================================
 
