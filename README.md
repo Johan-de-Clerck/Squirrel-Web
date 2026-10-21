@@ -1,15 +1,9 @@
-# Squirrel Studio 0.1.7
+# Squirrel Studio 0.1.8
 
-Een speelbare, standalone web-synthesizer met een 16-step groovebox en MIDI-invoer.
+Websynthesizer en 32-step groovebox met pattern options en ratchet per step.
 
-## Nieuw: LFO en SEND FX
-
-Vier onafhankelijke LFO's kunnen naar Lead/Bass Volume en Filter Cutoff worden gerouteerd. Iedere track heeft een eigen Delay- en Reverb-send. FX-pads ondersteunen rechtstreekse ProTracker-achtige hex-invoer.
-
-## Handleiding
-
-```
-SQUIRREL STUDIO 0.1.7 — WEB SYNTH + GROOVEBOX
+```text
+SQUIRREL STUDIO 0.1.8 — WEB SYNTH + GROOVEBOX
 ==============================================
 
 STARTEN (WINDOWS)
@@ -19,24 +13,28 @@ STARTEN (WINDOWS)
 3. Klik AUDIO STARTEN en druk PLAY voor het demopatroon.
 4. Een losse index.html is ook direct in de browser te openen.
 
-NIEUW IN 0.1.7
-- LFO-tab met vier onafhankelijke LFO's.
-- Per LFO: aan/uit, golfvorm (sine/triangle/square/saw),
-  snelheid (0,05–20 Hz), diepte (0–100%) en een route.
-- Routeer elke LFO naar Lead Volume, Lead Filter Cutoff,
-  Bass Volume of Bass Filter Cutoff (of UIT).
-- LFO's gebruiken echte Web Audio oscillatornodes.
-  Volumemodulatie werkt op de hele track; filtermodulatie
-  werkt op de stemmen van Lead/Bass, ook via MIDI.
-- SEND FX-tab: afzonderlijke DELAY SEND en REVERB SEND
-  voor alle zes tracks (Kick, Snare, Hi-Hat, Bass, Lead, Chord).
-- Instelbare globale delaytijd, delay-feedback en galmlengte.
-- Realtime effectbussen met delay-feedback en convolutiereverb.
-- Typ FX-commando's rechtstreeks in de FX-padrij: klik een FX-pad
-  en typ bijvoorbeeld 202, 447, A02 of B03.
-- De cursor springt na drie hex-tekens naar de volgende step.
-- ESC verlaat FX-invoer; Delete/Backspace wist de FX-step.
-- Bestaande projectbestanden van 0.1.0 t/m 0.1.6 blijven laden.
+NIEUW IN 0.1.8
+- Het onnodige hardwareoverzicht links is volledig verwijderd.
+- Het sequencergrid vult nu de beschikbare browserbreedte.
+- 32 notepad- en 32 FX-padkolommen zijn altijd zichtbaar, per track.
+- OPTIONS: stel de patroonlengte voor A/B/C/D apart in op 1–32 steps.
+- Inactieve steps krijgen een donkerdere kleur en zijn niet bewerkbaar.
+  Ze worden niet afgespeeld, maar hun data blijft bewaard bij inkorten.
+- De transport/playhead en toetsenbordnavigatie respecteren de ingestelde
+  patroonlengte; na de laatste step begint de sequencer opnieuw bij 1.
+- STEP EDITOR: nieuwe RATCHET-slider direct onder Gate (1x t/m 6x).
+  Ratchet triggert de noot/drum meerdere keren verdeeld over dezelfde step.
+- De gatewaarde begrenst de duur van de losse ratchet-noten.
+- Patroon kopieren/plakken neemt nu ook de patroonlengte mee.
+- Opslaan/laden bewaart de patroonlengte en ratchets per step.
+- Oude JSON-projecten (versies 1–3) worden automatisch uitgebreid naar
+  32 opgeslagen steps, met 16 actieve steps en ratchet 1x als standaard.
+
+UIT VERSIE 0.1.7
+- Vier routeerbare LFO's (Lead/Bass volume en filter cutoff).
+- Per-track Delay en Reverb sends, plus globale effectenparameters.
+- Snelle FX-invoer op de FX-padrij via drie hex-tekens (bijv. 202 / A02).
+- Individuele instrumenten en live MIDI via Web MIDI.
 
 STANDAARD INDELING
 Track 1: Kick (MIDI ch 1)
@@ -71,5 +69,16 @@ index.html       Complete offline webapp (HTML/CSS/JavaScript/Web Audio)
 START_STUDIO.cmd Start lokale Python HTTP-server op poort 8765
 README.txt       Deze instructies
 
-VERSIE 0.1.7 — 21 oktober 2026
+VERSIE 0.1.8 — 21 oktober 2026
+
+PATROONLENGTE
+Open OPTIONS en kies voor ieder patroon afzonderlijk het gewenste aantal
+steps. De gridweergave blijft altijd 32 kolommen tonen. Bij patroon A=16
+spelen steps 1–16; steps 17–32 zijn donker en uitgeschakeld. Als je later
+naar 32 terugschakelt, komen de bewaarde steps weer beschikbaar.
+
+RATCHET
+Klik op een actieve notestep, pas bij STEP EDITOR Ratchet aan van 1x
+naar 2x, 3x, 4x, 5x of 6x. De triggers vallen gelijkmatig binnen een step
+(inclusief swing). Ratchet 1x is het bestaande afspeelgedrag.
 ```
