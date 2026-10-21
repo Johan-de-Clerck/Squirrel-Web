@@ -67,3 +67,9 @@ OVERIGE FUNCTIES
 Opslaan: MIDI OUT-poortkeuze is een sessie-instelling; zet MIDI OUT
 na heropenen opnieuw bewust AAN.
 ```
+
+## Windows desktop (JUCE / ASIO-test)
+
+Het JUCE Windows-project staat in [`windows/`](windows/README.md). Het opent gemaximaliseerd en past de sequencer, mixer en modulatiedelen aan de volledige vensterhoogte aan. De GitHub Actions-workflow [Windows Desktop](../../actions/workflows/windows-desktop.yml) bouwt een Windows-x64 `.exe` zodra de C++-compile slaagt.
+
+**Huidige beperking:** de native ASIO-uitgang ondersteunt een testtoon; de Squirrel synthese-engine speelt vooralsnog via Web Audio binnen WebView2. Een koppeling van de synth naar ASIO volgt in een latere desktopversie.
