@@ -34,7 +34,11 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force output | Out-Null
-          Copy-Item "windows/build/SquirrelStudioDesktop_artefacts/Release/SquirrelStudioDesktop.exe" output/
+          $exe = "windows/build/SquirrelStudioDesktop_artefacts/Release/Squirrel Studio Desktop.exe"
+          if (-not (Test-Path -LiteralPath $exe -PathType Leaf)) {
+            throw "Windows EXE ontbreekt op verwacht pad: $exe"
+          }
+          Copy-Item -LiteralPath $exe -Destination "output/Squirrel Studio Desktop.exe" -Force
           Copy-Item windows/README.md output/README-Windows.md
       - name: Upload Windows desktop artifact
         uses: actions/upload-artifact@v4
