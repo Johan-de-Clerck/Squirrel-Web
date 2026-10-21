@@ -1,14 +1,41 @@
-# Squirrel Studio 0.1.11
+# Squirrel Studio 0.1.12
 
-Websynthesizer en grafische groovebox met vier routeerbare LFO's.
+Websynthesizer met 32-step groovebox, acht programmeerbare tracks (zes instrumenten en twee lege slots) en NEW SONG.
 
-## Nieuw
+## Nieuw in 0.1.12
 
-Drie nieuwe bestemmingen: Bass Panning, Lead Panning en Chord Panning. De LFO beweegt rondom de mixerpanning, met instelbare golfvorm, snelheid en diepte. Routing wordt opgeslagen in projecten.
+- Meer verticale ruimte tussen de sequencertracks
+- EMPTY 7 en EMPTY 8 met note- en FX-pads, mute en solo maar zonder audio-instrument
+- OPTIONS > NEW SONG: met bevestiging alle patronen en modulatie/mixeropties resetten
+- Bestaande zestrackprojecten blijven compatibel
 
-## Installatie en bediening
+## Handleiding
 
 ```
+SQUIRREL STUDIO 0.1.12 — WEB SYNTH + GROOVEBOX
+=================================================
+
+NIEUW IN 0.1.12 — ACHT TRACKS EN NEW SONG
+- Iets meer verticale ruimte tussen de instrumenttracks in de sequencer.
+- Twee extra lege tracks: EMPTY 7 en EMPTY 8, ieder met 32 note-pads,
+  32 FX-pads, MUTE/SOLO en programmeerbare noten/FX.
+- EMPTY 7/8 hebben nog geen instrument en produceren GEEN audio.
+- De originele zes geluidstracks, de 4 LFO's en de bestaande send FX
+  blijven onveranderd. De mixer markeert EMPTY 7/8 als niet aangesloten.
+- OPTIONS > NEW SONG: wist na een bevestiging alle steps en FX in
+  patronen A t/m D, en zet iedere patroonlengte terug op 16 steps.
+- NEW SONG zet BPM op 120, Octave op C-3, EDIT UIT en alle mixer-,
+  LFO-, filter-envelope- en send-instellingen op de standaardwaarden.
+- De synthesizerinstrumenten blijven beschikbaar met hun standaardklank.
+- NEW SONG is alleen ongedaan te maken via een eerder opgeslagen JSON-project.
+  Gebruik PROJECT OPSLAAN voordat je begint met een nieuwe song.
+- Bestaande projecten (JSON versie 1 t/m 6) worden automatisch
+  uitgebreid met de twee lege tracks; bestaande nootdata blijft intact.
+- Nieuwe projectopslag gebruikt dataformaat versie 7.
+- MIDI routing per kanaal kan CH 1 t/m 8 gebruiken; de laatste twee
+  kanalen worden wel in het grid opgenomen maar blijven stil.
+- Toets 1 t/m 8 kiest een track, pijltjes navigeren het step-grid.
+
 SQUIRREL STUDIO 0.1.11 — WEB SYNTH + GROOVEBOX
 ================================================
 
@@ -103,6 +130,8 @@ Track 3: Hi-Hat (MIDI ch 3)
 Track 4: Bass (MIDI ch 4)
 Track 5: Lead (MIDI ch 5)
 Track 6: Chord (MIDI ch 6)
+Track 7: EMPTY 7 (MIDI ch 7, geen instrument)
+Track 8: EMPTY 8 (MIDI ch 8, geen instrument)
 
 EDITOR / FX-COMMANDO'S
 Klik een notepad om die aan of uit te zetten.
