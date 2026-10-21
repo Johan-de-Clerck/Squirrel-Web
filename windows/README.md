@@ -63,3 +63,16 @@ JUCE kan onder GPLv3 of een commerciële licentie worden gebruikt. JUCE 8 bevat
 Steinberg ASIO-bronbestanden waarvoor ook licentievoorwaarden gelden. Controleer
 de licenties voordat je de Windows-app publiek verspreidt. Dit project voegt
 geen losse SDK of drivers toe aan de ZIP.
+
+
+Web interface 0.1.16: consistent height for Bass/Lead/Chord/Sampler lanes, 32-step grid and BPM-sync LFO. Native ASIO currently outputs a test tone; complete synth still runs via Web Audio.
+
+
+## Webinterface 0.1.17
+
+De gedeelde webinterface bevat nu Delay/Reverb Send op track 7 en 8, sampler filters en LFO/ADSR routing voor de samplers. Native ASIO blijft voorlopig een JUCE-testtoon; de synth-audio gaat nog via Web Audio.
+
+
+## Native MIDI in Windows 0.1.4
+
+De WebView2-app gebruikt JUCE MIDI IN/OUT voor MiniFreak en Focusrite, omdat de ingebedde browser Web MIDI kan weigeren. Kies MIDI / AUDIO > MIDI VERBINDEN, selecteer de gewenste in- en uitgang en zet MIDI OUT aan. De gewone webversie blijft Web MIDI gebruiken. SysEx is niet ingeschakeld. Stop of ALL NOTES OFF beëindigt aangehouden noten. De instrumentaudio blijft voorlopig via Web Audio lopen; AUDIO / ASIO en TEST 440 Hz zijn aparte native functies.
