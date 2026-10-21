@@ -1,18 +1,36 @@
-# Squirrel Studio 0.1.9
+# Squirrel Studio 0.1.10
 
-Websynthesizer met zes tracks, 32-stepsequencer, onafhankelijke LFO's en ADSR-filterenvelopes.
+Websynthesizer met 32-step sequencer, keyboard note editor en Note Off.
 
-## Wijzigingen in 0.1.9
+## Nieuw
 
-- Twee onafhankelijke ADSR-envelopes met routing naar Bass/Lead Filter Cutoff of Resonance.
-- Steps 01, 05, 09, 13, 17, 21, 25 en 29 lichten subtiel op als telmarkering, ook op de FX-rijen.
-- De bestaande 16–32-stepweergave, ratchets, send FX en MIDI blijven behouden.
+EDIT aan/uit met toetsen A W S E D F T G Y H U J, octave C-1 t/m C-6, compactere Bass/Lead stepeditor zonder verticale scroll, en effect **C00 NOTE OFF** voor gehouden Bass/Lead-noten met ADSR release.
 
-## Instructies
+## Handleiding
 
-```
-SQUIRREL STUDIO 0.1.9 — WEB SYNTH + GROOVEBOX
-==============================================
+```text
+SQUIRREL STUDIO 0.1.10 — WEB SYNTH + GROOVEBOX
+================================================
+
+NIEUW IN 0.1.10
+- Oplossing: bij het activeren van Bass/Lead-steps verschijnt op 1920×900
+  geen extra verticale scrollbar: compactere Step editor in drie kolommen.
+- OCTAVE keuzemenu bovenaan direct naast BPM: C-1 t/m C-6.
+- EDIT AAN/UIT bovenaan. EDIT AAN: typ A W S E D F T G Y H U J om
+  rechtstreeks 12 chromatische noten in de geselecteerde step te zetten.
+  Na een noot schuift de cursor een step verder en wordt de step ingeschakeld.
+- EDIT UIT: dezelfde toetsen spelen live op de geselecteerde track.
+- De pijltjestoetsen blijven door het grid navigeren.
+- In de FX-rij blijft directe hex-invoer actief, ook als EDIT AAN staat.
+- Nieuw commando C00 = NOTE OFF. Bass en Lead spelen de noot door
+  zonder gate-timeout. De release start pas op C00, een volgende noot
+  of bij het einde van de patroonloop. Een lege step houdt de noot vast.
+- Een C00-step speelt zelf geen nieuwe noot, ook als er eerder een note-pad
+  actief was. Bij kiezen van C00 wordt deze note-pad uitgezet.
+- Voor Kick, Snare, Hi-Hat en Chord blijft de bestaande gatewerking.
+- Oudere projecten van versie 1 t/m 5 blijven inleesbaar; opslag versie 6.
+- Tijdens een C00-release behoudt het volume de berekende ADSR-stand
+  zodat er geen plotselinge sprong in de amplitude ontstaat.
 
 STARTEN (WINDOWS)
 1. Pak de ZIP uit.
@@ -21,7 +39,7 @@ STARTEN (WINDOWS)
 3. Klik AUDIO STARTEN en druk PLAY voor het demopatroon.
 4. Een losse index.html is ook direct in de browser te openen.
 
-NIEUW IN 0.1.9
+UIT VERSIE 0.1.9
 - Nieuwe ENVELOPES-tab met twee onafhankelijke filtermodulatie-envelopes.
 - Iedere envelope: ACTIEF, bestemming, Attack, Decay, Sustain, Release,
   Amount van -100% tot +100% en grafische ADSR-curve.
@@ -75,6 +93,7 @@ Klik een FX-pad voor snelle hexadecimale invoer.
 1xx: ProTracker-achtige period-slide omhoog per tick.
 2xx: ProTracker-achtige period-slide omlaag per tick.
 4xy: vibrato (snelheid/diepte).
+C00: NOTE OFF: start release op Bass/Lead bij deze step.
 Axx: volume slide omlaag per tick (Squirrel-commando).
 Bxx: volume slide omhoog per tick (Squirrel-commando).
 Bij ontbrekend slidecommando stopt de verandering. De laatst
