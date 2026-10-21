@@ -1,4 +1,5 @@
 #include <JuceHeader.h>
+#include "NativeSynth.h"
 #include <cstring>
 #include <functional>
 #include <optional>
@@ -103,10 +104,16 @@ namespace
   });
   Object.defineProperty(navigator, 'requestMIDIAccess',
                         {configurable:true, value:request});
+  // The browser keeps its UI/sequencer. Only Bass/Lead/Chord sound generation
+  // is redirected to the native JUCE AudioSource in the desktop build.
+  window.squirrelNativeAudioSend = data =>
+    backend.emitEvent('squirrel-synth-command', data);
 })();
 )JSMIDI";
 
-    juce::WebBrowserComponent::Options browserOptions (std::function<void(juce::var)> midiCommand)
+    juce::WebBrowserComponent::Options browserOptions (
+        std::function<void(juce::var)> midiCommand,
+        std::function<void(juce::var)> synthCommand)
     {
         // ResourceProvider houdt de gedeelde HTML binnen de eigen applicatie.
         const auto dataDir = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
@@ -120,6 +127,8 @@ namespace
             .withUserScript (midiBridgeScript)
             .withEventListener ("squirrel-midi-command",
                 [handler = std::move (midiCommand)] (juce::var event) {handler (std::move (event));})
+            .withEventListener ("squirrel-synth-command",
+                [handler = std::move (synthCommand)] (juce::var event) {handler (std::move (event));})
             .withWinWebView2Options (juce::WebBrowserComponent::Options::WinWebView2{}
                                         .withUserDataFolder (dataDir))
             .withResourceProvider ([] (const juce::String& requestedPath)
@@ -140,7 +149,9 @@ class SquirrelMainComponent final : public juce::Component,
                                    private juce::AsyncUpdater
 {
 public:
-    SquirrelMainComponent() : browser (browserOptions ([this] (juce::var event) { handleMidiCommand (event); }))
+    SquirrelMainComponent() : browser (browserOptions (
+        [this] (juce::var event) { handleMidiCommand (event); },
+        [this] (juce::var event) { handleNativeSynthCommand (event); }))
     {
         setOpaque (true);
         addAndMakeVisible (browser);
@@ -153,7 +164,7 @@ public:
         toneButton.onClick = [this]
         {
             toneOn = !toneOn;
-            testTone.setAmplitude (toneOn ? 0.10f : 0.0f);
+            nativeSynth.setTestTone (toneOn);
             toneButton.setButtonText (toneOn ? "STOP TEST" : "TEST 440 Hz");
         };
         addAndMakeVisible (toneButton);
@@ -162,15 +173,13 @@ public:
         status.setColour (juce::Label::textColourId, highlight);
         addAndMakeVisible (status);
 
-        testTone.setFrequency (440.0);
-        testTone.setAmplitude (0.0f);
-        audioPlayer.setSource (&testTone);
+        audioPlayer.setSource (&nativeSynth);
         const auto error = audioManager.initialise (0, 2, nullptr, true);
         if (error.isNotEmpty())
             status.setText ("Audio initialiseren mislukt: " + error, juce::dontSendNotification);
         audioManager.addAudioCallback (&audioPlayer);
 
-        if (! juce::WebBrowserComponent::areOptionsSupported (browserOptions ([] (juce::var) {})))
+        if (! juce::WebBrowserComponent::areOptionsSupported (browserOptions ([] (juce::var) {}, [] (juce::var) {})))
         {
             status.setText ("WebView2 ontbreekt; installeer de Microsoft Edge WebView2 Runtime.",
                             juce::dontSendNotification);
@@ -204,6 +213,61 @@ public:
     }
 
 private:
+    void handleNativeSynthCommand (const juce::var& data)
+    {
+        const auto action = data.getProperty ("action", {}).toString();
+        SquirrelNativeAudio::Command cmd;
+        const auto number = [] (const juce::var& object, const char* key, double fallback)
+        {
+            const auto value = object.getProperty (key, {});
+            return value.isVoid() ? fallback : static_cast<double> (value);
+        };
+        const auto sound = data.getProperty ("patch", {});
+        const auto wave = [] (const juce::String& name)
+        {
+            if (name == "pulse") return 1;
+            if (name == "sine") return 2;
+            if (name == "triangle") return 3;
+            if (name == "square") return 4;
+            return 0;
+        };
+        if (action == "on") cmd.type = SquirrelNativeAudio::Command::on;
+        else if (action == "off") cmd.type = SquirrelNativeAudio::Command::off;
+        else if (action == "pitch") cmd.type = SquirrelNativeAudio::Command::pitch;
+        else if (action == "mix") cmd.type = SquirrelNativeAudio::Command::mix;
+        else if (action == "panic") cmd.type = SquirrelNativeAudio::Command::panic;
+        else return;
+        cmd.id = static_cast<uint64_t> (number (data, "id", 0));
+        cmd.track = static_cast<int> (number (data, "track", 3));
+        if (cmd.type == SquirrelNativeAudio::Command::on && (cmd.track < 3 || cmd.track > 5))
+            return;
+        cmd.note = static_cast<int> (number (data, "note", 60));
+        cmd.velocity = static_cast<float> (number (data, "velocity", 100) / 127.0);
+        cmd.cents = static_cast<float> (number (data, "cents", 0));
+        cmd.level = static_cast<float> (number (data, "level", 1));
+        auto& p = cmd.patch;
+        p.wave1 = wave (sound.getProperty ("wave1", {}).toString());
+        p.wave2 = wave (sound.getProperty ("wave2", {}).toString());
+        p.subWave = wave (sound.getProperty ("subWave", {}).toString());
+        p.subOctave = static_cast<int> (number (sound, "subOctave", -12));
+        p.level1 = static_cast<float> (number (sound, "level1", .46));
+        p.level2 = static_cast<float> (number (sound, "level2", .27));
+        p.subLevel = static_cast<float> (number (sound, "subLevel", .0875));
+        p.detune2 = static_cast<float> (number (sound, "detune2", 0));
+        p.subDetune = static_cast<float> (number (sound, "subDetune", 0));
+        p.pulseWidth = static_cast<float> (number (sound, "pulseWidth", .5));
+        p.cutoff = static_cast<float> (number (sound, "cutoff", 4500));
+        p.resonance = static_cast<float> (number (sound, "resonance", .7));
+        p.attack = static_cast<float> (number (sound, "attack", .01));
+        p.decay = static_cast<float> (number (sound, "decay", .2));
+        p.sustain = static_cast<float> (number (sound, "sustain", .7));
+        p.release = static_cast<float> (number (sound, "release", .2));
+        p.trackGain = static_cast<float> (number (sound, "trackGain", 1));
+        p.master = static_cast<float> (number (sound, "master", .75));
+        p.pan = static_cast<float> (number (sound, "pan", 0));
+        nativeSynth.submit (cmd, number (data, "delayMs", 0));
+    }
+
     // MIDI callbacks originate from the Windows MIDI input thread. The bridge
     // only talks to WebView2 after switching to the JUCE message thread.
     void handleIncomingMidiMessage (juce::MidiInput*, const juce::MidiMessage& message) override
@@ -336,7 +400,7 @@ private:
     std::unique_ptr<juce::MidiInput> midiInput;
     std::unique_ptr<juce::MidiOutput> midiOutput;
     juce::AudioDeviceManager audioManager;
-    juce::ToneGeneratorAudioSource testTone;
+    SquirrelNativeAudio nativeSynth;
     juce::AudioSourcePlayer audioPlayer;
     juce::WebBrowserComponent browser;
     juce::TextButton asioButton, toneButton;
@@ -348,7 +412,7 @@ class SquirrelStudioApplication final : public juce::JUCEApplication
 {
 public:
     const juce::String getApplicationName() override    { return "Squirrel Studio Desktop"; }
-    const juce::String getApplicationVersion() override { return "0.1.4"; }
+    const juce::String getApplicationVersion() override { return "0.1.6"; }
     bool moreThanOneInstanceAllowed() override { return false; }
 
     void initialise (const juce::String&) override
@@ -364,7 +428,7 @@ private:
     class Window final : public juce::DocumentWindow
     {
     public:
-        Window() : juce::DocumentWindow ("Squirrel Studio Desktop 0.1.4",
+        Window() : juce::DocumentWindow ("Squirrel Studio Desktop 0.1.6",
                                         juce::Colour (0xff171310),
                                         juce::DocumentWindow::allButtons)
         {
