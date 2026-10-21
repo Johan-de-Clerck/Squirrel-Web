@@ -268,6 +268,9 @@
 .option-pattern{padding:7px;gap:5px}.option-pattern strong{font-size:12px}.option-pattern select{max-width:60%;width:96px;padding:6px}
 .sample-editor-top{display:flex;align-items:end;gap:14px;flex-wrap:wrap;margin-bottom:12px}
 .sample-editor-top .field{min-width:190px}.sample-editor-top .btn{height:38px}
+.midi-out-controls{margin-top:12px;gap:12px}
+.midi-out-indicator{font:10px Consolas,monospace;letter-spacing:.4px;color:#bc9978;margin-top:10px}
+.sample-play-status{font:12px Consolas,monospace;color:#afeac5;white-space:nowrap}
 .waveform-wrap{border:1px solid #6c523d;background:#16110e;border-radius:10px;overflow:hidden}
 #sampleWaveCanvas{width:100%;height:230px;display:block;cursor:ew-resize;touch-action:none}
 .sample-wave-legend{display:flex;justify-content:space-around;color:#cda275;font:11px Consolas,monospace;padding:7px;background:#241a14}
@@ -280,7 +283,7 @@
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark" aria-hidden="true">S</div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO UIT</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI NIET VERBONDEN</span></span><span class="version">BUILD 0.1.14</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark" aria-hidden="true">S</div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO UIT</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI NIET VERBONDEN</span></span><span class="version">BUILD 0.1.15</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ AUDIO STARTEN</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Afspelen">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="EDIT aan: noten typen in het sequencergrid">✎ EDIT UIT</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octaaf"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" value="120" aria-label="Tempo in BPM"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Mastervolume"><output id="masterOut">75%</output></label></div></section>
@@ -298,14 +301,21 @@
       <div id="view-sound" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Synth engine</h2></div><div class="right-buttons"><span class="pill" id="soundTrackLabel">BASS</span><button class="btn" id="soundAuditionBtn">♪ PREVIEW C3</button></div></div><div class="wave-viz" id="waveViz" aria-label="Oscillator visualisatie"></div><div class="control-grid" id="soundControls"></div><div class="preview"><div><div class="tag">LIVE KEYBOARD</div></div><div class="preview-keys" id="previewKeys"></div></div></section></div>
       <div id="view-mixer" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Eight-track mixer</h2></div><button class="mini-btn" id="resetMixerBtn">RESET MIXER</button></div><div class="mixer" id="mixerStrips"></div></section></div>
       <div id="view-mod" class="hidden"><div class="mod-layout"><section class="panel"><div class="panel-head"><h2 class="section-title">LFO modulation</h2><span class="pill">4 LFO's</span></div><div class="lfo-grid" id="lfoGrid"></div></section><section class="panel"><div class="panel-head"><h2 class="section-title">Filter envelopes</h2><span class="pill">2 ADSR</span></div><div id="envelopeGrid" class="envelope-grid"></div></section></div></div>
-      <div id="view-sample" class="hidden"><section class="panel sample-editor-panel"><div class="panel-head"><h2 class="section-title">Waveform sample editor</h2><span class="pill">TRACK 7 / 8</span></div><div class="sample-editor-top"><label class="field"><span class="field-head">SAMPLER TRACK</span><select id="sampleEditTrack"><option value="6">07 · SAMPLER</option><option value="7">08 · SAMPLER</option></select></label><button class="btn" id="sampleEditorLoad">↑ WAV LADEN</button><button class="btn" id="sampleEditorPreview">▶ BELUISTER</button><span id="sampleEditorFile" class="sample-filename">GEEN SAMPLE</span></div><div class="waveform-wrap"><canvas id="sampleWaveCanvas" width="1200" height="230" aria-label="Waveform met sleepbare START, END, LOOP START en LOOP END markeringen"></canvas><div class="sample-wave-legend"><span>START</span><span>LOOP START</span><span>LOOP END</span><span>END</span></div></div><div id="sampleEditControls" class="sample-editor-controls"></div><input id="sampleEditorFileInput" type="file" accept=".wav,.wave,.mp3,.ogg,.aiff,.aif,audio/*" class="hidden"></section></div>
+      <div id="view-sample" class="hidden"><section class="panel sample-editor-panel"><div class="panel-head"><h2 class="section-title">Waveform sample editor</h2><span class="pill">TRACK 7 / 8</span></div><div class="sample-editor-top"><label class="field"><span class="field-head">SAMPLER TRACK</span><select id="sampleEditTrack"><option value="6">07 · SAMPLER</option><option value="7">08 · SAMPLER</option></select></label><button class="btn" id="sampleEditorLoad">↑ WAV LADEN</button><button class="btn" id="sampleEditorPreview">▶ BELUISTER</button><span id="sampleEditorFile" class="sample-filename">GEEN SAMPLE</span><span id="samplePlayStatus" class="sample-play-status" aria-live="off">POS —</span></div><div class="waveform-wrap"><canvas id="sampleWaveCanvas" width="1200" height="230" aria-label="Waveform met sleepbare START, END, LOOP START en LOOP END markeringen"></canvas><div class="sample-wave-legend"><span>START</span><span>LOOP START</span><span>LOOP END</span><span>END</span><span style="color:#b2f1ce">◆ PLAYHEAD</span></div></div><div id="sampleEditControls" class="sample-editor-controls"></div><input id="sampleEditorFileInput" type="file" accept=".wav,.wave,.mp3,.ogg,.aiff,.aif,audio/*" class="hidden"></section></div>
       <div id="view-send" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Delay / Reverb sends</h2><span class="pill">6 TRACKS</span></div><div class="sends-grid" id="sendsGrid"></div><div class="send-global" id="sendGlobal"></div></section></div>
       <div id="view-options" class="hidden"><section class="panel options-panel"><div class="panel-head"><h2 class="section-title">Pattern options</h2><span class="pill">MAX 32 STEPS</span></div><div id="optionsPatterns" class="options-patterns"></div>
         <div class="options-slots-head"><h3>Instrument slots</h3><span class="pill">7–8 · SAMPLER BESCHIKBAAR</span></div>
         <div id="optionsSlots" class="options-slots"></div><div class="new-song-actions"><button class="btn" type="button" id="newSongBtn">＋ NEW SONG</button></div></section></div>
       <div id="view-setup" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">MIDI & audio</h2></div></div>
         <div class="setting-cols"><div class="setup-box"><h3>USB MIDI input</h3><select id="midiInput"><option value="">Geen MIDI-poort gekozen</option></select><div class="setup-actions"><button class="btn primary" id="connectMidiBtn">MIDI VERBINDEN</button><button class="mini-btn" id="refreshMidiBtn">VERNIEUW</button></div><div style="height:14px"></div><label class="field"><span class="field-head"><span>MIDI ROUTING</span></span><select id="midiRouting"><option value="selected">Alle kanalen → geselecteerde track</option><option value="channels">Per MIDI-kanaal (CH 1–8)</option></select></label></div>
-        <div class="setup-box"><h3>Audio-uitgang / Focusrite</h3><select id="audioOutput"><option value="default">Standaard audio-uitgang (Windows)</option></select><div class="setup-actions"><button class="btn primary" id="applyOutputBtn">UITGANG INSTELLEN</button><button class="mini-btn" id="refreshAudioBtn">VERNIEUW APPARATEN</button><button class="mini-btn" id="chooseOutputBtn">KIES APPARAAT…</button></div><p id="outputHelp" class="hidden" aria-hidden="true"></p></div></div>
+        <div class="setup-box"><h3>MIDI OUT · MiniFreak / Focusrite</h3>
+          <select id="midiOutput"><option value="">Geen MIDI-uitgang geselecteerd</option></select>
+          <div class="setup-actions"><button class="btn" id="midiOutEnableBtn" aria-pressed="false">MIDI OUT UIT</button><button class="mini-btn" id="midiPanicBtn">ALL NOTES OFF</button></div>
+          <div class="control-grid midi-out-controls">
+            <label class="field"><span class="field-head">TRACK NAAR MIDI OUT</span><select id="midiOutTrack"><option value="selected">Geselecteerde track</option><option value="all">Alle 8 tracks</option></select></label>
+            <label class="field"><span class="field-head">MIDI-KANAAL</span><select id="midiOutChannel"><option value="track">CH 1–8 (per track)</option></select></label>
+          </div><div class="midi-out-indicator" id="midiOutStatus">MIDI OUT UIT</div></div>
+        <div class="setup-box"><h3>Audio-uitgang / Focusrite</h3><select id="audioOutput"><option value="default">Standaard audio-uitgang (Windows)</option></select><div class="setup-actions"><button class="btn primary" id="applyOutputBtn">UITGANG INSTELLEN</button><button class="mini-btn" id="refreshAudioBtn">VERNIEUW APPARATEN</button><button class="mini-btn" id="chooseOutputBtn">KIES APPARAAT…</button></div><p id="outputHelp" class="hidden" aria-hidden="true"></p><div class="midi-out-indicator">WEB AUDIO / WINDOWS AUDIO · ASIO NIET BESCHIKBAAR IN BROWSER</div></div></div>
         <div class="setup-box"><h3>Project opslaan & laden</h3><div class="setup-actions"><button class="btn" id="saveBtn">↓ PROJECT OPSLAAN (.JSON)</button><button class="btn" id="loadBtn">↑ PROJECT LADEN</button><button class="mini-btn" id="demoBtn">DEMO-PATROON HERSTELLEN</button><input type="file" id="loadFile" accept=".json,application/json" class="hidden"></div></div>
         </section></div>
       <div id="notice" role="status" class="notice" aria-live="polite"></div>
@@ -314,7 +324,7 @@
 </div>
 <script>
 'use strict';
-// Squirrel Studio 0.1.14 — complete Web Synth + pattern expansion and sample editor.
+// Squirrel Studio 0.1.15 — complete web synth + waveform playhead and MIDI OUT.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 const NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -451,9 +461,32 @@ function fresh(withDemo=true){const tracks=bases.map(b=>({...b,muted:false,solo:
  tracks.forEach(t=>{t.delaySend=0;t.reverbSend=0});
  return {version:10,bpm:120,swing:0,master:75,keyboardOctave:3,editMode:false,pattern:0,patternLengths:Array(PATTERN_COUNT).fill(16),selectedTrack:3,selectedStep:0,tracks,patterns,lfos:defaultLFOs(),envelopes:defaultEnvelopes(),sendFX:defaultSendFX()};}
 let state=fresh();try{const raw=localStorage.getItem('squirrel-studio-0.1');if(raw)state=validate(JSON.parse(raw));}catch(e){console.warn('Ongeldige lokale opslag:',e)}
-let audio=null,midiAccess=null,selectedInput=null,clipboard=null,playing=false,recording=false,currentStep=0,lastVisualStep=-1,nextNoteTime=0,timer=null,view='seq',audioSink='default',messageTimeout=null;
+let audio=null,midiAccess=null,selectedInput=null,selectedOutput=null,midiOutEnabled=false,midiHeld=new Map(),clipboard=null,playing=false,recording=false,currentStep=0,lastVisualStep=-1,nextNoteTime=0,timer=null,view='seq',audioSink='default',messageTimeout=null;
 let activeLive=new Map(),scheduledVoices=new Set(),playheadQueue=[],lastBeatAt=0;
 const sampleBuffers=new Map();
+// Visual sample cursor: record the BufferSource playback start, rate and loop points.
+// The draw loop uses AudioContext.currentTime rather than the sequencer step
+// so even live notes and manual waveform previews have a playback indicator.
+const samplePlaybacks=[];
+let samplePlayheadFrame=0;
+function clearSamplePlaybackTrack(trackIndex){
+ for(let i=samplePlaybacks.length-1;i>=0;i--)if(samplePlaybacks[i].track===trackIndex)samplePlaybacks.splice(i,1);
+}
+function sampleCursorPosition(trackIndex){
+ if(!audio)return null;
+ const now=audio.ctx.currentTime;
+ for(let i=samplePlaybacks.length-1;i>=0;i--){
+  const p=samplePlaybacks[i];
+  if(p.track!==trackIndex||now<p.when||p.ended)continue;
+  const elapsed=(now-p.when)*p.rate;
+  let pos=p.start+elapsed;
+  if(p.loop){
+   if(pos>=p.loopEnd)pos=p.loopStart+(pos-p.loopEnd)%Math.max(.001,p.loopEnd-p.loopStart);
+  }else if(pos>=p.end){continue;}
+  return {fraction:clamp(pos/p.duration,0,1),seconds:pos};
+ }
+ return null;
+}
 const MAX_SAMPLE_BYTES=16*1024*1024;
 let sampleSession=0;
 function openSampleDB(){return new Promise((resolve,reject)=>{
@@ -477,7 +510,7 @@ function sanitizeSampleMarkers(track){
  track.loopEnd=clamp(Number(track.loopEnd??.8),track.loopStart+.005,track.sampleEnd);
  track.sampleLoop=!!track.sampleLoop;
 }
-function clearSamplerSlot(trackIndex){sampleBuffers.delete(trackIndex);state.tracks[trackIndex].sampleData=null;state.tracks[trackIndex].sampleName='';}
+function clearSamplerSlot(trackIndex){clearSamplePlaybackTrack(trackIndex);sampleBuffers.delete(trackIndex);state.tracks[trackIndex].sampleData=null;state.tracks[trackIndex].sampleName='';}
 async function restoreStoredSamples(){
  const generation=sampleSession;
  for(let t=6;t<TRACK_COUNT;t++){
@@ -512,7 +545,7 @@ async function loadSamplerFile(trackIndex,file){
   if(!buffer.length)throw Error('Lege sample');
   const data=await fileToDataURL(file);const t=state.tracks[trackIndex];
   t.slotKind='sampler';t.name=slotTrackName(trackIndex,'sampler');t.sampleName=file.name.slice(0,160);t.sampleData=data; t.sampleStart=0;t.sampleEnd=1;t.loopStart=.2;t.loopEnd=.8;t.sampleLoop=false;
-  sampleBuffers.set(trackIndex,buffer);
+  clearSamplePlaybackTrack(trackIndex);sampleBuffers.set(trackIndex,buffer);
   try{await sampleDB('put',trackIndex,{data,name:t.sampleName,root:t.sampleRoot})}catch(e){notify('Sample speelt, maar lokaal bewaren lukte niet. Exporteer je song.',true)}
   persist();applyTrackMix();renderAll();notify('Sample geladen voor track '+(trackIndex+1)+': '+t.sampleName);
  }catch(e){notify('Sample laden mislukt: '+e.message,true)}
@@ -701,13 +734,17 @@ function sampleVoice(t,note,velocity,when,pitch=0){
  modGain.gain.value=1;src.connect(env).connect(modGain).connect(audio.trackGains[t]);
  const voice={env,oscs:[src],pitchParams:[src.detune],modGain,release:.065,released:false,
   trackIndex:t,filterEnvelopes:[],ampEnvelope:{start:when,peak:Math.max(.0002,velocity/127*.8),attack:.003,decay:.01,sustain:1}};
- scheduledVoices.add(voice);src.onended=()=>{
-  voice.released=true;scheduledVoices.delete(voice);
+ scheduledVoices.add(voice);let playback=null;src.onended=()=>{
+  if(playback)playback.ended=true;voice.released=true;scheduledVoices.delete(voice);
   try{src.disconnect();env.disconnect();modGain.disconnect()}catch(e){}
  };
  sanitizeSampleMarkers(track);
  const startAt=track.sampleStart*buffer.duration,endAt=track.sampleEnd*buffer.duration;
  if(track.sampleLoop){src.loop=true;src.loopStart=Math.max(startAt,track.loopStart*buffer.duration);src.loopEnd=Math.min(endAt,track.loopEnd*buffer.duration);}
+ playback={track:t,when,start:startAt,end:endAt,rate:src.playbackRate.value,duration:buffer.duration,
+  loop:!!track.sampleLoop,loopStart:track.loopStart*buffer.duration,loopEnd:track.loopEnd*buffer.duration,ended:false};
+ samplePlaybacks.push(playback);
+ if(samplePlaybacks.length>80)samplePlaybacks.splice(0,samplePlaybacks.length-50);
  src.start(when,startAt);
  if(!track.sampleLoop){const rate=src.playbackRate.value;src.stop(when+Math.max(.001,(endAt-startAt)/rate));}
  return voice;
@@ -730,13 +767,14 @@ function scheduleStep(idx,when){
  const dur=stepDuration(),tickTime=dur/TICKS_PER_STEP;
  for(let t=0;t<TRACK_COUNT;t++){
   const step=state.patterns[state.pattern][t][idx],track=state.tracks[t];
-  if(idx===0){for(const v of fxRuntime[t].voices)if(v&&!v.drum&&!v.released)releaseVoiceScheduled(v,when);fxRuntime[t]=blankFxRuntime()}
+  if(idx===0){midiOffTrack(t,when);for(const v of fxRuntime[t].voices)if(v&&!v.drum&&!v.released)releaseVoiceScheduled(v,when);fxRuntime[t]=blankFxRuntime()}
   const rt=fxRuntime[t];
   // Ook FX-pads op steps zonder nieuwe noot worden verwerkt (zoals tracker FX-rijen).
   // C00 is een NOTE OFF op de huidige step, ook zonder actieve notepad.
   // Bij C00 plus een nieuwe noot op dezelfde step wordt eerst de oude
   // voice afgesloten en begint de nieuwe noot daarna op de verse toonhoogte.
   if(step.fx===12){
+   midiOffTrack(t,when);
    if(track.type==='synth'||track.type==='chord'||track.slotKind==='sampler'){
     for(const v of rt.voices)if(v&&!v.drum&&!v.released)releaseVoiceScheduled(v,when);
     rt.voices=[];
@@ -759,6 +797,7 @@ function scheduleStep(idx,when){
     const hitHold=hold&&hit===hits-1;
     const gateDuration=hits===1?clamp(step.gate/100*dur,.025,.8):clamp(subDuration*step.gate/100,.004,subDuration*.94);
     const voices=playTrack(t,step.note,step.velocity,hitTime,hitHold?null:gateDuration)||[];
+    midiPlayStep(t,step.note,step.velocity,hitTime,hitHold,gateDuration);
     rt.voices.push(...voices);
    }
   }
@@ -777,11 +816,13 @@ function scheduleStep(idx,when){
  playheadQueue.push({step:idx,time:when});
 }
 function scheduler(){if(!audio||!playing)return;const horizon=audio.ctx.currentTime+.115;let safety=0;while(nextNoteTime<horizon&&safety++<30){scheduleStep(currentStep,nextNoteTime);const amount=state.swing/100*.5;nextNoteTime+=stepDuration()*(currentStep%2===0?1+amount:1-amount);currentStep=(currentStep+1)%patternLength()}}
-function stopTransport(){playing=false;recording=false;clearInterval(timer);timer=null;playheadQueue=[];lastVisualStep=-1;currentStep=0;resetFXRuntime();$('playBtn').classList.remove('playing');$('playBtn').textContent='▶ PLAY';$('recBtn').classList.remove('recording');renderPlayhead(-1);for(const v of [...scheduledVoices])releaseVoice(v,audio?.ctx.currentTime||0)}
+function stopTransport(){midiAllNotesOff();playing=false;recording=false;clearInterval(timer);timer=null;playheadQueue=[];lastVisualStep=-1;currentStep=0;resetFXRuntime();$('playBtn').classList.remove('playing');$('playBtn').textContent='▶ PLAY';$('recBtn').classList.remove('recording');renderPlayhead(-1);for(const v of [...scheduledVoices])releaseVoice(v,audio?.ctx.currentTime||0)}
 async function togglePlay(){if(playing){stopTransport();return}if(!await initAudio())return;currentStep=0;lastVisualStep=-1;playheadQueue=[];resetFXRuntime();nextNoteTime=audio.ctx.currentTime+.06;playing=true;$('playBtn').classList.add('playing');$('playBtn').textContent='❚❚ PAUZE';scheduler();timer=setInterval(scheduler,25)}
 function toggleRecord(){recording=!recording;$('recBtn').classList.toggle('recording',recording);if(recording&&!playing)notify('REC klaar: druk PLAY en speel noten via MIDI.');else notify(recording?'MIDI-opname ingeschakeld.':'MIDI-opname uitgeschakeld.')}
 function renderPlayhead(i){document.querySelectorAll('.pad.playhead,.fx-pad.playhead').forEach(x=>x.classList.remove('playhead'));document.querySelectorAll('.grid-head .beat').forEach(x=>x.classList.remove('beat'));if(i>=0){document.querySelectorAll('.pad[data-step="'+i+'"],.fx-pad[data-step="'+i+'"]').forEach(p=>p.classList.add('playhead'))}$('transportStep').textContent='STEP '+String(i>=0?i+1:state.selectedStep+1).padStart(2,'0')}
-function uiTick(){if(audio){if(playing){while(playheadQueue.length&&playheadQueue[0].time<=audio.ctx.currentTime+.012){const e=playheadQueue.shift();if(e.step!==lastVisualStep){lastVisualStep=e.step;renderPlayhead(e.step);lastBeatAt=performance.now()}}}const a=new Uint8Array(audio.analyser.fftSize);audio.analyser.getByteTimeDomainData(a);let sum=0;for(let i=0;i<a.length;i++){const x=(a[i]-128)/128;sum+=x*x}const rms=Math.sqrt(sum/a.length);document.querySelectorAll('.meter-fill').forEach((el,i)=>{const on=!(state.tracks[i].muted);el.style.height=(on?Math.min(100,Math.max(3,rms*260+((performance.now()-lastBeatAt<120&&playing)?18:0))):2)+'%'})}requestAnimationFrame(uiTick)}
+function uiTick(){if(audio){if(playing){while(playheadQueue.length&&playheadQueue[0].time<=audio.ctx.currentTime+.012){const e=playheadQueue.shift();if(e.step!==lastVisualStep){lastVisualStep=e.step;renderPlayhead(e.step);lastBeatAt=performance.now()}}}const a=new Uint8Array(audio.analyser.fftSize);audio.analyser.getByteTimeDomainData(a);let sum=0;for(let i=0;i<a.length;i++){const x=(a[i]-128)/128;sum+=x*x}const rms=Math.sqrt(sum/a.length);document.querySelectorAll('.meter-fill').forEach((el,i)=>{const on=!(state.tracks[i].muted);el.style.height=(on?Math.min(100,Math.max(3,rms*260+((performance.now()-lastBeatAt<120&&playing)?18:0))):2)+'%'})}
+ if(view==='sample'&&performance.now()-samplePlayheadFrame>33){samplePlayheadFrame=performance.now();drawSampleWaveform()}
+ requestAnimationFrame(uiTick)}
 function renderGrid(){
  const board=$('gridBoard');board.replaceChildren();
  const length=patternLength();
@@ -902,6 +943,14 @@ function drawSampleWaveform(){
   for(let i=0;i<buckets;i++){const a=Math.floor(i/buckets*n),z=Math.max(a+1,Math.floor((i+1)/buckets*n)),stride=Math.max(1,Math.floor((z-a)/18));let lo=1,hi=-1;for(let j=a;j<z;j+=stride){const v=data[j];lo=Math.min(lo,v);hi=Math.max(hi,v)}const x=i/buckets*W;ctx.moveTo(x,H/2-hi*H*.39);ctx.lineTo(x,H/2-lo*H*.39)}ctx.stroke();
  }else{ctx.fillStyle='#947257';ctx.font='21px sans-serif';ctx.fillText('Laad een sample in track 7 of 8',30,H/2)}
  for(const [key,label] of SAMPLE_MARKERS){const x=track[key]*W;ctx.strokeStyle=key.startsWith('loop')?'#8fe0b3':'#ffdb9b';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();ctx.fillStyle=ctx.strokeStyle;ctx.fillRect(x-4,0,8,10)}
+ const play=sampleCursorPosition(selectedSampleEditorTrack),status=$('samplePlayStatus');
+ if(status)status.textContent=play?'POS '+play.seconds.toFixed(2)+'s':'POS —';
+ if(play){
+  const x=play.fraction*W;
+  ctx.save();ctx.lineWidth=2.5;ctx.strokeStyle='#b4f6ce';ctx.shadowColor='#a4ffd1';ctx.shadowBlur=10;
+  ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();
+  ctx.shadowBlur=0;ctx.fillStyle='#b4f6ce';ctx.beginPath();ctx.moveTo(x-7,0);ctx.lineTo(x+7,0);ctx.lineTo(x,12);ctx.closePath();ctx.fill();ctx.restore();
+ }
 }
 function renderSampleEditor(){
  const select=$('sampleEditTrack');select.value=String(selectedSampleEditorTrack);
@@ -1040,8 +1089,66 @@ function renderOptions(){
 function renderAll(){renderGrid();renderStepEditor();renderFXEditor();if(view==='sound')renderSound();if(view==='mixer')renderMixer();if(view==='mod'){renderLFO();renderEnvelopes()}if(view==='sample')renderSampleEditor();if(view==='send')renderSendFX();if(view==='options')renderOptions();$('bpmInput').value=state.bpm;$('octaveInput').value=String(state.keyboardOctave);$('editModeBtn').textContent=state.editMode?'✎ EDIT AAN':'✎ EDIT UIT';$('editModeBtn').classList.toggle('active',state.editMode);$('editModeBtn').setAttribute('aria-pressed',String(state.editMode));$('swingInput').value=state.swing;$('swingOut').textContent=state.swing+'%';$('masterInput').value=state.master;$('masterOut').textContent=state.master+'%';$('patternSelect').value=String(state.pattern)}
 function switchView(to){if(to!=='seq'){fxEditMode=false;fxDigitBuffer=''}view=to;for(const id of ['seq','sound','mixer','mod','sample','send','options','setup'])$('view-'+id).classList.toggle('hidden',id!==to);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===to));if(to==='sound')renderSound();if(to==='mixer')renderMixer();if(to==='mod'){renderLFO();renderEnvelopes()}if(to==='sample')renderSampleEditor();if(to==='send')renderSendFX();if(to==='options')renderOptions()}
 function installNotes(){const patternSelect=$('patternSelect');for(let i=0;i<PATTERN_COUNT;i++)patternSelect.add(new Option(patternName(i),String(i)));const el=$('stepNote');for(let n=24;n<=95;n++){const o=document.createElement('option');o.value=n;o.textContent=noteName(n);el.appendChild(o)}const preview=$('previewKeys');for(let i=0;i<12;i++){const btn=document.createElement('button');btn.className='key'+(NAMES[i].includes('#')?' black':'');btn.textContent=noteName(60+i);btn.onpointerdown=e=>{e.preventDefault();playPreview(state.selectedTrack,60+i)};preview.appendChild(btn)}}
+// Web MIDI output: timestamped messages follow the Web Audio scheduler.
+// The port is opt-in. The default is OFF to avoid accidental external playback.
+function midiDestinationTrack(t){
+ const target=$('midiOutTrack')?.value||'selected';
+ return target==='all'||(target==='selected'?t===state.selectedTrack:t===Number(target));
+}
+function midiOutputChannel(t){
+ const mode=$('midiOutChannel')?.value||'0';
+ return mode==='track'?clamp(t,0,15):clamp(Number(mode)||0,0,15);
+}
+function midiOutputIsReady(t){return midiOutEnabled&&!!selectedOutput&&selectedOutput.state==='connected'&&midiDestinationTrack(t)&&!state.tracks[t].muted&&(!state.tracks.some(x=>x.solo)||state.tracks[t].solo)}
+function midiSend(data,when=null,port=selectedOutput){
+ if(!port)return;
+ try{
+  const ms=when!==null&&audio?Math.max(performance.now(),performance.now()+(when-audio.ctx.currentTime)*1000):undefined;
+  if(ms===undefined)port.send(data);else port.send(data,ms);
+ }catch(e){console.warn('MIDI OUT:',e);notify('MIDI OUT: '+e.message,true)}
+}
+function midiOffTrack(t,when=null){
+ const held=midiHeld.get(t);if(!held)return;
+ midiSend([0x80|held.channel,held.note,0],when,held.port);
+ midiHeld.delete(t);
+}
+function midiAllNotesOff(){
+ const port=selectedOutput;
+ try{port?.clear?.()}catch(e){console.warn(e)}
+ for(const [t,h] of midiHeld){midiSend([0x80|h.channel,h.note,0],null,h.port)}
+ midiHeld.clear();
+ if(port){for(let ch=0;ch<16;ch++)midiSend([0xb0|ch,123,0],null,port)}
+}
+function midiPlayStep(t,note,velocity,when,hold,gate){
+ if(!midiOutputIsReady(t))return;
+ const channel=midiOutputChannel(t),n=clamp(Math.round(note),0,127),v=clamp(Math.round(velocity),1,127);
+ midiOffTrack(t,when);
+ midiSend([0x90|channel,n,v],when);
+ if(hold)midiHeld.set(t,{port:selectedOutput,channel,note:n});
+ else midiSend([0x80|channel,n,0],when+Math.max(.008,gate));
+}
+function updateMidiOutputUI(){
+ const selected=selectedOutput&&selectedOutput.state==='connected';
+ const button=$('midiOutEnableBtn');button.textContent=midiOutEnabled?'MIDI OUT AAN':'MIDI OUT UIT';button.classList.toggle('active',midiOutEnabled);button.setAttribute('aria-pressed',String(midiOutEnabled));
+ $('midiOutStatus').textContent=midiOutEnabled?(selected?'UITGANG: '+selectedOutput.name:'KIES EEN GELDIGE MIDI-OUTPUT'):'MIDI OUT UIT';
+}
+function selectMidiOutput(){
+ midiAllNotesOff();
+ selectedOutput=midiAccess?.outputs.get($('midiOutput').value)||null;
+ if(!selectedOutput)midiOutEnabled=false;
+ updateMidiOutputUI();
+}
+function populateMidiOutputPorts(){
+ const select=$('midiOutput'),old=select.value;
+ select.replaceChildren(new Option('Geen MIDI-uitgang geselecteerd',''));
+ for(const port of midiAccess?.outputs.values()||[])select.add(new Option((port.name||'Onbekend')+' ('+port.state+')',port.id));
+ select.value=[...select.options].some(o=>o.value===old)?old:'';
+ const next=midiAccess?.outputs.get(select.value)||null;
+ if(next!==selectedOutput){midiAllNotesOff();selectedOutput=next;if(!next)midiOutEnabled=false}
+ updateMidiOutputUI();
+}
 async function connectMidi(){if(!('requestMIDIAccess' in navigator)){notify('Web MIDI is hier niet beschikbaar. Gebruik Edge/Chrome via http://localhost.',true);return}try{midiAccess=await navigator.requestMIDIAccess({sysex:false});midiAccess.onstatechange=updateMidiPorts;updateMidiPorts();notify('Web MIDI geactiveerd. Kies je MIDI-controller in de lijst.')}catch(e){notify('Geen MIDI-toegang: '+e.message,true)}}
-function updateMidiPorts(){if(!midiAccess)return;const select=$('midiInput'),old=select.value;select.replaceChildren(new Option('Geen MIDI-poort gekozen',''));for(const port of midiAccess.inputs.values())select.add(new Option((port.name||'Onbekend')+' ('+port.state+')',port.id));select.value=[...select.options].some(o=>o.value===old)?old:([].slice.call(select.options).find(o=>o.value!==''&&o.textContent.includes('connected'))?.value||'');selectMidiInput();}
+function updateMidiPorts(){if(!midiAccess)return;const select=$('midiInput'),old=select.value;select.replaceChildren(new Option('Geen MIDI-poort gekozen',''));for(const port of midiAccess.inputs.values())select.add(new Option((port.name||'Onbekend')+' ('+port.state+')',port.id));select.value=[...select.options].some(o=>o.value===old)?old:([].slice.call(select.options).find(o=>o.value!==''&&o.textContent.includes('connected'))?.value||'');selectMidiInput();populateMidiOutputPorts();}
 function selectMidiInput(){if(selectedInput)selectedInput.onmidimessage=null;selectedInput=midiAccess?.inputs.get($('midiInput').value)||null;if(selectedInput){selectedInput.onmidimessage=onMidiMessage;$('midiLed').className='led on';$('midiStatus').textContent=(selectedInput.name||'MIDI').toUpperCase()}else{$('midiLed').className='led';$('midiStatus').textContent='MIDI NIET VERBONDEN'}}
 function targetFromChannel(ch){return $('midiRouting').value==='channels'?clamp(ch,0,TRACK_COUNT-1):state.selectedTrack}
 function onMidiMessage(e){const [cmd,d1=0,d2=0]=e.data;const status=cmd&0xf0,ch=cmd&0x0f,t=targetFromChannel(ch);if($('midiRouting').value==='channels'&&ch>=TRACK_COUNT)return;if(status===0x90&&d2>0){liveNoteOn(t,d1,d2,ch)}else if(status===0x80||(status===0x90&&d2===0)){liveNoteOff(t,d1,ch)}else if(status===0xb0){if(d1===74&&t<AUDIO_TRACK_COUNT){const s=state.tracks[t].sound;s.cutoff=Math.round(100*Math.pow(120,d2/127));updateLiveCutoff(t);if(view==='sound')renderSound();persist()}if(d1===7){state.tracks[t].volume=Math.round(d2/127*100);applyTrackMix();if(view==='seq')renderStepEditor();if(view==='mixer')renderMixer();persist()}}}
@@ -1050,7 +1157,7 @@ function liveNoteOff(t,note,ch=0){if(!audio)return;const key=t+':'+ch+':'+note;c
 async function refreshOutputs(){const s=$('audioOutput'),prev=s.value;s.replaceChildren(new Option('Standaard audio-uitgang (Windows)','default'));if(!navigator.mediaDevices?.enumerateDevices){$('outputHelp').textContent='Deze browser kan audio-uitgangen niet weergeven. Kies Focusrite als standaard in Windows.';return}try{const dev=await navigator.mediaDevices.enumerateDevices();for(const d of dev.filter(x=>x.kind==='audiooutput')){if(d.deviceId==='default')continue;s.add(new Option(d.label||'Audio-uitgang '+(s.options.length),d.deviceId))}s.value=Array.from(s.options).some(o=>o.value===prev)?prev:'default'}catch(e){notify('Audioapparaten ophalen mislukt: '+e.message,true)}}
 async function applyOutput(){if(!await initAudio())return;const id=$('audioOutput').value;if(id==='default'){try{if(audio.outputElement){audio.outputElement.pause();audio.outputElement.srcObject=null}audio.analyser.disconnect();audio.analyser.connect(audio.ctx.destination);audioSink=id;notify('Audio naar Windows standaardafspeelapparaat.')}catch(e){notify('Audio reset mislukt: '+e.message,true)}return}try{if(typeof audio.ctx.setSinkId==='function'){if(audio.outputElement){audio.outputElement.pause();audio.outputElement.srcObject=null}audio.analyser.disconnect();audio.analyser.connect(audio.ctx.destination);await audio.ctx.setSinkId(id);audioSink=id;notify('Audio-uitgang ingesteld: '+$('audioOutput').selectedOptions[0].textContent);return}if(!HTMLMediaElement.prototype.setSinkId)throw Error('Deze browser ondersteunt geen specifieke audio-uitgang.');if(!audio.streamDest)audio.streamDest=audio.ctx.createMediaStreamDestination();if(!audio.outputElement){audio.outputElement=document.createElement('audio');audio.outputElement.autoplay=true;audio.outputElement.srcObject=audio.streamDest.stream}await audio.outputElement.setSinkId(id);audio.analyser.disconnect();audio.analyser.connect(audio.streamDest);await audio.outputElement.play();audioSink=id;notify('Audio-uitgang ingesteld via MediaStream: '+$('audioOutput').selectedOptions[0].textContent)}catch(e){audio.analyser.disconnect();audio.analyser.connect(audio.ctx.destination);notify('Selecteren van deze audio-uitgang is mislukt: '+e.message,true)}}
 async function chooseOutput(){if(!navigator.mediaDevices?.selectAudioOutput){notify('Selecteer je Focusrite via Windows Geluidsinstellingen; apparaatselectie niet ondersteund.',true);return}try{const x=await navigator.mediaDevices.selectAudioOutput();await refreshOutputs();if(x?.deviceId&&![...$('audioOutput').options].some(o=>o.value===x.deviceId))$('audioOutput').add(new Option(x.label||'Gekozen uitvoer',x.deviceId));if(x?.deviceId)$('audioOutput').value=x.deviceId;notify('Audioapparaat gekozen. Klik op UITGANG INSTELLEN.')}catch(e){notify('Geen apparaat geselecteerd: '+e.message,true)}}
-function saveProject(){const project=JSON.stringify({...state,savedAt:new Date().toISOString(),app:'Squirrel Studio'},null,2);const url=URL.createObjectURL(new Blob([project],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='SquirrelStudio_0.1.13_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),800);notify('Project als JSON gedownload.')}
+function saveProject(){const project=JSON.stringify({...state,savedAt:new Date().toISOString(),app:'Squirrel Studio'},null,2);const url=URL.createObjectURL(new Blob([project],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='SquirrelStudio_0.1.15_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),800);notify('Project als JSON gedownload.')}
 function typeFXDigit(key){
  const digit=key.toUpperCase();if(!/^[0-9A-F]$/.test(digit))return false;
  if(fxDigitBuffer.length===0&&!FX_OPTIONS.some(x=>fxCode(x.id)===digit))return true;
@@ -1063,7 +1170,12 @@ function typeFXDigit(key){
  if(finished){fxDigitBuffer='';if(state.selectedStep<patternLength()-1)state.selectedStep++}
  persist();renderAll();focusSelectedPad(false);return true;
 }
-function bindings(){document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>switchView(b.dataset.view));$('audioBtn').onclick=initAudio;$('playBtn').onclick=togglePlay;$('stopBtn').onclick=stopTransport;$('recBtn').onclick=toggleRecord;
+function bindings(){
+ const channelSelect=$('midiOutChannel');for(let ch=1;ch<=16;ch++)channelSelect.add(new Option('CH '+ch,String(ch-1)));
+ const trackSelect=$('midiOutTrack');for(let t=0;t<TRACK_COUNT;t++)trackSelect.add(new Option('TRACK '+(t+1)+' · '+bases[t].name,String(t)));
+ channelSelect.value='0';
+ channelSelect.onchange=()=>midiAllNotesOff();trackSelect.onchange=()=>midiAllNotesOff();
+ document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>switchView(b.dataset.view));$('audioBtn').onclick=initAudio;$('playBtn').onclick=togglePlay;$('stopBtn').onclick=stopTransport;$('recBtn').onclick=toggleRecord;
  $('editModeBtn').onclick=()=>{state.editMode=!state.editMode;keyboardDown.clear();keyboardAssignments.clear();persist();renderAll();if(view==='seq')focusSelectedPad(false)};$('octaveInput').onchange=()=>{state.keyboardOctave=Number($('octaveInput').value);persist();if(view==='seq')focusSelectedPad(false)};
  $('bpmInput').onchange=()=>{state.bpm=clamp(Math.round(Number($('bpmInput').value)||120),50,240);persist();renderAll()};$('swingInput').oninput=()=>{state.swing=Number($('swingInput').value);$('swingOut').textContent=state.swing+'%';persist()};$('masterInput').oninput=()=>{state.master=Number($('masterInput').value);$('masterOut').textContent=state.master+'%';applyTrackMix();persist()};$('patternSelect').onchange=()=>{if(playing)stopTransport();state.pattern=clamp(Number($('patternSelect').value),0,PATTERN_COUNT-1);state.selectedStep=Math.min(state.selectedStep,patternLength()-1);currentStep=0;lastVisualStep=-1;resetFXRuntime();persist();renderAll()};$('copyPatternBtn').onclick=()=>{clipboard={lanes:structuredClone(state.patterns[state.pattern]),length:patternLength()};notify('Patroon '+patternName(state.pattern)+' gekopieerd.')};$('pastePatternBtn').onclick=()=>{if(!clipboard){notify('Kopieer eerst een patroon.',true);return}state.patterns[state.pattern]=structuredClone(clipboard.lanes);setPatternLength(state.pattern,clipboard.length);notify('Patroon en patroonlengte geplakt.')};
  $('stepNote').onchange=()=>{selectedStep().note=Number($('stepNote').value);persist();renderAll();focusSelectedPad(false)};for(const [id,k] of [['velocity','velocity'],['gate','gate'],['chance','chance'],['ratchet','ratchet']])$(id).oninput=()=>{selectedStep()[k]=Number($(id).value);$(id+'Out').textContent=$(id).value+(id==='velocity'?'':id==='ratchet'?'×':'%');persist();renderGrid()};$('toggleStepBtn').onclick=()=>{const s=selectedStep();s.on=!s.on;persist();renderAll()};$('auditionStepBtn').onclick=()=>playPreview(state.selectedTrack,selectedStep().note,selectedStep().velocity);
@@ -1076,6 +1188,7 @@ function bindings(){document.querySelectorAll('[data-view]').forEach(b=>b.onclic
  $('clearTrackFx').onclick=()=>{state.patterns[state.pattern][state.selectedTrack].forEach(step=>step.fx=0);persist();renderAll();focusSelectedPad(false)};
  $('soundAuditionBtn').onclick=()=>playPreview(state.selectedTrack,bases[state.selectedTrack].note);
  $('resetMixerBtn').onclick=()=>{state.tracks.forEach((t,i)=>{t.volume=bases[i].volume;t.pan=bases[i].pan;t.muted=false;t.solo=false});persist();applyTrackMix();renderAll()};
+ $('midiOutput').onchange=selectMidiOutput;$('midiOutEnableBtn').onclick=()=>{if(!selectedOutput){notify('Kies eerst een MIDI OUT-poort (MiniFreak of Focusrite).',true);return}if(midiOutEnabled)midiAllNotesOff();midiOutEnabled=!midiOutEnabled;updateMidiOutputUI()};$('midiPanicBtn').onclick=()=>{midiAllNotesOff();notify('MIDI ALL NOTES OFF verstuurd.')};
  $('connectMidiBtn').onclick=connectMidi;$('refreshMidiBtn').onclick=()=>{if(midiAccess)updateMidiPorts();else connectMidi()};$('midiInput').onchange=selectMidiInput;$('refreshAudioBtn').onclick=refreshOutputs;$('applyOutputBtn').onclick=applyOutput;$('chooseOutputBtn').onclick=chooseOutput;$('saveBtn').onclick=saveProject;$('loadBtn').onclick=()=>$('loadFile').click();$('loadFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;
  try{const s=validate(JSON.parse(await f.text()));stopTransport();sampleSession++;sampleBuffers.clear();
  state=s;for(let i=6;i<TRACK_COUNT;i++){if(state.tracks[i].sampleData){try{await sampleDB('put',i,{data:state.tracks[i].sampleData,name:state.tracks[i].sampleName,root:state.tracks[i].sampleRoot})}catch(e){console.warn(e)}}else await removeStoredSample(i)}
