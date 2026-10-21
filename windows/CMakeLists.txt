@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(SquirrelStudioDesktop VERSION 0.1.1 LANGUAGES CXX)
+project(SquirrelStudioDesktop VERSION 0.1.1 LANGUAGES C CXX)
 
 if (NOT WIN32)
     message(FATAL_ERROR "Deze desktop-build is bedoeld voor Windows 10/11 x64. Gebruik de webversie op andere platforms.")
