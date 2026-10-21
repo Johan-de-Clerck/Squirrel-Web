@@ -1,9 +1,17 @@
-# Squirrel Studio 0.1.8
+# Squirrel Studio 0.1.9
 
-Websynthesizer en 32-step groovebox met pattern options en ratchet per step.
+Websynthesizer met zes tracks, 32-stepsequencer, onafhankelijke LFO's en ADSR-filterenvelopes.
 
-```text
-SQUIRREL STUDIO 0.1.8 — WEB SYNTH + GROOVEBOX
+## Wijzigingen in 0.1.9
+
+- Twee onafhankelijke ADSR-envelopes met routing naar Bass/Lead Filter Cutoff of Resonance.
+- Steps 01, 05, 09, 13, 17, 21, 25 en 29 lichten subtiel op als telmarkering, ook op de FX-rijen.
+- De bestaande 16–32-stepweergave, ratchets, send FX en MIDI blijven behouden.
+
+## Instructies
+
+```
+SQUIRREL STUDIO 0.1.9 — WEB SYNTH + GROOVEBOX
 ==============================================
 
 STARTEN (WINDOWS)
@@ -13,7 +21,21 @@ STARTEN (WINDOWS)
 3. Klik AUDIO STARTEN en druk PLAY voor het demopatroon.
 4. Een losse index.html is ook direct in de browser te openen.
 
-NIEUW IN 0.1.8
+NIEUW IN 0.1.9
+- Nieuwe ENVELOPES-tab met twee onafhankelijke filtermodulatie-envelopes.
+- Iedere envelope: ACTIEF, bestemming, Attack, Decay, Sustain, Release,
+  Amount van -100% tot +100% en grafische ADSR-curve.
+- Bestemmingen per envelope: Bass Filter Cutoff, Bass Resonance,
+  Lead/Synth Filter Cutoff en Lead/Synth Resonance.
+- De envelopes triggeren per noot, dus ook via het sequencergrid en MIDI.
+- Envelope en LFO kunnen tegelijkertijd dezelfde filterparameter moduleren.
+- Alle envelope-instellingen worden opgeslagen in JSON-projecten.
+- De noot- en FX-pads op steps 1, 5, 9, 13, 17, 21, 25 en 29
+  zijn iets lichter, zodat de 4/4-telindeling in een 32-stepgrid zichtbaar is.
+- Inactieve steps blijven donker, ook op een geaccentueerde positie.
+- Bestaande projecten uit eerdere versies blijven compatibel.
+
+UIT VERSIE 0.1.8
 - Het onnodige hardwareoverzicht links is volledig verwijderd.
 - Het sequencergrid vult nu de beschikbare browserbreedte.
 - 32 notepad- en 32 FX-padkolommen zijn altijd zichtbaar, per track.
@@ -69,7 +91,7 @@ index.html       Complete offline webapp (HTML/CSS/JavaScript/Web Audio)
 START_STUDIO.cmd Start lokale Python HTTP-server op poort 8765
 README.txt       Deze instructies
 
-VERSIE 0.1.8 — 21 oktober 2026
+VERSIE 0.1.9 — 21 oktober 2026
 
 PATROONLENGTE
 Open OPTIONS en kies voor ieder patroon afzonderlijk het gewenste aantal
@@ -81,4 +103,15 @@ RATCHET
 Klik op een actieve notestep, pas bij STEP EDITOR Ratchet aan van 1x
 naar 2x, 3x, 4x, 5x of 6x. De triggers vallen gelijkmatig binnen een step
 (inclusief swing). Ratchet 1x is het bestaande afspeelgedrag.
+
+ENVELOPES EN MAATACCENTEN (0.1.9)
+Open de ENVELOPES-tab, schakel een envelope in en kies de bestemming.
+Bass en Lead hebben elk hun eigen cutoff- en resonantieparameters.
+ATTACK/DECAY/RELEASE zijn in seconden, SUSTAIN en AMOUNT in procenten.
+AMOUNT negatief laat het filter/de resonantie in de andere richting bewegen.
+De envelope start opnieuw bij een nieuwe bass- of leadnoot en gaat
+bij Note Off of Gate einde naar de release-fase.
+LFO en envelopes kunnen samen dezelfde parameter aansturen.
+Steps 01/05/09/13/17/21/25/29 zijn licht geaccentueerd. Inactieve
+steps worden niet afgespeeld en blijven donkerder.
 ```
