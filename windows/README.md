@@ -1,78 +1,15 @@
-# Squirrel Studio Desktop — Windows native, eerste basisversie 0.1.1
+# Squirrel Studio Desktop 0.1.6 — eerste native JUCE synthesizer
 
-Dit is het **naast elkaar bestaande Windows-project** bij Squirrel Studio Web 0.1.15.
-De webapp blijft intact. De Windows-versie gebruikt exact dezelfde ingebouwde `web/index.html`
-in een **native JUCE 8 / Microsoft Edge WebView2 venster** en bevat een aparte native audioapparaatlaag.
+Bass (track 4), Lead (track 5) en Chord (track 6) genereren nu de oscillatoren, filter en ADSR in JUCE, op het gekozen Windows-audioapparaat (ook Focusrite ASIO indien beschikbaar). De WebView2-interface plant noten en stuurt Note On, Note Off, pitchslides, vibrato en volumewijzigingen door via een native bridge.
 
-## Vensters vullen de beschikbare schermhoogte
+**Dit is een eerste technische versie.** De native synth bevat OSC 1, OSC 2, SUB, detune, niveau, stereo-panning, filter en amplitude-ADSR. De klank is nog niet identiek aan de browser-versie. Kick/Snare/Hi-Hat, sampletracks 7/8, send-FX en LFO/filter-modulatie blijven momenteel via Web Audio lopen. Daardoor kan audio tijdelijk via verschillende apparaten lopen: de ASIO-uitgang voor de synth en Windows-standaardaudio voor drums/samples.
 
-De Windows-app opent standaard gemaximaliseerd, rekening houdend met de Windows-taakbalk.
-De actieve pagina vult nu de ruimte onder de Squirrel Studio-transportbalk en tabs.
-De sequencer, mixer, LFO/envelopes en waveform-editor gebruiken de beschikbare hoogte;
-bij kleinere vensters verschijnt alleen waar nodig een scrollbar binnen het actieve paneel.
-Het venster blijft in grootte aanpasbaar en ondersteunt Windows Snap.
+MIDI IN/OUT blijft native via JUCE. De 440 Hz-testtoon gebruikt dezelfde native uitgang. Selecteer bij AUDIO / ASIO de gewenste Focusrite-driver, zet het volume laag en speel een Bass- of Lead-step. Als de backend geen verbinding kan maken, test de webversie apart.
 
-## Wat werkt in deze eerste desktopbasis?
+## Bouwen
 
-- Echt Windows `.exe` project (C++17, JUCE 8, CMake, Visual Studio 2022).
-- Bestaande Squirrel Studio 0.1.15-UI ingebed in het venster (met song-JSON-bestanden).
-- Windows-audioapparaatkeuze inclusief beschikbare **ASIO**-drivers, indien de Focusrite-driver is geïnstalleerd.
-- **TEST 440 Hz** om de native audio-uitgang te controleren, bij voorkeur op de Focusrite ASIO-driver.
-- Webversie blijft onafhankelijk bruikbaar in Chrome en Edge.
-- GitHub Actions bouwt de Windows-app automatisch; download daarna `SquirrelStudioDesktop-Windows-x64` bij Actions → laatste build → Artifacts.
+GitHub Actions compileert de Windows-EXE met JUCE en WebView2. In de Windows-projectmap kun je lokaal `BUILD_WINDOWS.cmd` gebruiken (CMake, NuGet en Visual Studio C++ nodig).
 
-## Belangrijke beperking
+## Volgende mijlpalen
 
-**De bestaande Squirrel-synthese, sampler en sequencer produceren in deze eerste desktopbasis nog audio via Web Audio in de ingebouwde WebView2.**
-Het JUCE ASIO-geluidsapparaat is wel geopend en testbaar, maar de bestaande
-Web Audio-engine wordt **nog niet** naar JUCE/ASIO gerouteerd. Je hoort de song
-in deze fase via de standaard-Windows-audioroute (of de Focusrite als Windows-uitgang).
-
-Dat is een bewust tussenstadium: om de volledige synth via ASIO te spelen, moet de
-synthese/samplerengine worden overgezet naar JUCE C++ of met een goed ontworpen
-audiobrug worden verbonden. Een ASIO-apparaatkeuzeknop alleen lost dat niet op.
-
-## Build op je Windows 11-pc
-
-1. Installeer Visual Studio 2022 met **Desktop development with C++**.
-2. Installeer CMake 3.24+, Git en `nuget.exe` (of bouw via GitHub Actions).
-3. Installeer de **Microsoft Edge WebView2 Runtime** (meestal al aanwezig op Windows 11).
-4. Installeer de officiële **Focusrite Windows/ASIO-driver**.
-5. Start `BUILD_WINDOWS.cmd` in deze map.
-6. Start de gegenereerde `.exe` onder `build/SquirrelStudioDesktop_artefacts/Release/`.
-7. Open **AUDIO / ASIO**, kies het Focusrite ASIO-device en probeer **TEST 440 Hz**.
-
-Een Windows-build kan hier in de Linux-ontwikkelomgeving niet worden uitgevoerd.
-De GitHub Actions-workflow moet als eerste echte Windows-compile worden gecontroleerd.
-
-## Samen met de webversie
-
-De repository bevat:
-
-- `/index.html` — bestaande webversie, geen wijzigingen nodig.
-- `/windows/web/index.html` — kopie voor de Windows-build (wordt automatisch vanuit `/index.html` aangemaakt; de ZIP bevat al een kopie).
-- `/windows/src/Main.cpp` — JUCE Windows shell en ASIO-test.
-- `/windows/CMakeLists.txt` — Windows build.
-- `/.github/workflows/windows-desktop.yml` — automatische Windows-build.
-
-Bij webupdates kun je `/index.html` naar `/windows/web/index.html` kopiëren en de desktop opnieuw compileren.
-
-## Licenties
-
-JUCE kan onder GPLv3 of een commerciële licentie worden gebruikt. JUCE 8 bevat
-Steinberg ASIO-bronbestanden waarvoor ook licentievoorwaarden gelden. Controleer
-de licenties voordat je de Windows-app publiek verspreidt. Dit project voegt
-geen losse SDK of drivers toe aan de ZIP.
-
-
-Web interface 0.1.16: consistent height for Bass/Lead/Chord/Sampler lanes, 32-step grid and BPM-sync LFO. Native ASIO currently outputs a test tone; complete synth still runs via Web Audio.
-
-
-## Webinterface 0.1.17
-
-De gedeelde webinterface bevat nu Delay/Reverb Send op track 7 en 8, sampler filters en LFO/ADSR routing voor de samplers. Native ASIO blijft voorlopig een JUCE-testtoon; de synth-audio gaat nog via Web Audio.
-
-
-## Native MIDI in Windows 0.1.4
-
-De WebView2-app gebruikt JUCE MIDI IN/OUT voor MiniFreak en Focusrite, omdat de ingebedde browser Web MIDI kan weigeren. Kies MIDI / AUDIO > MIDI VERBINDEN, selecteer de gewenste in- en uitgang en zet MIDI OUT aan. De gewone webversie blijft Web MIDI gebruiken. SysEx is niet ingeschakeld. Stop of ALL NOTES OFF beëindigt aangehouden noten. De instrumentaudio blijft voorlopig via Web Audio lopen; AUDIO / ASIO en TEST 440 Hz zijn aparte native functies.
+Breng drumtracks en WAV-samplers naar dezelfde JUCE-audiobus, gevolgd door Delay/Reverb en volledige LFO/envelope-mapping. Pas daarna is het een uniforme ASIO-groovebox.
