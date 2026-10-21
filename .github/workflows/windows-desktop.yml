@@ -1,0 +1,42 @@
+name: Windows Desktop (JUCE + ASIO)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'windows/**'
+      - 'index.html'
+      - '.github/workflows/windows-desktop.yml'
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download WebView2 SDK
+        shell: pwsh
+        run: |
+          nuget install Microsoft.Web.WebView2 -OutputDirectory windows/third_party -NonInteractive -ExcludeVersion
+      - name: Copy latest web UI into desktop build
+        shell: pwsh
+        run: Copy-Item index.html windows/web/index.html -Force
+      - name: Configure CMake (Windows x64, ASIO)
+        shell: pwsh
+        run: |
+          cmake -S windows -B windows/build -G "Visual Studio 17 2022" -A x64 -DJUCE_WEBVIEW2_PACKAGE_LOCATION="$env:GITHUB_WORKSPACE/windows/third_party"
+      - name: Build Release EXE
+        shell: pwsh
+        run: cmake --build windows/build --config Release --parallel 4
+      - name: Package Windows application
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force output | Out-Null
+          Copy-Item "windows/build/SquirrelStudioDesktop_artefacts/Release/SquirrelStudioDesktop.exe" output/
+          Copy-Item windows/README.md output/README-Windows.md
+      - name: Upload Windows desktop artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SquirrelStudioDesktop-Windows-x64
+          path: output/
+          if-no-files-found: error
