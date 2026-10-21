@@ -73,3 +73,16 @@ na heropenen opnieuw bewust AAN.
 Het JUCE Windows-project staat in [`windows/`](windows/README.md). Het opent gemaximaliseerd en past de sequencer, mixer en modulatiedelen aan de volledige vensterhoogte aan. De GitHub Actions-workflow [Windows Desktop](../../actions/workflows/windows-desktop.yml) bouwt een Windows-x64 `.exe` zodra de C++-compile slaagt.
 
 **Huidige beperking:** de native ASIO-uitgang ondersteunt een testtoon; de Squirrel synthese-engine speelt vooralsnog via Web Audio binnen WebView2. Een koppeling van de synth naar ASIO volgt in een latere desktopversie.
+
+
+## Web UI 0.1.16
+
+# Squirrel Studio Web 0.1.16
+
+- Compacte, gelijkvormige Step editor voor alle tracks, inclusief Bass, Lead, Chord en samplers.
+- Op korte Windows/WebView2-vensters worden de pads compacter zonder ongewenste verticale gridscrollbars.
+- Vier LFO’s ondersteunen nu FREE en tempo-sync (1/1, 1/2, 1/4, 1/8, 1/16, 1/32).
+- Bestaande projecten met LFO’s zonder sync-instelling blijven ongewijzigd in FREE-modus.
+- De overige functies van 0.1.15 blijven behouden, inclusief MIDI OUT en waveform-playhead.
+
+Start in Chrome/Edge met een lokale server, of gebruik de gedeelde `index.html` via JUCE/WebView2.
