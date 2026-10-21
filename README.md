@@ -122,3 +122,32 @@ Voorbeeldinstelling: Sampler 7 Delay Send 45%, Reverb Send 25%, Filter Cutoff 22
 ## Web 0.1.18 — CHORD per step
 
 De CHORD-track gebruikt dezelfde dual-oscillatorparameters als BASS/LEAD (OSC 1/2, detune, pulse width, filter en ADSR). De akkoordkwaliteit wordt **per step** ingesteld in SEQUENCER → Step FX → **CHORD MODE** (rechts naast FX COMMANDO), onafhankelijk van het tracker-effect. Keuzes: MAJ, MIN, SUS2, SUS4, DIM, AUG, 7, MAJ7, MIN7, M7b5, DIM7, ADD9, MIN9, MAJ9 en POWER. MIDI OUT stuurt alle akkoordnoten inclusief Note Off. Oude songs behouden hun major/minor-voicing. De Windows-build neemt automatisch de nieuwste web-UI mee.
+
+
+---
+
+# Squirrel Studio 0.1.19 — 3 oscillatoren
+
+Webversie van de Squirrel Studio groovebox. De Windows desktopvariant embedt dezelfde `index.html` uit de hoofdmap van Squirrel-Web.
+
+## Nieuw in 0.1.19
+
+- BASS (track 4), LEAD (track 5), CHORD (track 6): drie synthsecties naast elkaar: OSCILLATOR 1, OSCILLATOR 2, SUB OSCILLATOR.
+- Sub waveform: SAW, PULSE, SINE.
+- Sub octave: -12 / -24 semitones ten opzichte van de gespeelde noot.
+- Sub detune: -50 tot +50 cent en eigen level: 0–100%.
+- Pulse width blijft voor de pulse-golven instelbaar (gedeeld voor OSC 1, OSC 2 en SUB).
+- Sub gaat door dezelfde filter, ADSR en mixer/effect-routing als OSC 1 en 2.
+- Pitchslide, vibrato en NOTE OFF grijpen aan op alle drie oscillatoren; CHORD blijft meerstemmig.
+- Subinstellingen worden per instrument en in song-JSON opgeslagen. Bestaande songs zonder subinstellingen krijgen veilige defaults: SINE, -12 ST, 0 cent, 35% level.
+- Layout past op 1920×768 / 900 / 1080, zonder extra pagina-scrollbar.
+
+## Windows/web starten
+
+Open `index.html` in Chrome of Edge. Voor betrouwbare MIDI-toegang is de lokale server via `START_STUDIO.cmd` aanbevolen (Python 3 nodig), bereikbaar op http://localhost:8765.
+
+Voor de native Windows-app gaat een nieuwe GitHub Actions-build lopen zodra de web-`index.html` op main is bijgewerkt. De desktopapp gebruikt momenteel Web Audio voor de synthese; de afzonderlijke JUCE-audio-uitgang kan een ASIO-testtoon genereren.
+
+## Bediening
+
+Kies BASS, LEAD of CHORD en open de tab SYNTH. Stel in het SUB OSCILLATOR-paneel waveform, octave, detune en level in. Voor een klassieke diepe bas: SINE, -12 semitones, 0 cent, level 30–50%. Voor een zwaardere sublaag: -24 semitones, bijvoorbeeld met SAW op lager level.
