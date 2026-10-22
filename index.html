@@ -786,7 +786,7 @@ input[type="password"],textarea,
         </section>
         <div class="two-cols">
           <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step editor</h2></div><span class="pill" id="stepOnLabel">STEP OFF</span></div><div class="control-grid"><label class="field"><span class="field-head">INSTRUMENT TYPE</span><select id="stepTrackKind" aria-label="Instrument type for selected track"><option value="drum">DRUM</option><option value="bass">BASS</option><option value="lead">LEAD</option><option value="sample">SAMPLE</option><option value="chord">CHORD</option></select></label><label class="field hidden" id="stepDrumSampleField"><span class="field-head"><span>SAMPLE</span></span><select id="stepDrumSample" aria-label="Sample for the selected drum step"></select><div class="step-drum-quick" id="stepDrumQuick" role="group" aria-label="Drum slot quick selection"></div></label><label class="field" id="stepNoteField"><span class="field-head"><span>NOTE</span><output id="stepNoteOut">C3</output></span><select id="stepNote"></select></label><label class="field"><span class="field-head"><span>VELOCITY</span><output id="velocityOut">110</output></span><input id="velocity" type="range" min="1" max="127" value="110"></label><label class="field" id="stepGateField"><span class="field-head"><span>GATE</span><output id="gateOut">85%</output></span><input id="gate" type="range" min="10" max="180" value="85"></label><label class="field"><span class="field-head"><span>CHANCE</span><output id="chanceOut">100%</output></span><input id="chance" type="range" min="0" max="100" value="100"></label><label class="field"><span class="field-head"><span>RATCHET</span><output id="ratchetOut">1×</output></span><input id="ratchet" type="range" min="1" max="6" step="1" value="1"></label></div><div class="setup-actions"><button class="mini-btn" id="toggleStepBtn">TOGGLE STEP</button><button class="mini-btn" id="copyStepBtn" type="button">COPY STEP</button><button class="mini-btn" id="pasteStepBtn" type="button" disabled>PASTE STEP</button><button class="mini-btn" id="undoStepBtn" type="button" disabled>↶ UNDO</button><button class="mini-btn" id="redoStepBtn" type="button" disabled>↷ REDO</button><button class="mini-btn" id="auditionStepBtn">♪ AUDITION</button></div></section>
-          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step FX</h2></div><span class="pill" id="fxStatus">FX OFF</span></div><div class="control-grid fx-controls"><label class="field"><span class="field-head"><span>FX COMMAND</span></span><select id="stepFx" aria-label="Effect for the selected step"><option value="0">0 · NO EFFECT</option><option value="1">1 · PORTAMENTO UP</option><option value="2">2 · PORTAMENTO DOWN</option><option value="3">3 · OCTAVE UP</option><option value="4">4 · VIBRATO</option><option value="5">5 · OCTAVE DOWN</option><option value="9">9 · SAMPLE OFFSET (%)</option><option value="10">A · VOLUME SLIDE DOWN</option><option value="11">B · VOLUME SLIDE UP</option><option value="12">C · NOTE OFF</option></select></label><label class="field hidden" id="stepChordField"><span class="field-head"><span>CHORD MODE</span><output id="chordModeOutput">MIN</output></span><select id="stepChordMode" aria-label="Chord quality for the selected CHORD step"></select></label><label class="field" id="fxAmountField"><span class="field-head"><span id="fxAmountLabel">PERIOD/TICK · HEX</span><output id="fxAmountOut">02</output></span><div class="fx-amount-row"><input id="fxAmount" aria-label="FX amount" type="range" min="0" max="255" step="1" value="2"><input id="fxHex" type="text" maxlength="2" spellcheck="false" autocomplete="off" inputmode="text" aria-label="FX parameter in hex" value="02"></div></label></div><div class="setup-actions fx-actions"><button class="mini-btn" id="clearStepFx">CLEAR FX</button><button class="mini-btn" id="clearTrackFx">CLEAR TRACK FX</button></div></section>
+          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step FX</h2></div><span class="pill" id="fxStatus">FX OFF</span></div><div class="control-grid fx-controls"><label class="field"><span class="field-head"><span>FX COMMAND</span></span><select id="stepFx" aria-label="Effect for the selected step"><option value="0">0 · NO EFFECT</option><option value="1">1 · PORTAMENTO UP</option><option value="2">2 · PORTAMENTO DOWN</option><option value="3">3 · OCTAVE UP</option><option value="4">4 · VIBRATO</option><option value="5">5 · OCTAVE DOWN</option><option value="9">9 · SAMPLE OFFSET (%)</option><option value="10">A · VOLUME SLIDE DOWN</option><option value="11">B · VOLUME SLIDE UP</option><option value="12">C · NOTE OFF</option><option value="13">D · SAMPLE CONTINUE → NEXT PATTERN</option></select></label><label class="field hidden" id="stepChordField"><span class="field-head"><span>CHORD MODE</span><output id="chordModeOutput">MIN</output></span><select id="stepChordMode" aria-label="Chord quality for the selected CHORD step"></select></label><label class="field" id="fxAmountField"><span class="field-head"><span id="fxAmountLabel">PERIOD/TICK · HEX</span><output id="fxAmountOut">02</output></span><div class="fx-amount-row"><input id="fxAmount" aria-label="FX amount" type="range" min="0" max="255" step="1" value="2"><input id="fxHex" type="text" maxlength="2" spellcheck="false" autocomplete="off" inputmode="text" aria-label="FX parameter in hex" value="02"></div></label></div><div class="setup-actions fx-actions"><button class="mini-btn" id="clearStepFx">CLEAR FX</button><button class="mini-btn" id="clearTrackFx">CLEAR TRACK FX</button></div></section>
         </div>
       </div>
       <div id="view-song" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Song mode</h2></div><span class="pill">A1–D8 · 32 PATTERNS</span></div>
@@ -1007,7 +1007,7 @@ const makeStep=(track,on=false,note=null)=>({on,note:note??bases[track].note,sam
 // ticks 1..5 voeren de slide uit; lege FX-rijen stoppen de slide, maar behouden
 // de laatste period/volume. 1xx/2xx gebruiken period-units, Axx/Bxx volume-units.
 // 4xy = vibrato (speed=x, depth=y), 0xx herhaalt de laatst gebruikte parameter.
-const FX_OPTIONS=[{id:0,label:'0 · No effect'},{id:1,label:'1 · Portamento up'},{id:2,label:'2 · Portamento down'},{id:3,label:'3 · Octave up'},{id:4,label:'4 · Vibrato'},{id:5,label:'5 · Octave down'},{id:9,label:'9 · Sample offset (%)'},{id:10,label:'A · Volume slide down'},{id:11,label:'B · Volume slide up'},{id:12,label:'C · NOTE OFF'}];
+const FX_OPTIONS=[{id:0,label:'0 · No effect'},{id:1,label:'1 · Portamento up'},{id:2,label:'2 · Portamento down'},{id:3,label:'3 · Octave up'},{id:4,label:'4 · Vibrato'},{id:5,label:'5 · Octave down'},{id:9,label:'9 · Sample offset (%)'},{id:10,label:'A · Volume slide down'},{id:11,label:'B · Volume slide up'},{id:12,label:'C · NOTE OFF'},{id:13,label:'D · SAMPLE CONTINUE'}];
 const fxHex=n=>clamp(n|0,0,255).toString(16).toUpperCase().padStart(2,'0');
 const fxAmountText=(id,n)=>id===9?String(clamp(Math.round(Number(n)||0),0,99)).padStart(2,'0'):fxHex(n);
 const sampleOffsetFraction=(id,amount)=>id===9?clamp(Math.round(Number(amount)||0),0,99)/100:0;
@@ -1017,7 +1017,25 @@ const periodForNote=note=>428*Math.pow(2,(48-note)/12);
 const TICKS_PER_STEP=6;
 function blankFxRuntime(){return {voices:[],basePeriod:428,period:428,level:64,activeFx:0,activeAmount:0,phase:0,memory:{},vibratoSpeed:0,vibratoDepth:0}}
 let fxRuntime=Array.from({length:TRACK_COUNT},blankFxRuntime);
-function resetFXRuntime(){fxRuntime=Array.from({length:TRACK_COUNT},blankFxRuntime)}
+const continuedSampleVoices=Array.from({length:TRACK_COUNT},()=>new Set());
+function markSampleContinuation(t,voice){
+ if(!voice||voice.released||!voice.src||!(voice.sampleVoice||voice.drum))return false;
+ voice.carryAcrossPatterns=true;continuedSampleVoices[t].add(voice);return true;
+}
+function releaseContinuedSamples(t,when){
+ for(const voice of [...continuedSampleVoices[t]]){
+  if(!voice.released)releaseVoiceScheduled(voice,when);
+  voice.carryAcrossPatterns=false;
+ }
+ continuedSampleVoices[t].clear();
+}
+function forgetSampleContinuation(voice){
+ if(voice?.trackIndex>=0)continuedSampleVoices[voice.trackIndex]?.delete(voice);
+}
+function resetFXRuntime(){
+ fxRuntime=Array.from({length:TRACK_COUNT},blankFxRuntime);
+ for(const voices of continuedSampleVoices)voices.clear();
+}
 // Pure berekening van een tracker-tick: eenvoudig onafhankelijk te testen.
 function advanceFXTick(rt){
  const command=rt.activeFx, arg=rt.activeAmount;
@@ -1623,7 +1641,7 @@ function drumSampleVoice(t,slot,velocity,when,offsetPercent=0,gate=null){
   activeChokeVoices.get(groupKey).add(groupEntry);
  }
  src.onended=()=>{
-  voice.released=true;scheduledVoices.delete(voice);
+  voice.released=true;scheduledVoices.delete(voice);forgetSampleContinuation(voice);
   if(group)activeChokeVoices.get(groupKey)?.delete(groupEntry);
   try{src.disconnect();filter?.disconnect();gain.disconnect();slotPanner.disconnect();modGain.disconnect()}catch(e){}
  };
@@ -2572,6 +2590,23 @@ function synthVoice(track,note,velocity,when,gate=null){
  return v;
 }
 function releaseVoiceScheduled(v,when){if(v.released)return;
+ if(v.drum&&!v.nativeId){
+  v.released=true;v.releaseScheduled=when;
+  if(v.modGain&&v.src){
+   const t=Math.max(when,audio?.ctx.currentTime??when),fade=Math.max(.001,v.drumRelease??.018);
+   const gain=v.modGain.gain;
+   try{
+    const level=v.gateOff!==null&&v.gateOff!==undefined
+     ?(t<v.gateOff?1:clamp(1-(t-v.gateOff)/fade,0,1))
+     :Math.max(0,gain.value);
+    if(typeof gain.cancelAndHoldAtTime==='function')gain.cancelAndHoldAtTime(t);
+    else{gain.cancelScheduledValues(t);gain.setValueAtTime(level,t)}
+    gain.linearRampToValueAtTime(0,t+fade);
+    v.src.stop(t+fade+.007);
+   }catch(e){console.warn('Scheduled drum NOTE OFF:',e)}
+  }
+  return;
+ }
  if(v.nativeId){v.released=true;v.releaseScheduled=when;nativeVAMessage('off',{id:v.nativeId},when);return;}v.released=true;v.releaseScheduled=when;const p=v.env.gain;const val=voiceGainAt(v,when);p.cancelScheduledValues(when);p.setValueAtTime(val,when);p.exponentialRampToValueAtTime(.0001,when+v.release);releaseFilterEnvelopes(v,when);v.oscs.forEach(o=>o.stop(when+v.release+.04))}
 function oneShot(type,track,velocity,when,pitch=0){
  // Embedded Windows desktop: Kick/Snare/Hi-Hat now use the same JUCE/ASIO
@@ -2628,10 +2663,10 @@ function sampleVoice(t,note,velocity,when,pitch=0,offsetPercent=0){
  filter.type='lowpass';filter.frequency.setValueAtTime(track.sampleCutoff??12000,when);filter.Q.setValueAtTime(track.sampleResonance??.7,when);
  const filterEnvelopes=attachFilterEnvelopes(filter,t,when);audio.cutoffBuses[t].connect(filter.frequency);
  modGain.gain.value=1;src.connect(filter).connect(env).connect(modGain).connect(audio.trackGains[t]);
- const voice={env,oscs:[src],pitchParams:[src.detune],modGain,release:.065,released:false,filter,
+ const voice={env,oscs:[src],pitchParams:[src.detune],modGain,release:.065,released:false,sampleVoice:true,filter,
   trackIndex:t,filterEnvelopes,ampEnvelope:{start:when,peak:Math.max(.0002,velocity/127*.8),attack:.003,decay:.01,sustain:1}};
  scheduledVoices.add(voice);let playback=null;src.onended=()=>{
-  if(playback)playback.ended=true;voice.released=true;scheduledVoices.delete(voice);
+  if(playback)playback.ended=true;voice.released=true;scheduledVoices.delete(voice);forgetSampleContinuation(voice);
   try{src.disconnect();audio.cutoffBuses[t].disconnect(filter.frequency);filterEnvelopes.forEach(e=>{try{e.source.stop();e.source.disconnect()}catch(_){}});filter.disconnect();env.disconnect();modGain.disconnect()}catch(e){}
  };
  sanitizeSampleMarkers(track);
@@ -2753,7 +2788,7 @@ function scheduleStep(idx,when){
  for(let t=0;t<TRACK_COUNT;t++){
   const laneStep=idx%trackLength(state.pattern,t);
   const step=state.patterns[state.pattern][t][laneStep],track=state.tracks[t];
-  if(laneStep===0){midiOffTrack(t,when);for(const v of fxRuntime[t].voices)if(v&&!v.drum&&!v.released)releaseVoiceScheduled(v,when);fxRuntime[t]=blankFxRuntime()}
+  if(laneStep===0){midiOffTrack(t,when);for(const v of fxRuntime[t].voices)if(v&&!v.drum&&!v.released&&!v.carryAcrossPatterns)releaseVoiceScheduled(v,when);fxRuntime[t]=blankFxRuntime()}
   const rt=fxRuntime[t];
   // Ook FX-pads op steps zonder nieuwe noot worden verwerkt (zoals tracker FX-rijen).
   // C00 is een NOTE OFF op de huidige step, ook zonder actieve notepad.
@@ -2761,14 +2796,16 @@ function scheduleStep(idx,when){
   // voice afgesloten en begint de nieuwe noot daarna op de verse toonhoogte.
   if(step.fx===12){
    midiOffTrack(t,when);
-   if(isSynth(t)||isSample(t)){
-    for(const v of rt.voices)if(v&&!v.drum&&!v.released)releaseVoiceScheduled(v,when);
-    rt.voices=[];
-   }
+   releaseContinuedSamples(t,when);
+   for(const v of rt.voices)if(v&&!v.released)releaseVoiceScheduled(v,when);
+   rt.voices=[];
   }
+  // D00 may also appear on an empty FX row after the sample trigger.
+  if(step.fx===13&&!step.on&&(isSample(t)||isDrum(t)))
+   for(const v of rt.voices)markSampleContinuation(t,v);
   const startsNote=step.on&&step.fx!==12&&Math.random()*100<step.chance;
   if(startsNote){
-   for(const v of rt.voices)if(v&&!v.drum&&!v.released)releaseVoiceScheduled(v,when);
+   for(const v of rt.voices)if(v&&!v.drum&&!v.released&&!v.carryAcrossPatterns)releaseVoiceScheduled(v,when);
    rt.voices=[];rt.basePeriod=periodForNote(step.note);rt.period=rt.basePeriod;rt.level=64;rt.phase=0;rt.activeFx=0;
    // Blijf een voice vasthouden tot de volgende noot als een latere step
    // (eventueel na lege steps) een effect op diezelfde noot gaat uitvoeren.
@@ -2782,7 +2819,9 @@ function scheduleStep(idx,when){
     // trigger houdt sustain aan totdat C00 of de volgende noot volgt.
     const hitHold=hold&&hit===hits-1;
     const gateDuration=hits===1?clamp(step.gate/100*dur,.025,.8):clamp(subDuration*step.gate/100,.004,subDuration*.94);
-    const voices=playTrack(t,step.note,step.velocity,hitTime,hitHold?null:gateDuration,0,step.chordMode,step.sampleSlot||0,sampleOffsetFraction(step.fx,step.fxAmount))||[];
+    const carry=step.fx===13&&(isSample(t)||isDrum(t));
+    const voices=playTrack(t,step.note,step.velocity,hitTime,carry?null:hitHold?null:gateDuration,0,step.chordMode,step.sampleSlot||0,sampleOffsetFraction(step.fx,step.fxAmount))||[];
+    if(carry)for(const voice of voices)markSampleContinuation(t,voice);
     midiPlayStep(t,step.note,step.velocity,hitTime,hitHold,gateDuration,step.chordMode);
     rt.voices.push(...voices);
    }
@@ -4143,6 +4182,7 @@ function typeFXDigit(key){
  if(step.fx===10||step.fx===11)step.fxAmount=Math.min(step.fxAmount,15);
  if(step.fx===9)step.fxAmount=clamp(step.fxAmount,0,99);
  if(step.fx===12)step.on=false;
+ if(step.fx===13)step.fxAmount=0;
  const finished=fxDigitBuffer.length===3;
  if(finished){fxDigitBuffer='';if(state.selectedStep<trackLength()-1)state.selectedStep++}
  persist();renderAll();focusSelectedPad(false);return true;
@@ -4166,7 +4206,7 @@ function bindings(){
  $('redoStepBtn').onclick=redoEdit;
  $('auditionStepBtn').onclick=()=>playPreview(state.selectedTrack,selectedStep().note,selectedStep().velocity,selectedStep());
  $('stepChordMode').onchange=()=>{if(kindOf(state.tracks[state.selectedTrack])!=='chord')return;const step=selectedStep();step.chordMode=chordMode($('stepChordMode').value).id;persist();renderGrid();renderFXEditor();focusSelectedPad(false)};
- $('stepFx').onchange=()=>{const step=selectedStep(),prev=step.fx;step.fx=Number($('stepFx').value);if(step.fx===12){step.fxAmount=0;step.on=false;}else if(step.fx===9&&prev!==9)step.fxAmount=0;else if(step.fx===4&&prev!==4)step.fxAmount=0x47;else if([10,11].includes(step.fx)&&![10,11].includes(prev))step.fxAmount=0x02;else if([1,2].includes(step.fx)&&![1,2].includes(prev))step.fxAmount=0x02;persist();renderAll();focusSelectedPad(false)};
+ $('stepFx').onchange=()=>{const step=selectedStep(),prev=step.fx;step.fx=Number($('stepFx').value);if(step.fx===12){step.fxAmount=0;step.on=false;}else if(step.fx===13){step.fxAmount=0;}else if(step.fx===9&&prev!==9)step.fxAmount=0;else if(step.fx===4&&prev!==4)step.fxAmount=0x47;else if([10,11].includes(step.fx)&&![10,11].includes(prev))step.fxAmount=0x02;else if([1,2].includes(step.fx)&&![1,2].includes(prev))step.fxAmount=0x02;persist();renderAll();focusSelectedPad(false)};
  $('fxAmount').oninput=()=>{const st=selectedStep();st.fxAmount=Number($('fxAmount').value);const label=fxAmountText(st.fx,st.fxAmount);$('fxAmountOut').textContent=st.fx===9?label+'%':label;$('fxHex').value=label;$('fxStatus').textContent=fxCode(st.fx)+label;persist();renderGrid()};
  $('fxHex').oninput=()=>{const raw=$('fxHex').value.trim(),st=selectedStep(),offset=st.fx===9;
   if(!(offset?/^[0-9]{1,2}$/.test(raw):/^[0-9a-f]{1,2}$/i.test(raw)))return;
