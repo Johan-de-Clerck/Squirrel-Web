@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.1.72 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.1.73 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -763,7 +763,7 @@ input[type="password"],textarea,
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.72</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.73</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1054,7 +1054,7 @@ function applyFXCommand(rt, step){
  rt.activeAmount=amount||rt.memory[effect]||0;
 }
 const DRUM_LIBRARY_SIZE=15;
-function defaultDrumSlot(name='',data=null,chokeGroup=0){return {name,data,chokeGroup,libraryIndex:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,slotVolume:100,slotPitch:0,slotFine:0,slotPan:0,slotAttack:2,slotDecay:0,slotRelease:18,slotFilterOn:false,slotFilterType:'lowpass',slotCutoff:12000,slotResonance:.7}}
+function defaultDrumSlot(name='',data=null,chokeGroup=0){return {name,data,chokeGroup,libraryIndex:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,slotVolume:100,slotPitch:0,slotFine:0,slotPan:0,slotAttack:2,slotDecay:0,slotRelease:18,slotFilterOn:false,slotFilterType:'lowpass',slotCutoff:12000,slotResonance:.7,slotFilterEnvDepth:0,slotFilterEnvTime:0}}
 const DRUM_FILTER_TYPES=Object.freeze(['lowpass','highpass','bandpass']);
 function drumSlotFilterType(item){return DRUM_FILTER_TYPES.includes(item?.slotFilterType)?item.slotFilterType:'lowpass'}
 // Filters bypass by default: no extra audio nodes or CPU on older projects.
@@ -1066,9 +1066,29 @@ function drumSlotFilterCutoff(item,ctx=audio?.ctx){
 function drumSlotFilterResonance(item){return clamp(Number(item?.slotResonance??.7)||.7,.1,18)}
 function drumSlotFilterPosition(hz){return Math.round(clamp(Math.log(clamp(hz,80,20000)/80)/Math.log(250),0,1)*1000)}
 function drumSlotFilterHz(position){return Math.round(80*Math.pow(250,clamp(Number(position)||0,0,1000)/1000))}
+function drumSlotFilterSweep(item,ctx=audio?.ctx){
+ const base=drumSlotFilterCutoff(item,ctx);
+ const depth=clamp(Number(item?.slotFilterEnvDepth??0)||0,-48,48);
+ const duration=clamp(Number(item?.slotFilterEnvTime??0)||0,0,3000)/1000;
+ const nyquist=ctx?.sampleRate?ctx.sampleRate/2:22050;
+ return {base,depth,duration,active:depth!==0&&duration>0,minimum:80,maximum:Math.min(20000,nyquist*.98)};
+}
+function drumSlotSweepFrequency(sweep,elapsed){
+ if(!sweep.active||elapsed>=sweep.duration)return sweep.base;
+ const fraction=clamp(elapsed/sweep.duration,0,1);
+ return clamp(sweep.base*Math.pow(2,(sweep.depth/12)*(1-fraction)),sweep.minimum,sweep.maximum);
+}
+function scheduleDrumSlotFilterSweep(param,item,when,ctx=audio?.ctx,elapsed=0){
+ const sweep=drumSlotFilterSweep(item,ctx),remaining=Math.max(0,sweep.duration-elapsed);
+ const start=drumSlotSweepFrequency(sweep,elapsed);
+ param.setValueAtTime(start,when);
+ if(sweep.active&&remaining>0&&Math.abs(start-sweep.base)>.0001)
+  param.exponentialRampToValueAtTime(sweep.base,when+remaining);
+ return sweep;
+}
 function resetDrumSlotFilter(t,slot){
  const item=state.drumSamples?.[t]?.[slot];if(!item)return;
- item.slotFilterOn=false;item.slotFilterType='lowpass';item.slotCutoff=12000;item.slotResonance=.7;
+ item.slotFilterOn=false;item.slotFilterType='lowpass';item.slotCutoff=12000;item.slotResonance=.7;item.slotFilterEnvDepth=0;item.slotFilterEnvTime=0;
  persist();renderDrumSamples();
 }
 function updateLiveDrumSlotFilter(t,slot){
@@ -1078,10 +1098,20 @@ function updateLiveDrumSlotFilter(t,slot){
  for(const voice of scheduledVoices){
   if(voice.trackIndex!==t||voice.sampleSlot!==slot||!voice.filter||voice.released)continue;
   voice.filter.type=drumSlotFilterType(item);
-  for(const [param,value] of [[voice.filter.frequency,drumSlotFilterCutoff(item)],[voice.filter.Q,drumSlotFilterResonance(item)]]){
-   if(typeof param.setTargetAtTime==='function')param.setTargetAtTime(value,now,.012);
-   else param.setValueAtTime(value,now);
+  const at=Math.max(now,voice.startTime??now);
+  const elapsed=Math.max(0,at-(voice.startTime??at));
+  const sweep=drumSlotFilterSweep(item,audio.ctx),frequency=voice.filter.frequency;
+  if(sweep.active&&elapsed<sweep.duration){
+   frequency.cancelScheduledValues(at);
+   scheduleDrumSlotFilterSweep(frequency,item,at,audio.ctx,elapsed);
+  }else{
+   frequency.cancelScheduledValues(at);
+   if(typeof frequency.setTargetAtTime==='function')frequency.setTargetAtTime(sweep.base,at,.012);
+   else frequency.setValueAtTime(sweep.base,at);
   }
+  const q=voice.filter.Q,value=drumSlotFilterResonance(item);
+  if(typeof q.setTargetAtTime==='function')q.setTargetAtTime(value,at,.012);
+  else q.setValueAtTime(value,at);
  }
 }
 function drumSlotDetuneCents(item){
@@ -1391,7 +1421,9 @@ async function loadDrumSampleFile(t,slot,file){
    slotRelease:previous?.slotRelease??18,
    slotFilterOn:previous?.slotFilterOn??false,slotFilterType:drumSlotFilterType(previous),
    slotCutoff:previous?.slotCutoff??12000,
-   slotResonance:previous?.slotResonance??.7};
+   slotResonance:previous?.slotResonance??.7,
+   slotFilterEnvDepth:previous?.slotFilterEnvDepth??0,
+   slotFilterEnvTime:previous?.slotFilterEnvTime??0};
   rememberDrumSlot(t,slot);
   drumSampleBuffers.set(drumSlotKey(t,slot),decoded);
   try{await sampleDB('put',drumSlotKey(t,slot),state.drumSamples[t][slot])}
@@ -1432,7 +1464,7 @@ function drumSampleVoice(t,slot,velocity,when,offsetPercent=0,gate=null){
  const filter=item.slotFilterOn?c.createBiquadFilter():null;
  if(filter){
   filter.type=drumSlotFilterType(item);
-  filter.frequency.setValueAtTime(drumSlotFilterCutoff(item,c),when);
+  scheduleDrumSlotFilterSweep(filter.frequency,item,when,c);
   filter.Q.setValueAtTime(drumSlotFilterResonance(item),when);
   src.connect(filter).connect(gain);
  }else src.connect(gain);
@@ -1457,7 +1489,7 @@ function drumSampleVoice(t,slot,velocity,when,offsetPercent=0,gate=null){
  }
  const drumRelease=clamp(Number(item.slotRelease??18)||0,0,2000)/1000;
  const voice={pitchParams:[src.detune],baseDetune,modGain,drum:true,
-  drumRelease,released:false,trackIndex:t,sampleSlot:slot,filter,src,gateOff:null};
+  drumRelease,released:false,trackIndex:t,sampleSlot:slot,filter,src,startTime:when,gateOff:null};
  scheduledVoices.add(voice);
  const groupEntry={src,gain,envelope,level:peak};
  if(group){
@@ -1877,6 +1909,8 @@ s.drumSamples=Array.from({length:TRACK_COUNT},(_,t)=>Array.from({length:5},(_,sl
   normalized.slotFilterType=drumSlotFilterType(item);
   normalized.slotCutoff=clamp(Number(item.slotCutoff??12000)||12000,80,20000);
   normalized.slotResonance=clamp(Number(item.slotResonance??.7)||.7,.1,18);
+  normalized.slotFilterEnvDepth=clamp(Number(item.slotFilterEnvDepth??0)||0,-48,48);
+  normalized.slotFilterEnvTime=clamp(Number(item.slotFilterEnvTime??0)||0,0,3000);
   normalized.libraryIndex=Number.isInteger(item.libraryIndex)&&item.libraryIndex>=0&&item.libraryIndex<DRUM_LIBRARY_SIZE?item.libraryIndex:null;
   sanitizeSampleMarkers(normalized);
   return normalized;
@@ -3787,6 +3821,8 @@ function validateSampleBank(pack){
   output.slotFilterType=drumSlotFilterType(item);
   output.slotCutoff=clamp(Number(item.slotCutoff??12000)||12000,80,20000);
   output.slotResonance=clamp(Number(item.slotResonance??.7)||.7,.1,18);
+  output.slotFilterEnvDepth=clamp(Number(item.slotFilterEnvDepth??0)||0,-48,48);
+  output.slotFilterEnvTime=clamp(Number(item.slotFilterEnvTime??0)||0,0,3000);
   output.libraryIndex=Number.isInteger(item.libraryIndex)&&item.libraryIndex>=0&&item.libraryIndex<DRUM_LIBRARY_SIZE?item.libraryIndex:null;
   sanitizeSampleMarkers(output);return output;
  }));
