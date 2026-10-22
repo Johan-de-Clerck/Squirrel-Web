@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.59**  
+**Current web version: 0.1.61**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,14 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.61
+
+- **Green Song Mode follow, timed to actual audio:** the green playing tile is updated by the audio playhead queue, rather than the scheduler's lookahead position.
+- **Cue any arrangement tile:** click a song tile, or focus it and press Enter/Space, to select where playback starts. The stopped cue appears in muted green; the playing tile becomes bright green.
+- **Start from any position:** double-click the tile while Song Mode is enabled, or select it once and press the main PLAY button.
+- **STOP remembers the last audible song position**, ready for another PLAY. Insert, remove, duplicate and reorder controls preserve the logical cue position. Editing the arrangement during playback now stops transport first to avoid racing the scheduler.
+- No project format changes; existing saved projects remain compatible.
 
 ## What is new in 0.1.59
 
