@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.1.48 — User Manual
+# Squirrel Studio Web 0.1.49 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -138,6 +138,12 @@ You can back up and transfer audio separately from a song using **EXPORT SAMPLE 
 
 **IMPORT SAMPLE BANK** replaces the current audio bank after confirmation but keeps the song arrangement, notes and patterns. Older version-1 sample banks with three drum banks and two sampler slots can still be imported. A Sample Bank is **not** a complete project backup; use **SAVE PROJECT** to preserve instrument configurations, synth patches and patterns as well.
 
+### Mixer signal meters (0.1.49)
+
+Every Mixer track has its own VU meter, connected after that track's volume and panning controls. The meter shows the actual output of **that track only**, before the shared compressor and effect returns. A note on another track cannot cause this meter to move. When a track is silent, its meter falls to zero; Mute and Solo affect which tracks can be heard and measured. Tracks configured as MIDI OUT ONLY have no browser audio to meter.
+
+The VU meter is a visual indicator, not a recording or gain-adjustment control. It does not alter audio playback. Because it is measured before the shared Delay/Reverb/Chorus returns, an effect tail may remain audible even after a particular track's dry VU meter has fallen to zero.
+
 ## 10. Demo song (`demo.json`)
 
 `demo.json` must be placed beside `index.html` on your web server.
@@ -192,4 +198,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.1.48.**
+**Documentation version: Squirrel Studio Web 0.1.49.**
