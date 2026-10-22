@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.1.62 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.1.63 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -539,6 +539,9 @@ input[type="password"],textarea,
 .drum-slot-controls{display:flex;flex:0 0 auto;gap:6px}
 .drum-slot-controls button{white-space:nowrap}
 #stepDrumSampleField select{width:100%}
+.step-drum-quick{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin-top:8px}
+.step-drum-quick button{min-width:0;border:1px solid #755a41;border-radius:5px;padding:6px 2px;background:#33281e;color:#e4c49d;font:700 11px Consolas,monospace;cursor:pointer}
+.step-drum-quick button.active{border-color:#9de3a6;background:#285c3b;color:#e3ffe7;box-shadow:0 0 0 1px #62b879}
 @media(max-width:950px){.drum-slot-list{grid-template-columns:1fr}}
 @media(max-width:500px){.drum-slot-row{flex-wrap:wrap}.drum-slot-controls{width:100%;justify-content:flex-end}}
 
@@ -713,7 +716,7 @@ input[type="password"],textarea,
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.62</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.63</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -724,7 +727,7 @@ input[type="password"],textarea,
           
         </section>
         <div class="two-cols">
-          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step editor</h2></div><span class="pill" id="stepOnLabel">STEP OFF</span></div><div class="control-grid"><label class="field"><span class="field-head">INSTRUMENT TYPE</span><select id="stepTrackKind" aria-label="Instrument type for selected track"><option value="drum">DRUM</option><option value="bass">BASS</option><option value="lead">LEAD</option><option value="sample">SAMPLE</option><option value="chord">CHORD</option></select></label><label class="field hidden" id="stepDrumSampleField"><span class="field-head"><span>SAMPLE</span></span><select id="stepDrumSample" aria-label="Sample for the selected drum step"></select></label><label class="field" id="stepNoteField"><span class="field-head"><span>NOTE</span><output id="stepNoteOut">C3</output></span><select id="stepNote"></select></label><label class="field"><span class="field-head"><span>VELOCITY</span><output id="velocityOut">110</output></span><input id="velocity" type="range" min="1" max="127" value="110"></label><label class="field" id="stepGateField"><span class="field-head"><span>GATE</span><output id="gateOut">85%</output></span><input id="gate" type="range" min="10" max="180" value="85"></label><label class="field"><span class="field-head"><span>CHANCE</span><output id="chanceOut">100%</output></span><input id="chance" type="range" min="0" max="100" value="100"></label><label class="field"><span class="field-head"><span>RATCHET</span><output id="ratchetOut">1×</output></span><input id="ratchet" type="range" min="1" max="6" step="1" value="1"></label></div><div class="setup-actions"><button class="mini-btn" id="toggleStepBtn">TOGGLE STEP</button><button class="mini-btn" id="copyStepBtn" type="button">COPY STEP</button><button class="mini-btn" id="pasteStepBtn" type="button" disabled>PASTE STEP</button><button class="mini-btn" id="undoStepBtn" type="button" disabled>↶ UNDO</button><button class="mini-btn" id="redoStepBtn" type="button" disabled>↷ REDO</button><button class="mini-btn" id="auditionStepBtn">♪ AUDITION</button></div></section>
+          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step editor</h2></div><span class="pill" id="stepOnLabel">STEP OFF</span></div><div class="control-grid"><label class="field"><span class="field-head">INSTRUMENT TYPE</span><select id="stepTrackKind" aria-label="Instrument type for selected track"><option value="drum">DRUM</option><option value="bass">BASS</option><option value="lead">LEAD</option><option value="sample">SAMPLE</option><option value="chord">CHORD</option></select></label><label class="field hidden" id="stepDrumSampleField"><span class="field-head"><span>SAMPLE</span></span><select id="stepDrumSample" aria-label="Sample for the selected drum step"></select><div class="step-drum-quick" id="stepDrumQuick" role="group" aria-label="Drum slot quick selection"></div></label><label class="field" id="stepNoteField"><span class="field-head"><span>NOTE</span><output id="stepNoteOut">C3</output></span><select id="stepNote"></select></label><label class="field"><span class="field-head"><span>VELOCITY</span><output id="velocityOut">110</output></span><input id="velocity" type="range" min="1" max="127" value="110"></label><label class="field" id="stepGateField"><span class="field-head"><span>GATE</span><output id="gateOut">85%</output></span><input id="gate" type="range" min="10" max="180" value="85"></label><label class="field"><span class="field-head"><span>CHANCE</span><output id="chanceOut">100%</output></span><input id="chance" type="range" min="0" max="100" value="100"></label><label class="field"><span class="field-head"><span>RATCHET</span><output id="ratchetOut">1×</output></span><input id="ratchet" type="range" min="1" max="6" step="1" value="1"></label></div><div class="setup-actions"><button class="mini-btn" id="toggleStepBtn">TOGGLE STEP</button><button class="mini-btn" id="copyStepBtn" type="button">COPY STEP</button><button class="mini-btn" id="pasteStepBtn" type="button" disabled>PASTE STEP</button><button class="mini-btn" id="undoStepBtn" type="button" disabled>↶ UNDO</button><button class="mini-btn" id="redoStepBtn" type="button" disabled>↷ REDO</button><button class="mini-btn" id="auditionStepBtn">♪ AUDITION</button></div></section>
           <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step FX</h2></div><span class="pill" id="fxStatus">FX OFF</span></div><div class="control-grid fx-controls"><label class="field"><span class="field-head"><span>FX COMMAND</span></span><select id="stepFx" aria-label="Effect for the selected step"><option value="0">0 · NO EFFECT</option><option value="1">1 · PORTAMENTO UP</option><option value="2">2 · PORTAMENTO DOWN</option><option value="3">3 · OCTAVE UP</option><option value="4">4 · VIBRATO</option><option value="5">5 · OCTAVE DOWN</option><option value="9">9 · SAMPLE OFFSET (%)</option><option value="10">A · VOLUME SLIDE DOWN</option><option value="11">B · VOLUME SLIDE UP</option><option value="12">C · NOTE OFF</option></select></label><label class="field hidden" id="stepChordField"><span class="field-head"><span>CHORD MODE</span><output id="chordModeOutput">MIN</output></span><select id="stepChordMode" aria-label="Chord quality for the selected CHORD step"></select></label><label class="field" id="fxAmountField"><span class="field-head"><span id="fxAmountLabel">PERIOD/TICK · HEX</span><output id="fxAmountOut">02</output></span><div class="fx-amount-row"><input id="fxAmount" aria-label="FX amount" type="range" min="0" max="255" step="1" value="2"><input id="fxHex" type="text" maxlength="2" spellcheck="false" autocomplete="off" inputmode="text" aria-label="FX parameter in hex" value="02"></div></label></div><div class="setup-actions fx-actions"><button class="mini-btn" id="clearStepFx">CLEAR FX</button><button class="mini-btn" id="clearTrackFx">CLEAR TRACK FX</button></div></section>
         </div>
       </div>
@@ -1630,7 +1633,7 @@ function rememberDrumSlot(t,slot){
 }
 function toggleSelectedNote(){
  const step=selectedStep();
- if(!step.on&&isDrum(state.selectedTrack))step.sampleSlot=drumLastSlot(state.selectedTrack);
+ if(!step.on&&isDrum(state.selectedTrack))state.drumLastSlots[state.selectedTrack]=clamp(step.sampleSlot??drumLastSlot(state.selectedTrack),0,4);
  step.on=!step.on;
  persist();renderAll();focusSelectedPad(false);
 }
@@ -2513,6 +2516,13 @@ function moveGridSelection(key){
  focusSelectedPad();
 }
 function selectTrack(n){if(n!==state.selectedTrack){stopEnterPreview();stopAllEditNotePreviews()}clearStepRange();fxEditMode=false;fxDigitBuffer='';state.selectedTrack=n;state.selectedStep=Math.min(state.selectedStep,trackLength()-1);persist();renderAll()}
+function selectDrumStepSlot(track,slot){
+ if(!isDrum(track)||track!==state.selectedTrack)return;
+ slot=clamp(Math.round(Number(slot)||0),0,4);
+ state.drumLastSlots[track]=slot;
+ selectedStep().sampleSlot=slot;
+ persist();renderGrid();renderStepEditor();focusSelectedPad(false);
+}
 function renderStepEditor(){const step=selectedStep(),t=state.tracks[state.selectedTrack];
  $('stepTrackKind').value=kindOf(t);
  const drum=isDrum(state.selectedTrack),drumField=$('stepDrumSampleField'),drumSelect=$('stepDrumSample');
@@ -2520,7 +2530,16 @@ function renderStepEditor(){const step=selectedStep(),t=state.tracks[state.selec
  if(drum){
   drumSelect.replaceChildren();
   for(let slot=0;slot<5;slot++)drumSelect.add(new Option((slot+1)+' · '+drumName(state.selectedTrack,slot),String(slot)));
-  drumSelect.value=String(step.on?clamp(step.sampleSlot||0,0,4):drumLastSlot(state.selectedTrack));
+  drumSelect.value=String(clamp(step.sampleSlot??drumLastSlot(state.selectedTrack),0,4));
+   const quick=$('stepDrumQuick');quick.replaceChildren();
+   for(let slot=0;slot<5;slot++){
+    const button=document.createElement('button');button.type='button';button.textContent='S'+(slot+1);
+    button.classList.toggle('active',Number(drumSelect.value)===slot);
+    button.title='Slot '+(slot+1)+' · '+drumName(state.selectedTrack,slot);
+    button.setAttribute('aria-label','Select drum slot '+(slot+1)+' · '+drumName(state.selectedTrack,slot));
+    button.setAttribute('aria-pressed',String(Number(drumSelect.value)===slot));
+    button.onclick=()=>selectDrumStepSlot(state.selectedTrack,slot);quick.append(button);
+   }
  }
 $('stepOnLabel').textContent=step.on?'STEP ON':'STEP OFF';$('stepNoteField').classList.toggle('hidden',!t.midiOnly&&drum);$('gate').disabled=kindOf(t)==='bass'||kindOf(t)==='lead';$('gateOut').textContent=$('gate').disabled?'HOLD':step.gate+'%';$('stepNote').value=String(step.note);$('stepNoteOut').textContent=noteName(step.note);$('velocity').value=step.velocity;$('velocityOut').textContent=step.velocity;$('gate').value=step.gate;$('ratchet').value=step.ratchet||1;$('ratchetOut').textContent=(step.ratchet||1)+'×';$('chance').value=step.chance;$('chanceOut').textContent=step.chance+'%';}
 function renderFXEditor(){
@@ -3521,12 +3540,7 @@ function bindings(){
  $('bpmInput').onchange=()=>{state.bpm=normalizeBpm($('bpmInput').value);applyLFOs();persist();renderAll()};$('swingInput').oninput=()=>{state.swing=Number($('swingInput').value);$('swingOut').textContent=state.swing+'%';persist()};$('masterInput').oninput=()=>{state.master=Number($('masterInput').value);$('masterOut').textContent=state.master+'%';applyTrackMix();persist()};$('patternNameInput').onchange=()=>setPatternName(state.pattern,$('patternNameInput').value);$('patternNameInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('patternNameInput').blur()}};
  $('patternGroup').onchange=()=>choosePattern(patternIndex(Number($('patternGroup').value),0));$('patternSelect').onchange=()=>choosePattern(patternIndex(Number($('patternGroup').value),Number($('patternSelect').value)));$('copyPatternBtn').onclick=()=>{clipboard={lanes:structuredClone(state.patterns[state.pattern]),lengths:[...state.trackLengths[state.pattern]]};notify('Pattern '+patternName(state.pattern)+' copied.')};$('pastePatternBtn').onclick=()=>{if(!clipboard){notify('Copy a pattern first.',true);return}if(playing)stopTransport();state.patterns[state.pattern]=structuredClone(clipboard.lanes);state.trackLengths[state.pattern]=clipboard.lengths?[...clipboard.lengths]:Array(TRACK_COUNT).fill(clipboard.length||32);state.patternLengths[state.pattern]=patternLength();state.selectedStep=Math.min(state.selectedStep,trackLength()-1);persist();renderAll();notify('Pattern and track lengths pasted.')};
  $('stepTrackKind').onchange=()=>assignTrackKind(state.selectedTrack,$('stepTrackKind').value);
- $('stepDrumSample').onchange=()=>{
-  const track=state.selectedTrack,slot=clamp(Number($('stepDrumSample').value)||0,0,4);
-  rememberDrumSlot(track,slot);
-  if(selectedStep().on)selectedStep().sampleSlot=slot;
-  persist();renderAll();focusSelectedPad(false)
- };
+ $('stepDrumSample').onchange=()=>selectDrumStepSlot(state.selectedTrack,$('stepDrumSample').value);
  $('stepNote').onchange=()=>{selectedStep().note=Number($('stepNote').value);persist();renderAll();focusSelectedPad(false)};for(const [id,k] of [['velocity','velocity'],['gate','gate'],['chance','chance'],['ratchet','ratchet']])$(id).oninput=()=>{selectedStep()[k]=Number($(id).value);$(id+'Out').textContent=$(id).value+(id==='velocity'?'':id==='ratchet'?'×':'%');persist();renderGrid()};$('toggleStepBtn').onclick=toggleSelectedNote;
  $('copyStepBtn').onclick=copySelectedStep;
  $('pasteStepBtn').onclick=pasteSelectedStep;
