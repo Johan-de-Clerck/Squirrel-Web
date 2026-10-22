@@ -2284,7 +2284,7 @@ function moveGridSelection(key){
   case 'ArrowDown':state.selectedTrack=clamp(prevTrack+1,0,state.tracks.length-1);break;
  }
  state.selectedStep=Math.min(state.selectedStep,trackLength()-1);
- if(state.selectedTrack!==prevTrack||state.selectedStep!==prevStep){fxDigitBuffer='';persist();renderAll()}
+ if(state.selectedTrack!==prevTrack||state.selectedStep!==prevStep){stopEnterPreview();stopAllEditNotePreviews();fxDigitBuffer='';persist();renderAll()}
  focusSelectedPad();
 }
 function selectTrack(n){if(n!==state.selectedTrack){stopEnterPreview();stopAllEditNotePreviews()}clearStepRange();fxEditMode=false;fxDigitBuffer='';state.selectedTrack=n;state.selectedStep=Math.min(state.selectedStep,trackLength()-1);persist();renderAll()}
