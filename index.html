@@ -2619,6 +2619,20 @@ function updateLiveOscillatorMix(trackIndex){
 }
 // Two-operator phase/frequency modulation: operator 2 drives operator 1's
 // frequency at audio rate. The modulation index has its own ADS envelope.
+function updateLiveFM(trackIndex){
+ if(!audio)return;
+ const sound=state.tracks[trackIndex]?.sound;if(!sound||sound.engine!=='fm')return;
+ const now=audio.ctx.currentTime;
+ for(const v of scheduledVoices){
+  if(v.trackIndex!==trackIndex||v.engine!=='fm'||v.released)continue;
+  const f=v.fmFundamental,maxHz=audio.ctx.sampleRate?audio.ctx.sampleRate*.45:18000;
+  v.fmModulator.frequency.setTargetAtTime(Math.min(f*clamp(Number(sound.fmRatio??2),.25,16),maxHz),now,.015);
+  // Index edits reshape the remaining timbre without retriggering the note.
+  const sustain=clamp(Number(sound.fmSustain??30),0,100)/100;
+  v.fmDepth.gain.cancelScheduledValues(now);
+  v.fmDepth.gain.setTargetAtTime(Math.min(f*clamp(Number(sound.fmIndex??3),0,12),maxHz)*sustain,now,.02);
+ }
+}
 function fmSynthVoice(track,note,velocity,when,gate=null){
  const c=audio.ctx,s=track.sound,index=state.tracks.indexOf(track),frequency=hz(note);
  const carrier=c.createOscillator(),modulator=c.createOscillator();
@@ -2640,15 +2654,15 @@ function fmSynthVoice(track,note,velocity,when,gate=null){
  filter.type='lowpass';filter.frequency.setValueAtTime(s.cutoff,when);filter.Q.value=s.resonance;
  const filterEnvelopes=attachFilterEnvelopes(filter,index,when);
  audio.cutoffBuses[index].connect(filter.frequency);
- carrier.connect(volume).connect(filter).connect(out).connect(audio.trackGains[index]);
+ carrier.connect(volume).connect(filter).connect(out);
  const modGain=c.createGain();modGain.gain.value=1;
- // The separate gain is required for the tracker's note volume/pitch effects.
- out.disconnect();out.connect(modGain).connect(audio.trackGains[index]);
+ // Keep tracker note-volume slides independent of FM timbre modulation.
+ out.connect(modGain).connect(audio.trackGains[index]);
  volume.gain.value=.65;
  gainEnv(out.gain,when,velocity,s.attack,s.decay,s.sustain);
  const v={engine:'fm',env:out,oscs:[carrier,modulator],pitchParams:[carrier.detune,modulator.detune],
   modGain,release:Math.max(.02,s.release),released:false,trackIndex:index,
-  filter,filterEnvelopes,fmDepth:depth,
+  filter,filterEnvelopes,fmDepth:depth,fmModulator:modulator,fmFundamental:frequency,
   ampEnvelope:{start:when,peak:Math.max(.0002,velocity/127*.5),
    attack:Math.max(.003,s.attack),decay:Math.max(.01,s.decay),sustain:s.sustain}};
  carrier.start(when);modulator.start(when);
@@ -3432,6 +3446,7 @@ function soundFieldControl(s,f){
   show();persist();
   if(f.k==='cutoff')updateLiveCutoff(state.selectedTrack);
    if(f.k==='pulseWidth')updateLivePulseWidth(state.selectedTrack);
+   if(f.k==='fmRatio'||f.k==='fmIndex'||f.k==='fmSustain')updateLiveFM(state.selectedTrack);
   if(['osc1Level','osc2Level','subLevel'].includes(f.k))updateLiveOscillatorMix(state.selectedTrack);
   drawWave();
  };
