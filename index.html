@@ -1282,7 +1282,14 @@ function renderDrumLibrary(){
    const src=audio.ctx.createBufferSource(),gn=audio.ctx.createGain();src.buffer=drumLibraryBuffers.get(i);
    if(!src.buffer)return;gn.gain.value=.6;src.connect(gn).connect(audio.trackGains[track]);src.start();
   };
-  row.append(title,label,upload,audition);root.appendChild(row);
+  const clear=document.createElement('button');clear.type='button';clear.className='mini-btn';
+  clear.textContent='×';clear.title='Empty library slot '+(i+1);clear.disabled=!item?.data;
+  clear.onclick=async()=>{
+   state.drumLibrary[i]={name:'',data:null};drumLibraryBuffers.delete(i);
+   await sampleDB('delete',drumLibraryKey(i)).catch(e=>console.warn(e));
+   persist();renderAll();renderDrumSamples();
+  };
+  row.append(title,label,upload,audition,clear);root.appendChild(row);
  }
 }
 function renderDrumSamples(){
@@ -2646,6 +2653,7 @@ function renderSampleEditor(){
  else select.add(new Option('NO SAMPLE TRACKS OR LOADED DRUM SLOTS',''));
  select.disabled=!available.length;
  $('sampleEditorLoad').disabled=!available.length;
+ $('sampleEditorLoad').textContent=sampleEditorIsDrum()?'♬ DRUM LIBRARY':'↑ LOAD WAV';
  $('sampleEditorPreview').disabled=!choice||!sampleEditorBuffer();
  grid.replaceChildren();
  if(!choice){$('sampleEditorFile').textContent='LOAD A SAMPLE OR CHOOSE SAMPLE IN OPTIONS';drawSampleWaveform();return}
@@ -2693,7 +2701,7 @@ function renderSampleEditor(){
 }
 function bindSampleEditor(){
  $('sampleEditTrack').onchange=()=>{const choice=$('sampleEditTrack').value.split(':');selectedSampleEditorTrack=Number(choice[1]);selectedSampleEditorDrumSlot=choice[0]==='d'?Number(choice[2]):null;renderSampleEditor()};
- $('sampleEditorLoad').onclick=()=>{$('sampleEditorFileInput').click()};
+ $('sampleEditorLoad').onclick=()=>{if(sampleEditorIsDrum()){drumEditorTrack=selectedSampleEditorTrack;switchView('drum')}else $('sampleEditorFileInput').click()};
  $('sampleEditorFileInput').onchange=async e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;
   if(sampleEditorIsDrum()){notify('Load or replace drum samples in the DRUM SAMPLES library.',true);return;}
   if(isSample(selectedSampleEditorTrack))await loadSamplerFile(selectedSampleEditorTrack,file);
