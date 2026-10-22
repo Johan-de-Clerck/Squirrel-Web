@@ -1790,6 +1790,7 @@ function renderDrumSamples(){
    const filterHint=document.createElement('small');filterHint.textContent='LOW / HIGH / BAND · PER SLOT · OFF = ORIGINAL AUDIO';
    filterSettings.append(filterHeading,filterHint);
    const filterControls=document.createElement('div');filterControls.className='drum-slot-filter-controls';
+   let redrawSweepGraph=()=>{};
    const modeLabel=document.createElement('label');modeLabel.className='drum-filter-mode';
    const modeText=document.createElement('span');modeText.textContent='TYPE';
    const modeSelect=document.createElement('select');modeSelect.className='drum-filter-select';
@@ -1815,6 +1816,7 @@ function renderDrumSamples(){
    const updateCut=(hz,commit=true)=>{
     const next=clamp(Math.round(Number(hz)||80),80,20000);
     item.slotCutoff=next;cutNumber.value=String(next);cutSlider.value=String(drumSlotFilterPosition(next));
+    redrawSweepGraph();
     updateLiveDrumSlotFilter(drumEditorTrack,slot);if(commit)persist();
    };
    cutSlider.oninput=()=>updateCut(drumSlotFilterHz(cutSlider.value));
@@ -1842,6 +1844,7 @@ function renderDrumSamples(){
    sweepTitle.textContent='CUTOFF SWEEP · DEPTH OR TIME 0 = OFF';
    sweepControls.append(sweepTitle);
    const sweepInputs=[];
+   const sweepChanges=new Map();
    for(const [field,label,min,max,defaultValue,unit] of [
     ['slotFilterEnvDepth','DEPTH',-48,48,0,' st'],
     ['slotFilterEnvTime','TIME',0,3000,0,' ms']
@@ -1857,16 +1860,24 @@ function renderDrumSamples(){
     slider.value=String(current);numeric.value=String(current);
     slider.setAttribute('aria-label','Drum slot '+(slot+1)+' filter sweep '+label+unit);
     numeric.setAttribute('aria-label','Drum slot '+(slot+1)+' filter sweep '+label+' exact value');
-    const change=value=>{
+    const change=(value,commit=true)=>{
      const next=Number.isFinite(value)?clamp(Math.round(value),min,max):item[field]??defaultValue;
      item[field]=next;slider.value=String(next);numeric.value=String(next);
-     updateLiveDrumSlotFilter(drumEditorTrack,slot);persist();
+     redrawSweepGraph();
+     updateLiveDrumSlotFilter(drumEditorTrack,slot);
+     if(commit)persist();
     };
+    sweepChanges.set(field,change);
     slider.oninput=()=>change(Number(slider.value));
     numeric.onchange=()=>change(numeric.value.trim()===''?NaN:Number(numeric.value));
     wrap.append(caption,slider,numeric);sweepControls.append(wrap);
     sweepInputs.push(slider,numeric);
    }
+   const sweepGraph=createDrumFilterSweepGraph(item,slot,(field,value,commit)=>{
+    sweepChanges.get(field)?.(value,commit);
+   });
+   redrawSweepGraph=sweepGraph.redraw;
+   sweepControls.append(sweepGraph.root);
    filterSettings.append(sweepControls);
    const resetFilter=document.createElement('button');resetFilter.type='button';
    resetFilter.className='mini-btn drum-slot-reset';resetFilter.textContent='RESET FILTER';
@@ -1878,6 +1889,7 @@ function renderDrumSamples(){
     modeSelect.disabled=cutSlider.disabled=cutNumber.disabled=resSlider.disabled=resNumber.disabled=!filterToggle.checked;
     sweepControls.classList.toggle('inactive',!filterToggle.checked);
     for(const input of sweepInputs)input.disabled=!filterToggle.checked;
+    redrawSweepGraph();
    };
    filterToggle.onchange=()=>{
     item.slotFilterOn=filterToggle.checked;syncFilter();persist();
