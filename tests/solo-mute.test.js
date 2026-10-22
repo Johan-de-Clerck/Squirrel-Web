@@ -1,4 +1,4 @@
-// Squirrel Studio 0.1.54 — red MUTE / green exclusive SOLO regression.
+// Squirrel Studio 0.1.55 — red MUTE / green exclusive SOLO regression.
 // Run: node tests/solo-mute.test.js
 'use strict';
 const assert=require('node:assert/strict');
@@ -67,12 +67,30 @@ const run=new Function('window','document','localStorage','console','structuredC
  setTrackMute(0);
  eq(mixerBuilds,6,'Unmuting via sequencer refreshes Mixer');
  eq(red(0),false,'Manual mute can be turned off');
+ // Selecting SOLO on a manually muted channel must also clear its own MUTE.
+ setTrackMute(0);
+ eq([state.tracks[0].muted,red(0)],[true,true],'Track 1 is muted before SOLO');
+ setTrackSolo(0);
+ eq([state.tracks[0].solo,state.tracks[0].muted,green(0),red(0)],[true,false,true,false],'SOLO automatically clears MUTE on its own track');
+ eq(activeGains[0].gain.value>0,true,'Previously muted SOLO track becomes audible');
+ eq(strips.map((_,i)=>red(i)),[false,true,true,true,true,true,true,true],'Other tracks show red auto-MUTE');
+ eq(muteButton(0).attributes['aria-pressed'],'false','Solo track MUTE aria state updates');
+ setTrackSolo(0);
+ eq([state.tracks[0].solo,state.tracks[0].muted,red(0)],[false,false,false],'Solo off keeps its own MUTE cleared');
+ // Switching solo directly to a muted track must make the new solo track audible.
+ setTrackMute(5);
+ setTrackSolo(2);
+ setTrackSolo(5);
+ eq([state.tracks[5].solo,state.tracks[5].muted,green(5),red(5)],[true,false,true,false],'Transfer SOLO to muted track clears MUTE');
+ eq(activeGains.map(g=>g.gain.value>0),[false,false,false,false,false,true,false,false],'Only newly soloed track audible after transfer');
+ setTrackSolo(5);
+ eq(state.tracks.every(t=>!t.muted&&!t.solo),true,'Other manual MUTE states unaffected by SOLO transfer');
  const saved=fresh(false);
  saved.tracks[2].solo=true;saved.tracks[5].solo=true;saved.tracks[7].muted=true;
  const migrated=validate(JSON.parse(JSON.stringify(saved)));
  eq(migrated.tracks.map(t=>t.solo),[false,false,true,false,false,false,false,false],'Legacy multiple solo flags normalize to first');
  eq(migrated.tracks[7].muted,true,'Manual mute survives project normalization');
- return 'PASS: live sequencer-to-mixer SOLO/MUTE sync, green/red controls, isolated audio and cached VU layout';
+ return 'PASS: SOLO clears selected MUTE, transfers to muted tracks, mixer/seq sync and audio isolation';
 `);
 console.log(run({}, {}, {getItem:()=>null,setItem:()=>{}},
  {log:()=>{},warn:()=>{},error:()=>{}},structuredClone));
