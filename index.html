@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.1.71 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.1.72 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -479,6 +479,10 @@
 @media(max-width:850px){.song-mode-grid{grid-template-columns:1fr}#view-send .send-title,#view-send .send-row{min-width:660px;gap:10px}#view-send .sends-grid{overflow-x:auto}#view-send .send-global{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:1100px) and (max-height:850px){#view-send .send-row{min-height:43px;padding:5px 11px}}
 
+/* 0.1.72: independently selectable low-pass, high-pass and band-pass filters. */
+#drumSlotList .drum-filter-mode{display:flex;align-items:center;gap:7px;min-width:185px;color:#e9c59d;font:700 11px Consolas,monospace}
+#drumSlotList .drum-filter-select{flex:1;background:#2b221e;border:1px solid #715741;border-radius:5px;color:#d7ebd6;padding:6px;font:11px Consolas,monospace;min-width:112px}
+#drumSlotList .drum-filter-select:disabled{opacity:.65}
 /* 0.1.71: optional per-slot low-pass, allocated only while enabled. */
 #drumSlotList .drum-slot-filter{order:3;flex:1 1 100%;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 0;border-top:1px solid #544237}
 #drumSlotList .drum-slot-filter-heading{display:flex;align-items:center;gap:6px;font:700 11px Consolas,monospace;color:#add2b0}
@@ -759,7 +763,7 @@ input[type="password"],textarea,
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.71</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.72</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1050,8 +1054,10 @@ function applyFXCommand(rt, step){
  rt.activeAmount=amount||rt.memory[effect]||0;
 }
 const DRUM_LIBRARY_SIZE=15;
-function defaultDrumSlot(name='',data=null,chokeGroup=0){return {name,data,chokeGroup,libraryIndex:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,slotVolume:100,slotPitch:0,slotFine:0,slotPan:0,slotAttack:2,slotDecay:0,slotRelease:18,slotFilterOn:false,slotCutoff:12000,slotResonance:.7}}
-// New filters are bypassed by default: no extra audio nodes or CPU on old projects.
+function defaultDrumSlot(name='',data=null,chokeGroup=0){return {name,data,chokeGroup,libraryIndex:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,slotVolume:100,slotPitch:0,slotFine:0,slotPan:0,slotAttack:2,slotDecay:0,slotRelease:18,slotFilterOn:false,slotFilterType:'lowpass',slotCutoff:12000,slotResonance:.7}}
+const DRUM_FILTER_TYPES=Object.freeze(['lowpass','highpass','bandpass']);
+function drumSlotFilterType(item){return DRUM_FILTER_TYPES.includes(item?.slotFilterType)?item.slotFilterType:'lowpass'}
+// Filters bypass by default: no extra audio nodes or CPU on older projects.
 // The cutoff slider is logarithmic so the low-frequency range remains controllable.
 function drumSlotFilterCutoff(item,ctx=audio?.ctx){
  const nyquist=ctx?.sampleRate?ctx.sampleRate/2:22050;
@@ -1062,7 +1068,7 @@ function drumSlotFilterPosition(hz){return Math.round(clamp(Math.log(clamp(hz,80
 function drumSlotFilterHz(position){return Math.round(80*Math.pow(250,clamp(Number(position)||0,0,1000)/1000))}
 function resetDrumSlotFilter(t,slot){
  const item=state.drumSamples?.[t]?.[slot];if(!item)return;
- item.slotFilterOn=false;item.slotCutoff=12000;item.slotResonance=.7;
+ item.slotFilterOn=false;item.slotFilterType='lowpass';item.slotCutoff=12000;item.slotResonance=.7;
  persist();renderDrumSamples();
 }
 function updateLiveDrumSlotFilter(t,slot){
@@ -1071,6 +1077,7 @@ function updateLiveDrumSlotFilter(t,slot){
  const now=audio.ctx.currentTime;
  for(const voice of scheduledVoices){
   if(voice.trackIndex!==t||voice.sampleSlot!==slot||!voice.filter||voice.released)continue;
+  voice.filter.type=drumSlotFilterType(item);
   for(const [param,value] of [[voice.filter.frequency,drumSlotFilterCutoff(item)],[voice.filter.Q,drumSlotFilterResonance(item)]]){
    if(typeof param.setTargetAtTime==='function')param.setTargetAtTime(value,now,.012);
    else param.setValueAtTime(value,now);
@@ -1382,7 +1389,8 @@ async function loadDrumSampleFile(t,slot,file){
    slotFine:previous?.slotFine??0,slotPan:previous?.slotPan??0,
    slotAttack:previous?.slotAttack??2,slotDecay:previous?.slotDecay??0,
    slotRelease:previous?.slotRelease??18,
-   slotFilterOn:previous?.slotFilterOn??false,slotCutoff:previous?.slotCutoff??12000,
+   slotFilterOn:previous?.slotFilterOn??false,slotFilterType:drumSlotFilterType(previous),
+   slotCutoff:previous?.slotCutoff??12000,
    slotResonance:previous?.slotResonance??.7};
   rememberDrumSlot(t,slot);
   drumSampleBuffers.set(drumSlotKey(t,slot),decoded);
@@ -1423,7 +1431,7 @@ function drumSampleVoice(t,slot,velocity,when,offsetPercent=0,gate=null){
  // Allocate a BiquadFilterNode only for enabled slots.
  const filter=item.slotFilterOn?c.createBiquadFilter():null;
  if(filter){
-  filter.type='lowpass';
+  filter.type=drumSlotFilterType(item);
   filter.frequency.setValueAtTime(drumSlotFilterCutoff(item,c),when);
   filter.Q.setValueAtTime(drumSlotFilterResonance(item),when);
   src.connect(filter).connect(gain);
@@ -1618,12 +1626,24 @@ function renderDrumSamples(){
    const filterHeading=document.createElement('label');filterHeading.className='drum-slot-filter-heading';
    const filterToggle=document.createElement('input');filterToggle.type='checkbox';
    filterToggle.checked=!!item.slotFilterOn;
-   filterToggle.setAttribute('aria-label','Enable low-pass filter for drum slot '+(slot+1));
-   const filterText=document.createElement('span');filterText.textContent='LOW-PASS FILTER';
+   filterToggle.setAttribute('aria-label','Enable filter for drum slot '+(slot+1));
+   const filterText=document.createElement('span');filterText.textContent='MULTIMODE FILTER';
    filterHeading.append(filterToggle,filterText);
-   const filterHint=document.createElement('small');filterHint.textContent='OFF = ORIGINAL AUDIO · CUT / RES ARE PER SLOT';
+   const filterHint=document.createElement('small');filterHint.textContent='LOW / HIGH / BAND · PER SLOT · OFF = ORIGINAL AUDIO';
    filterSettings.append(filterHeading,filterHint);
    const filterControls=document.createElement('div');filterControls.className='drum-slot-filter-controls';
+   const modeLabel=document.createElement('label');modeLabel.className='drum-filter-mode';
+   const modeText=document.createElement('span');modeText.textContent='TYPE';
+   const modeSelect=document.createElement('select');modeSelect.className='drum-filter-select';
+   modeSelect.setAttribute('aria-label','Drum slot '+(slot+1)+' filter type');
+   for(const [name,label] of [['lowpass','LOW-PASS'],['highpass','HIGH-PASS'],['bandpass','BAND-PASS']])
+    modeSelect.add(new Option(label,name));
+   modeSelect.value=drumSlotFilterType(item);
+   modeSelect.onchange=()=>{
+    item.slotFilterType=drumSlotFilterType({slotFilterType:modeSelect.value});
+    updateLiveDrumSlotFilter(drumEditorTrack,slot);persist();
+   };
+   modeLabel.append(modeText,modeSelect);filterControls.append(modeLabel);
    const cutLabel=document.createElement('label');cutLabel.className='drum-slot-setting';
    const cutCaption=document.createElement('span');cutCaption.textContent='CUTOFF (Hz)';
    const cutSlider=document.createElement('input');cutSlider.type='range';
@@ -1661,12 +1681,12 @@ function renderDrumSamples(){
    resLabel.append(resCaption,resSlider,resNumber);filterControls.append(resLabel);
    const resetFilter=document.createElement('button');resetFilter.type='button';
    resetFilter.className='mini-btn drum-slot-reset';resetFilter.textContent='RESET FILTER';
-   resetFilter.title='Turn off filter and restore 12000 Hz cutoff / 0.7 Q. Keep audio, mix and envelope.';
+   resetFilter.title='Turn off filter and restore LOW-PASS, 12000 Hz cutoff / 0.7 Q. Keep audio, mix and envelope.';
    resetFilter.onclick=()=>resetDrumSlotFilter(drumEditorTrack,slot);
    filterControls.append(resetFilter);filterSettings.append(filterControls);
    const syncFilter=()=>{
     filterControls.classList.toggle('inactive',!filterToggle.checked);
-    cutSlider.disabled=cutNumber.disabled=resSlider.disabled=resNumber.disabled=!filterToggle.checked;
+    modeSelect.disabled=cutSlider.disabled=cutNumber.disabled=resSlider.disabled=resNumber.disabled=!filterToggle.checked;
    };
    filterToggle.onchange=()=>{
     item.slotFilterOn=filterToggle.checked;syncFilter();persist();
@@ -1854,6 +1874,7 @@ s.drumSamples=Array.from({length:TRACK_COUNT},(_,t)=>Array.from({length:5},(_,sl
   normalized.slotDecay=clamp(Number(item.slotDecay??0)||0,0,3000);
   normalized.slotRelease=clamp(Number(item.slotRelease??18)||0,0,2000);
   normalized.slotFilterOn=!!item.slotFilterOn;
+  normalized.slotFilterType=drumSlotFilterType(item);
   normalized.slotCutoff=clamp(Number(item.slotCutoff??12000)||12000,80,20000);
   normalized.slotResonance=clamp(Number(item.slotResonance??.7)||.7,.1,18);
   normalized.libraryIndex=Number.isInteger(item.libraryIndex)&&item.libraryIndex>=0&&item.libraryIndex<DRUM_LIBRARY_SIZE?item.libraryIndex:null;
@@ -3763,6 +3784,7 @@ function validateSampleBank(pack){
   output.slotDecay=clamp(Number(item.slotDecay??0)||0,0,3000);
   output.slotRelease=clamp(Number(item.slotRelease??18)||0,0,2000);
   output.slotFilterOn=!!item.slotFilterOn;
+  output.slotFilterType=drumSlotFilterType(item);
   output.slotCutoff=clamp(Number(item.slotCutoff??12000)||12000,80,20000);
   output.slotResonance=clamp(Number(item.slotResonance??.7)||.7,.1,18);
   output.libraryIndex=Number.isInteger(item.libraryIndex)&&item.libraryIndex>=0&&item.libraryIndex<DRUM_LIBRARY_SIZE?item.libraryIndex:null;
