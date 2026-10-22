@@ -1,0 +1,40 @@
+// Squirrel Studio 0.1.50 — decimal BPM regression suite.
+// Run without dependencies: node tests/bpm-decimal.test.js
+'use strict';
+const fs=require('node:fs');
+const path=require('node:path');
+const assert=require('node:assert/strict');
+const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+assert.ok(/id="bpmInput"[^>]*step="0\.1"/.test(html),'BPM input must use 0.1 step increments');
+assert.ok(html.includes('value="120.0"'),'BPM input should show one decimal place');
+let app=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+assert.ok(app,'Application JS found');
+app=app.replace(/installNotes\(\);bindings\(\);bindSampleEditor\(\);bindDrumSamples\(\);bindSampleBank\(\);attachStepRangeSelection\(\);resetUndoHistory\(\);renderAll\(\);refreshOutputs\(\);requestAnimationFrame\(uiTick\);bootstrapDemoJson\(\);/,'');
+const run=new Function('window','document','localStorage','console','structuredClone',app+`
+ const assertEq=(actual,expected,label)=>{if(JSON.stringify(actual)!==JSON.stringify(expected))throw Error(label+': '+actual+' vs '+expected)};
+ assertEq(normalizeBpm(120.3),120.3,'Tenths are preserved');
+ assertEq(normalizeBpm('87,5'),87.5,'Comma as input decimal separator');
+ assertEq(normalizeBpm('140.7'),140.7,'Dot as input decimal separator');
+ assertEq(normalizeBpm(120.34),120.3,'Round to nearest tenth');
+ assertEq(normalizeBpm(120.36),120.4,'Round upward to nearest tenth');
+ assertEq(normalizeBpm(30),50,'BPM lower bound');
+ assertEq(normalizeBpm(300),240,'BPM upper bound');
+ assertEq(normalizeBpm('invalid'),120,'Invalid BPM fallback');
+ state=fresh(false);
+ state.bpm=normalizeBpm(120.3);
+ const saved=JSON.parse(JSON.stringify(state));
+ const loaded=validate(saved);
+ assertEq(loaded.bpm,120.3,'Project save/load keeps decimal BPM');
+ state.bpm=loaded.bpm;
+ const actual=stepDuration(),expected=60/120.3/4;
+ if(Math.abs(actual-expected)>1e-12)throw Error('Step duration is not fractional BPM');
+ const oldSong=JSON.parse(JSON.stringify(fresh(false)));
+ oldSong.version=21;oldSong.bpm=143;
+ oldSong.patterns=oldSong.patterns.slice(0,16);
+ oldSong.patternNames=oldSong.patternNames.slice(0,16);
+ oldSong.patternLengths=oldSong.patternLengths.slice(0,16);
+ oldSong.trackLengths=oldSong.trackLengths.slice(0,16);
+ assertEq(validate(oldSong).bpm,143,'Legacy integer BPM survives migration');
+ return 'PASS: BPM 0.1 increments, locale input, rounding, limits, project roundtrip and playback timing';
+`);
+console.log(run({}, {},{getItem:()=>null,setItem:()=>{}},{warn:()=>{},log:()=>{},error:()=>{}},structuredClone));
