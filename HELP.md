@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.1.56 — User Manual
+# Squirrel Studio Web 0.1.57 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -44,7 +44,9 @@ Starting with 0.1.47, active notes and FX text are slightly larger, centered and
 Switching between Drums 1, Drums 2, Drums 3, Bass, Lead, Chord, Sampler or MIDI-only tracks no longer changes the **height of the Step Sequencer**. The **Step Editor** and **Step FX** panels below it keep a fixed, responsive height. If selecting a track reveals more settings than fit inside either editor, **scroll with the mouse wheel or touchpad inside that panel (the scrollbar is hidden)**; the sequencer remains at the same height. This applies to the compact desktop layout and smaller screens as well.
 
 
-**EDIT mode indicator (0.1.56):** The **EDIT ON** button in the top toolbar turns **red** while step editing via the computer keyboard is enabled. Clicking it again changes the label to **EDIT OFF** and restores the normal neutral color. The underlying note-entry shortcuts are unchanged.
+**Held note preview while EDIT ON (0.1.57):** When entering a note with a ProTracker keyboard key, the note is auditioned while the key is held, even if the sample is longer than the current pattern. Releasing the key stops the voice. Note entry still advances the cursor automatically. The selected Drum sample and FX 9 sample offset are used, and MIDI OUT ONLY receives a corresponding note-on and note-off. The EDIT ON button remains red to indicate editing. STOP, EDIT OFF or leaving browser focus ends the audition so samples cannot keep playing unexpectedly.
+
+**EDIT mode indicator (0.1.57):** The **EDIT ON** button in the top toolbar turns **red** while step editing via the computer keyboard is enabled. Clicking it again changes the label to **EDIT OFF** and restores the normal neutral color. The underlying note-entry shortcuts are unchanged.
 
 Clicking any note cell **only selects** that cell: it does not insert or erase a note. **Hold the left mouse button and drag** from one step to another to select a highlighted, rectangular range; this also works across multiple tracks. Release the button to finish. Drag-selecting does not change the music. **Ctrl+C** copies the entire rectangular selection, including inactive (off) notes and their step FX; click the first destination step on another track and press **Ctrl+V** to paste every copied step at matching offsets. Copying multiple tracks pastes on consecutive destination tracks. Steps outside the target track length or beyond track 8 are skipped. The clipboard is a snapshot and can be pasted multiple times or into another pattern. If no range is selected, Ctrl+C/V continues to copy/paste one step. Press **Delete** to clear the notes in the range (FX remain). Clicking once elsewhere clears the range and selects a single step. An active step displays its note or the relevant drum sample slot. Select a cell and use **Enter** to toggle it on/off, **Delete** to clear its note, or enter a pitch with the computer keyboard while **EDIT ON**.
 
@@ -165,13 +167,13 @@ You can back up and transfer audio separately from a song using **EXPORT SAMPLE 
 
 **IMPORT SAMPLE BANK** replaces the current audio bank after confirmation but keeps the song arrangement, notes and patterns. Older version-1 sample banks with three drum banks and two sampler slots can still be imported. A Sample Bank is **not** a complete project backup; use **SAVE PROJECT** to preserve instrument configurations, synth patches and patterns as well.
 
-### Live Mixer / Sequencer synchronization (0.1.56)
+### Live Mixer / Sequencer synchronization (0.1.57)
 
 Mute and Solo buttons stay synchronized between the **Step Sequencer** and the **Mixer**. You can press **S** or **M** beside a sequencer track, then open the Mixer and immediately see the correct green SOLO / red MUTE states; you do not need to change the Mixer tab to trigger an update. Using the large buttons in the Mixer likewise updates the sequencer controls. Tracks not selected by SOLO appear temporarily muted, without replacing their manually stored MUTE settings.
 
 Mixer strips are updated only when a meaningful track setting changes. This avoids resetting the VU indicators or faders during ordinary sequencer editing.
 
-### Mixer MUTE / SOLO buttons (0.1.56)
+### Mixer MUTE / SOLO buttons (0.1.57)
 
 **SOLO overrides MUTE on the same track:** if a channel is manually muted (red MUTE) and you click its SOLO button, that channel's MUTE is cleared and SOLO becomes green. The selected track is audible immediately. If you move SOLO to another manually muted channel, the new track's MUTE is also cleared. Switching SOLO off does not turn that channel's MUTE back on. Other tracks keep their saved manual MUTE settings.
 
@@ -180,7 +182,7 @@ Mixer strips are updated only when a meaningful track setting changes. This avoi
 
 SOLO is exclusive, so only one track is soloed at a time. The red MUTE buttons of other tracks are temporarily locked while SOLO is on to avoid changing saved mute settings. Any manually muted tracks retain their mute setting after SOLO is disabled. Track-specific MIDI output respects these mute/solo changes, with note-off sent to excluded tracks.
 
-### Mixer signal meters (0.1.56)
+### Mixer signal meters (0.1.57)
 
 Every Mixer track has its own VU meter, connected after that track's volume and panning controls. The meter shows the actual output of **that track only**, before the shared compressor and effect returns. A note on another track cannot cause this meter to move. When a track is silent, its meter falls to zero; Mute and Solo affect which tracks can be heard and measured. Tracks configured as MIDI OUT ONLY have no browser audio to meter.
 
@@ -240,4 +242,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.1.56.**
+**Documentation version: Squirrel Studio Web 0.1.57.**
