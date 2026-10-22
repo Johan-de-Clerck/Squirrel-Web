@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.66**  
+**Current web version: 0.1.67**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,17 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.67
+
+- **Fine tune per DRUM slot:** add -100 to +100 cents to the existing coarse PITCH (-24 to +24 semitones), VOL (0-200%) and PAN (-100 to +100).
+- **Numerical entry:** each DRUM SAMPLES mix control now has a slider and an editable exact integer value, including negative pitch and pan.
+- **RESET MIX:** resets VOL 100%, PITCH 0, FINE 0 and PAN 0 for one slot without deleting its shared-library assignment, loop/trim markers, direct sample or choke setting.
+- The five drum slot mixers use full-width responsive rows, rather than squeezing multiple slot configurations into two columns.
+- **Pitch-correct sample tails:** pitched-down one-shot drum audio now runs for the correct extended duration instead of being cut at the original buffer-time duration; tracker step FX preserve the slot's base pitch and fine tuning.
+- Reloading a direct drum sample now preserves that slot's volume, pitch, fine tune, pan and choke group. Waveform trim/loop markers reset for the new audio file.
+- Existing project format 23 and sample bank v3 remain compatible; older files default to zero fine tune.
+- Regression coverage: `tests/drum-slot-tuning.test.js` checks voice tuning/gain/pan, FX pitch, playback duration, project/bank round-trips, migration and reset.
 
 ## What is new in 0.1.66
 
