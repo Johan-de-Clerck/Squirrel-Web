@@ -1,6 +1,6 @@
 # Squirrel Studio Desktop (experimental JUCE build)
 
-The `windows/` folder contains a separate **Windows desktop** integration of the Squirrel Studio web interface. The browser release (`index.html`) is authoritative; the native application is a technical prototype and does not yet have complete feature parity with the current web version **0.1.38**.
+The `windows/` folder contains a separate **Windows desktop** integration of the Squirrel Studio web interface. The browser release (`index.html`) is authoritative; the native application is a technical prototype and does not yet have complete feature parity with the current web version **0.1.40**.
 
 ## Existing native features
 
@@ -22,4 +22,4 @@ The browser/web editor uses Web Audio. The Windows test implementation contains 
 
 For the latest browser controls and project/sample-bank instructions, see [../HELP.md](../HELP.md).
 
-*Windows README updated to reflect web release 0.1.38. Native build and full integration have not been verified in this update.*
+*Windows README updated to reflect web release 0.1.40. Native build and full integration have not been verified in this update.*

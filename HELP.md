@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.1.38 — User Manual
+# Squirrel Studio Web 0.1.40 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -29,7 +29,7 @@ Use **SEQUENCER**, **SONG MODE**, **SYNTH**, **MIXER**, **LFO / ENVELOPES**, **D
 
 Clicking any note cell **only selects** that cell: it does not insert or erase a note. **Hold the left mouse button and drag** from one step to another to select a highlighted, rectangular range; this also works across multiple tracks. Release the button to finish. Drag-selecting does not change the music. Press **Delete** to clear the notes in the range (FX remain). Clicking once elsewhere clears the range and selects a single step. An active step displays its note or the relevant drum sample slot. Select a cell and use **Enter** to toggle it on/off, **Delete** to clear its note, or enter a pitch with the computer keyboard while **EDIT ON**.
 
-The current keyboard layout for entering notes is `A W S E D F T G Y H U J`; use the octave selector to change the range. When editing notes, the cursor advances unless already at the end of the selected track.
+The **ProTracker keyboard layout** uses two rows. The **lower octave** starts at **Z = C**, with **S = C#**, **X = D**, **D = D#**, **C = E**, **V = F**, **G = F#**, **B = G**, **H = G#**, **N = A**, **J = A#**, **M = B**. The **upper octave** starts at **Q = C**, then **2 = C#**, **W = D**, **3 = D#**, **E = E**, **R = F**, **5 = F#**, **T = G**, **6 = G#**, **Y = A**, **7 = A#**, **U = B**. The top row continues at **I = the next C**, **9 = C#**, **O = D**, **0 = D#**, **P = E**. Use the octave selector to choose the base octave. **Alt+1 through Alt+8** selects tracks without conflicting with the upper-row sharp-note keys. When editing notes, the cursor advances unless already at the end of the selected track.
 
 | Key / control | Action |
 | --- | --- |
@@ -44,6 +44,9 @@ The current keyboard layout for entering notes is `A W S E D F T G Y H U J`; use
 | Delete with a range selected | Delete notes in that range, keeping FX |
 | COPY STEP / PASTE STEP | Copy/paste the note, drum slot, velocity, gate, ratchet, chance and FX |
 | Space | Start/stop playback |
+| Z / S / X / D / C / V / G / B / H / N / J / M | Lower-octave note keys |
+| Q / 2 / W / 3 / E / R / 5 / T / 6 / Y / 7 / U | Upper-octave note keys |
+| Alt+1 through Alt+8 | Select a track directly |
 | Mouse click on grid | Move selection only |
 
 **UNDO / REDO** buttons are available in the Step Editor. They reverse changes to notes, step parameters, pattern lengths, pattern names and other editable project parameters. They do not undo loading a different project or importing/replacing the audio files. A copied step may be pasted onto a different track, step or pattern. **COPY PATTERN** and **PASTE PATTERN** copy the entire pattern and its per-track lengths. In the Step Editor you can also edit velocity, gate, ratchet, chance and the selected drum sample.
@@ -79,7 +82,7 @@ Every drum sample slot has a **CHOKE** selector: **OFF**, **1**, **2**, **3**, o
 
 Open **OPTIONS** and choose **SAMPLER** for instrument slot 7 or 8, then load your audio. In **SAMPLE EDITOR**, you can select sampler 7 or 8, preview the waveform, set start/end and loop markers, enable or disable looping, set the root note, adjust low-pass cutoff and resonance, and audition the sample.
 
-These tracks have their own note and step FX rows in the sequencer. Loop markers affect repeated playback; non-looped playback starts at the sample's beginning/start marker.
+These tracks have their own note and step FX rows in the sequencer. When **LOOP ON** is disabled, the LOOP START and LOOP END handles are **hidden in both the waveform and parameter controls**. Only the sample START and END handles remain available. Enable **LOOP ON** to reveal and edit loop markers. Looping is only applied to sample playback when this switch is on; non-looped playback starts at the sample START marker.
 
 ## 7. Synth, Chord, FX and modulation
 
@@ -137,13 +140,26 @@ A sample bank is **not** a complete project backup. Use **SAVE PROJECT** as well
 
 If `demo.json` is missing or cannot be fetched, the app still opens. The included `demo.json` is the **Johan_01** song with embedded kick, clap, snare, and closed hi-hat audio, plus named patterns **Main**, **Odd Track** and **Odd Snare**. Replace it with a different complete project JSON whenever you choose.
 
-## 11. MIDI input/output and audio devices
+## 11. Per-track MIDI OUT ONLY and external MIDI devices
 
-In **MIDI / AUDIO**, you can choose compatible USB MIDI inputs and outputs, select MIDI routing and output channel, and enable MIDI output deliberately. **ALL NOTES OFF** can stop external stuck notes. Actual Web MIDI availability depends on browser permissions and support.
+All eight tracks can play **internal audio** or operate in **MIDI OUT ONLY** mode. To use an external synthesizer, drum machine or MIDI instrument:
 
-The web version uses **Web Audio** via the browser and Windows audio stack. **It cannot open the Focusrite ASIO driver directly**. Choose Focusrite as an available output or Windows default output. The separate `windows/` JUCE project is an experimental native desktop build and does not yet fully match every web feature.
+1. Open **MIDI / AUDIO**. Connect or refresh MIDI access, select the desired **MIDI output port**, and switch **MIDI OUT ON**.
+2. Go to **OPTIONS → TRACK AUDIO / MIDI OUTPUT**.
+3. For the desired track, change **INTERNAL AUDIO** to **MIDI OUT ONLY**, and choose **CH 1–16** for the receiving instrument.
+4. Set your external MIDI instrument to listen on the corresponding channel, then start playback.
 
-## 12. Troubleshooting
+When a track is **MIDI OUT ONLY**, its internal synth/drum sample or sampler will **not** play through Web Audio. The original sound settings and any loaded samples remain stored, so you can switch back to **INTERNAL AUDIO** later. Notes, velocities, ratchets, gate durations, the track's step length and Note Off commands still sequence MIDI. The note value shown in a MIDI-only drum step is the **MIDI pitch**, not the drum sample-slot name. Track mute and solo continue to apply.
+
+MIDI OUT ONLY is independent of the older **TRACK TO MIDI OUT** mirroring control: it always routes that particular track to the configured channel. Standard internal tracks keep their existing optional MIDI mirror settings. The MIDI output port and MIDI OUT enable switch must still be activated in the current browser session; if no output is connected, a MIDI-only track is silent by design.
+
+Open **MIDI / AUDIO** to select compatible USB MIDI input and output ports and routing. **ALL NOTES OFF** can stop stuck external notes. Actual Web MIDI availability depends on browser permissions and support.
+
+## 12. Browser audio and troubleshooting
+
+The browser version uses **Web Audio** via the browser and Windows audio stack. **It cannot open the Focusrite ASIO driver directly**. Choose Focusrite as an available output or Windows default output. The separate `windows/` JUCE project is an experimental native desktop build and does not yet fully match every web feature.
+
+## 13. Troubleshooting
 
 | Symptom | Check |
 | --- | --- |
@@ -151,6 +167,8 @@ The web version uses **Web Audio** via the browser and Windows audio stack. **It
 | Drum step is silent | Check the step's sample slot and whether that slot has a loaded sample |
 | Demo does not load | Use HTTP/HTTPS; ensure `demo.json` is in the same folder as `index.html` |
 | Wrong sample when editing | Open DRUM SAMPLES, click USE on the intended slot; existing steps keep their assigned slots |
+| MIDI-only track makes no sound | Verify MIDI OUT ON, select the right MIDI output device and matching CH 1–16; the browser sound is deliberately disabled |
+| Cannot see loop markers | LOOP START / END handles are shown only when LOOP ON is checked |
 | Song moves too early/late | Check the longest step length among all eight tracks for that pattern |
 | Loaded samples disappeared | Import your project JSON or Sample Bank backup; browser storage can be cleared |
 | External MIDI is silent | Connect/authorize your MIDI device; select the correct port/channel, enable MIDI OUT |
@@ -165,4 +183,4 @@ The web version uses **Web Audio** via the browser and Windows audio stack. **It
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.1.38.**
+**Documentation version: Squirrel Studio Web 0.1.40.**
