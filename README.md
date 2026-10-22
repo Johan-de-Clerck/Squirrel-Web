@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.75**  
+**Current web version: 0.1.76**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,14 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.76
+
+- **Fixed D00 on actual SAMPLE tracks:** previously the cross-pattern carry flag was rejected for ordinary sampler voices because the sequencer checked a `src` property absent from real sample voices (while test doubles incorrectly had it). The real sampler voice now exposes its AudioBufferSourceNode consistently and the D00 continuation guard accepts both source layouts.
+- **Verified A1 → B1 playback:** a 12-second sample triggered with D00 is no longer automatically given NOTE OFF at the next pattern, whether Song Mode advances automatically or a track reaches its lane step zero. Other notes may sound on the same track without ending a carried voice. **C00** still enters the selected sampler release, and **STOP** still fades the audio.
+- D00 can also be placed on an empty FX row while the sample is already running; the voice then carries across the next pattern.
+- New `tests/sample-continue-real-voice.test.js` uses the **actual sampleVoice** Web Audio object instead of a simplified mock, including A1/B1 transition, overlapping hits, C00 release, natural sample duration and an FX-only D00 row.
+- No project, pattern or bank format changes. Existing files remain compatible.
 
 ## What is new in 0.1.75
 
