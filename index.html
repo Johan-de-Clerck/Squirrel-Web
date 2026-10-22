@@ -1032,7 +1032,11 @@ function sampleCursorPosition(trackIndex){
   const elapsed=(now-p.when)*p.rate;
   let pos=p.start+elapsed;
   if(p.loop){
-   if(pos>=p.loopEnd)pos=p.loopStart+(pos-p.loopEnd)%Math.max(.001,p.loopEnd-p.loopStart);
+   if(pos>=p.loopEnd){
+    const width=Math.max(.001,p.loopEnd-p.loopStart);
+    const phase=(pos-p.loopEnd)%(p.pingPong?width*2:width);
+    pos=p.pingPong?(phase<width?p.loopEnd-phase:p.loopStart+(phase-width)):p.loopStart+phase;
+   }
   }else if(pos>=p.end){continue;}
   return {fraction:clamp(pos/p.duration,0,1),seconds:pos};
  }
@@ -1823,12 +1827,35 @@ const c=audio.ctx,vol=clamp(velocity/127,0,1),ratio=Math.pow(2,pitch/12),modGain
 // FX 9 always seeks within the trimmed sample region. A voice whose
 // offset starts beyond LOOP END plays the remaining tail as a one-shot;
 // otherwise the saved LOOP START/END markers remain unchanged and valid.
+// Web Audio does not have a native reverse-loop direction. Build an
+// independent playback buffer: original through LOOP END, reversed loop
+// region, then the remaining tail. Retain the original sample for editing
+// and one-shots, and cache mirrored buffers for repeated note triggers.
+const pingPongBuffers=new WeakMap();
+function pingPongAudioBuffer(buffer,loopStart,loopEnd){
+ const start=Math.max(0,Math.min(buffer.length-2,Math.round(loopStart*buffer.sampleRate)));
+ const end=Math.max(start+1,Math.min(buffer.length,Math.round(loopEnd*buffer.sampleRate)));
+ const span=end-start,key=start+':'+end;
+ let cached=pingPongBuffers.get(buffer);
+ if(!cached){cached=new Map();pingPongBuffers.set(buffer,cached)}
+ if(cached.has(key))return cached.get(key);
+ const mirrored=audio.ctx.createBuffer(buffer.numberOfChannels,buffer.length+span,buffer.sampleRate);
+ for(let ch=0;ch<buffer.numberOfChannels;ch++){
+  const original=buffer.getChannelData(ch),target=mirrored.getChannelData(ch);
+  target.set(original.subarray(0,end),0);
+  for(let i=0;i<span;i++)target[end+i]=original[end-1-i];
+  target.set(original.subarray(end),end+span);
+ }
+ const output={buffer:mirrored,loopStart:start/buffer.sampleRate,loopEnd:(end+span)/buffer.sampleRate};
+ cached.set(key,output);
+ return output;
+}
 function samplePlaybackPlan(track,duration,offsetPercent=0){
  const start=track.sampleStart*duration,end=track.sampleEnd*duration;
  const at=start+(end-start)*clamp(Number(offsetPercent)||0,0,.99);
  const loopStart=track.loopStart*duration,loopEnd=track.loopEnd*duration;
  const loop=!!track.sampleLoop&&at<loopEnd&&loopStart<loopEnd;
- return {startAt:at,endAt:end,loop,loopStart,loopEnd};
+ return {startAt:at,endAt:end,loop,loopStart,loopEnd,pingPong:loop&&!!track.loopPingPong};
 }
 function sampleVoice(t,note,velocity,when,pitch=0,offsetPercent=0){
  const track=state.tracks[t],buffer=sampleBuffers.get(t);
@@ -1849,9 +1876,15 @@ function sampleVoice(t,note,velocity,when,pitch=0,offsetPercent=0){
  };
  sanitizeSampleMarkers(track);
  const plan=samplePlaybackPlan(track,buffer.duration,offsetPercent);
- if(plan.loop){src.loop=true;src.loopStart=plan.loopStart;src.loopEnd=plan.loopEnd;}
+ if(plan.loop){
+  src.loop=true;
+  if(plan.pingPong){
+   const mirrored=pingPongAudioBuffer(buffer,plan.loopStart,plan.loopEnd);
+   src.buffer=mirrored.buffer;src.loopStart=mirrored.loopStart;src.loopEnd=mirrored.loopEnd;
+  }else{src.loopStart=plan.loopStart;src.loopEnd=plan.loopEnd}
+ }
  playback={track:t,when,start:plan.startAt,end:plan.endAt,rate:src.playbackRate.value,duration:buffer.duration,
-  loop:plan.loop,loopStart:plan.loopStart,loopEnd:plan.loopEnd,ended:false};
+  loop:plan.loop,pingPong:plan.pingPong,loopStart:plan.loopStart,loopEnd:plan.loopEnd,ended:false};
  samplePlaybacks.push(playback);
  if(samplePlaybacks.length>80)samplePlaybacks.splice(0,samplePlaybacks.length-50);
  src.start(when,plan.startAt);
