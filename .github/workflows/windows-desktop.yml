@@ -2,11 +2,6 @@ name: Windows Desktop (JUCE + ASIO)
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'windows/**'
-      - 'index.html'
-      - '.github/workflows/windows-desktop.yml'
 
 jobs:
   build:
