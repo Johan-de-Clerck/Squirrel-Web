@@ -965,13 +965,13 @@ function applyFXCommand(rt, step){
  if(amount)rt.memory[effect]=amount;
  rt.activeAmount=amount||rt.memory[effect]||0;
 }
-function defaultDrumSlot(name='',data=null,chokeGroup=0){return {name,data,chokeGroup,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false}}
+function defaultDrumSlot(name='',data=null,chokeGroup=0){return {name,data,chokeGroup,libraryIndex:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false}}
 function fresh(withDemo=true){const tracks=bases.map((b,i)=>({...b,trackKind:i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample',drumType:['kick','snare','hat'][i%3],name:kindName(i,i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample'),volume:i>=6?78:b.volume,muted:false,solo:false,slotKind:i>=6?'sampler':'empty',sound:defaultSound(b),kindPatches:{},midiOnly:false,midiChannel:clamp(b.channel-1,0,15),sampleName:'',sampleRoot:48,sampleData:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,sampleCutoff:12000,sampleResonance:.7,chorusSend:0,distortion:0}));const patterns=Array.from({length:PATTERN_COUNT},()=>tracks.map((_,t)=>Array.from({length:MAX_STEPS},()=>makeStep(t))));
  const set=(t,ns,note=null,vel=null)=>{for(const s of ns){const p=patterns[0][t][s];p.on=true;if(note!==null)p.note=note;if(vel!==null)p.velocity=vel;}};
  if(withDemo){set(0,[0,4,8,12]);set(1,[4,12]);set(2,[2,6,10,14],90);set(2,[0,4,8,12],75);set(3,[0,3,6,8,11,14]);[36,36,39,43,36,41,39].forEach((n,i)=>{const idx=[0,3,6,8,11,14,15][i];patterns[0][3][idx].on=true;patterns[0][3][idx].note=n;});
  set(4,[2,7,10,15]);patterns[0][3][3].fx=1;patterns[0][3][3].fxAmount=5;patterns[0][3][4].fx=1;patterns[0][3][4].fxAmount=0;patterns[0][3][11].fx=2;patterns[0][3][11].fxAmount=5;patterns[0][3][12].fx=2;patterns[0][3][12].fxAmount=0;patterns[0][4][10].fx=3;[60,62,67,64].forEach((n,i)=>patterns[0][4][[2,7,10,15][i]].note=n);set(5,[0,8]);patterns[0][5][0].note=48;patterns[0][5][8].note=53;}
  tracks.forEach(t=>{t.delaySend=0;t.reverbSend=0;t.chorusSend=0;t.distortion=0});
- return {version:23,drumLastSlots:Array(TRACK_COUNT).fill(0),drumSamples:Array.from({length:TRACK_COUNT},()=>Array.from({length:5},()=>defaultDrumSlot())),projectName:'',patternNames:Array.from({length:PATTERN_COUNT},(_,i)=>defaultPatternName(i)),songModeEnabled:false,songSequence:[],bpm:120,swing:0,master:75,keyboardOctave:3,editMode:false,pattern:0,patternLengths:Array(PATTERN_COUNT).fill(32),trackLengths:Array.from({length:PATTERN_COUNT},()=>Array(TRACK_COUNT).fill(32)),selectedTrack:3,selectedStep:0,tracks,patterns,lfos:defaultLFOs(),envelopes:defaultEnvelopes(),sendFX:defaultSendFX()};}
+ return {version:23,drumLibrary:Array.from({length:DRUM_LIBRARY_SIZE},()=>({name:'',data:null})),drumLastSlots:Array(TRACK_COUNT).fill(0),drumSamples:Array.from({length:TRACK_COUNT},()=>Array.from({length:5},()=>defaultDrumSlot())),projectName:'',patternNames:Array.from({length:PATTERN_COUNT},(_,i)=>defaultPatternName(i)),songModeEnabled:false,songSequence:[],bpm:120,swing:0,master:75,keyboardOctave:3,editMode:false,pattern:0,patternLengths:Array(PATTERN_COUNT).fill(32),trackLengths:Array.from({length:PATTERN_COUNT},()=>Array(TRACK_COUNT).fill(32)),selectedTrack:3,selectedStep:0,tracks,patterns,lfos:defaultLFOs(),envelopes:defaultEnvelopes(),sendFX:defaultSendFX()};}
 const LOCAL_PROJECT_KEY='squirrel-studio-0.1';
 const DEMO_AUTO_KEY='squirrel-studio-auto-demo';
 let hasLocalProject=false,autoDemoOnStart=false;
@@ -1011,10 +1011,27 @@ function nativeUpdateVAMix(i){if(nativeVAEnabled()&&i>=0&&i<=5)nativeVAMessage('
 
 const sampleBuffers=new Map();
 const drumSampleBuffers=new Map();
+const drumLibraryBuffers=new Map();
+const DRUM_LIBRARY_SIZE=15;
+const drumLibraryKey=index=>'drum-library:'+index;
+const drumLibraryItem=index=>state.drumLibrary?.[index]||null;
+const drumSlotItem=(t,slot)=>state.drumSamples?.[t]?.[slot]||null;
+const drumSlotSource=(t,slot)=>{
+ const assignment=drumSlotItem(t,slot);
+ return Number.isInteger(assignment?.libraryIndex)&&assignment.libraryIndex>=0&&assignment.libraryIndex<DRUM_LIBRARY_SIZE
+  ?drumLibraryItem(assignment.libraryIndex):assignment;
+};
+const drumSlotBuffer=(t,slot)=>{
+ const item=drumSlotItem(t,slot);
+ return Number.isInteger(item?.libraryIndex)&&item.libraryIndex>=0&&item.libraryIndex<DRUM_LIBRARY_SIZE
+  ?drumLibraryBuffers.get(item.libraryIndex):drumSampleBuffers.get(drumSlotKey(t,slot));
+};
+function drumSlotHasAudio(t,slot){return !!drumSlotSource(t,slot)?.data}
+
 let drumEditorTrack=0,drumFileTarget=null;
 const drumSlotKey=(track,slot)=>'drum:'+track+':'+slot;
-const drumName=(track,slot)=>state.drumSamples?.[track]?.[slot]?.name||('SLOT '+(slot+1));
-const hasDrumSamples=track=>!!state.drumSamples?.[track]?.some(s=>!!s.data);
+const drumName=(track,slot)=>drumSlotSource(track,slot)?.name||('SLOT '+(slot+1));
+const hasDrumSamples=track=>!!state.drumSamples?.[track]?.some((s,i)=>drumSlotHasAudio(track,i));
 // Visual sample cursor: record the BufferSource playback start, rate and loop points.
 // The draw loop uses AudioContext.currentTime rather than the sequencer step
 // so even live notes and manual waveform previews have a playback indicator.
@@ -1330,7 +1347,12 @@ function validate(data){
  }
  const s=fresh();
  s.drumLastSlots=Array.from({length:TRACK_COUNT},(_,t)=>clamp(Math.round(Number(data.drumLastSlots?.[t])||0),0,4));
- s.drumSamples=Array.from({length:TRACK_COUNT},(_,t)=>Array.from({length:5},(_,slot)=>{
+ s.drumLibrary=Array.from({length:DRUM_LIBRARY_SIZE},(_,i)=>{
+ const item=data.drumLibrary?.[i];
+ return {name:typeof item?.name==='string'?item.name.slice(0,160):'',
+ data:typeof item?.data==='string'&&/^data:[^;]*;base64,/i.test(item.data)&&item.data.length<=26000000?item.data:null};
+});
+s.drumSamples=Array.from({length:TRACK_COUNT},(_,t)=>Array.from({length:5},(_,slot)=>{
   const item=data.drumSamples?.[t]?.[slot];
   if(!item||typeof item!=='object')return defaultDrumSlot();
   const normalized=defaultDrumSlot(typeof item.name==='string'?item.name.slice(0,160):'',
@@ -1339,6 +1361,7 @@ function validate(data){
   for(const field of ['sampleStart','sampleEnd','loopStart','loopEnd'])
    if(Number.isFinite(Number(item[field])))normalized[field]=clamp(Number(item[field]),0,1);
   normalized.sampleLoop=!!item.sampleLoop;normalized.loopPingPong=!!item.loopPingPong;
+  normalized.libraryIndex=Number.isInteger(item.libraryIndex)&&item.libraryIndex>=0&&item.libraryIndex<DRUM_LIBRARY_SIZE&&s.drumLibrary[item.libraryIndex].data?item.libraryIndex:null;
   sanitizeSampleMarkers(normalized);
   return normalized;
  }));
