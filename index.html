@@ -2967,7 +2967,14 @@ function cueSongPosition(index){
  songCuePosition=index;visibleSongPosition=index;songPosition=index;
  state.pattern=state.songSequence[index];
  state.selectedStep=Math.min(state.selectedStep,patternLength()-1);
- persist();renderAll();
+ persist();
+ // Do not rebuild the Song Mode tiles on the first click: that would
+ // destroy the clicked DOM node and prevent a native double-click.
+ if(view==='song'){
+  renderGrid();renderStepEditor();renderFXEditor();
+  updatePatternPicker();$('patternNameInput').value=patternName(state.pattern);
+  renderSongPosition();
+ }else renderAll();
 }
 function renderSongPosition(){
  const indicator=$('songPositionLabel');if(!indicator)return;
