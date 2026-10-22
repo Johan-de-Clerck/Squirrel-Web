@@ -1,10 +1,10 @@
 # Squirrel Studio Desktop (experimental JUCE build)
 
-The `windows/` folder contains a separate **Windows desktop** integration of the Squirrel Studio web interface. The browser release (`index.html`) is authoritative; the native application is a technical prototype and does not yet have complete feature parity with the current web version **0.1.41**.
+The `windows/` folder contains a separate **Windows desktop** integration of the Squirrel Studio web interface. The browser release (`index.html`) is authoritative; the native application is a technical prototype and does not yet have complete feature parity with the current web version **0.1.42**.
 
 ## Existing native features
 
-The JUCE-native audio path was previously implemented for Kick, Snare, Hi-Hat, Bass, Lead and Chord: note/drum triggers, dual oscillator + sub voice generation, panning/volume and transport-related controls. The Windows project can also display the current browser UI through WebView2.
+The JUCE-native audio path was previously implemented for the synthesized kick, snare and hi-hat engines (now displayed as Drums 1–3), Bass, Lead and Chord: note/drum triggers, dual oscillator + sub voice generation, panning/volume and transport-related controls. The Windows project can also display the current browser UI through WebView2.
 
 **Important:** Newer web features such as the five sample slots on each drum track, portable Sample Bank, updated Song Mode, and some sampler or send-FX paths may still use Web Audio or remain unsupported in the native engine. Do not assume full ASIO routing for these functions.
 
@@ -22,4 +22,4 @@ The browser/web editor uses Web Audio. The Windows test implementation contains 
 
 For the latest browser controls and project/sample-bank instructions, see [../HELP.md](../HELP.md).
 
-*Windows README updated to reflect web release 0.1.41. Native build and full integration have not been verified in this update.*
+*Windows README updated to reflect web release 0.1.42. Native build and full integration have not been verified in this update.*

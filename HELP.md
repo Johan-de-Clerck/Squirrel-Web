@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.1.41 — User Manual
+# Squirrel Studio Web 0.1.42 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -14,9 +14,9 @@ Avoid opening `index.html` directly as a `file://` URL if you rely on automatic 
 
 | Track | Default sound | What you can edit |
 | --- | --- | --- |
-| 1 | Kick | Synthesized kick or one of five loaded drum samples |
-| 2 | Snare | Synthesized snare or one of five loaded drum samples |
-| 3 | Hi-Hat | Synthesized hat or one of five loaded drum samples |
+| 1 | Drums 1 | Synthesized kick or one of five loaded drum samples |
+| 2 | Drums 2 | Synthesized snare or one of five loaded drum samples |
+| 3 | Drums 3 | Synthesized hat or one of five loaded drum samples |
 | 4 | Bass | Synth settings, note steps, FX |
 | 5 | Lead | Synth settings, note steps, FX |
 | 6 | Chord | Synth settings, chord types, note steps, FX |
@@ -29,7 +29,7 @@ Use **SEQUENCER**, **SONG MODE**, **SYNTH**, **MIXER**, **LFO / ENVELOPES**, **D
 
 ### Stable sequencer height
 
-Switching between Kick, Snare, Hi-Hat, Bass, Lead, Chord, Sampler or MIDI-only tracks no longer changes the **height of the Step Sequencer**. The **Step Editor** and **Step FX** panels below it keep a fixed, responsive height. If selecting a track reveals more settings than fit inside either editor, **scroll within that editor panel**; the sequencer remains at the same height. This applies to the compact desktop layout and smaller screens as well.
+Switching between Drums 1, Drums 2, Drums 3, Bass, Lead, Chord, Sampler or MIDI-only tracks no longer changes the **height of the Step Sequencer**. The **Step Editor** and **Step FX** panels below it keep a fixed, responsive height. If selecting a track reveals more settings than fit inside either editor, **scroll within that editor panel**; the sequencer remains at the same height. This applies to the compact desktop layout and smaller screens as well.
 
 
 Clicking any note cell **only selects** that cell: it does not insert or erase a note. **Hold the left mouse button and drag** from one step to another to select a highlighted, rectangular range; this also works across multiple tracks. Release the button to finish. Drag-selecting does not change the music. Press **Delete** to clear the notes in the range (FX remain). Clicking once elsewhere clears the range and selects a single step. An active step displays its note or the relevant drum sample slot. Select a cell and use **Enter** to toggle it on/off, **Delete** to clear its note, or enter a pitch with the computer keyboard while **EDIT ON**.
@@ -64,9 +64,9 @@ Each track has an independent **step length from 1 to 32**, initially **32**. Yo
 
 The effective pattern length is the **longest** enabled track length. For example, if the kick runs for 32 steps and the hi-hat for 6, the hi-hat repeats its six steps until the global position reaches 32. **Song Mode advances only then**. The song arrangement can contain a pattern several times and can be reordered by dragging tiles. Song Mode can be enabled or disabled.
 
-## 5. Drum samples — tracks 1, 2 and 3
+## 5. Drum samples — Drums 1, Drums 2 and Drums 3
 
-Open **DRUM SAMPLES**, select the drum track, and use **LOAD** to load audio into any of the five slots (up to **15 loaded samples** across these tracks). Supported formats depend on the browser's audio decoder; WAV is a good default. Each file is limited to **16 MB per slot**.
+Open **DRUM SAMPLES**, select **Drums 1**, **Drums 2**, or **Drums 3**, and use **LOAD** to load audio into any of the five slots (up to **15 loaded samples** across these tracks). Supported formats depend on the browser's audio decoder; WAV is a good default. Each file is limited to **16 MB per slot**.
 
 Each drum track remembers its **most recently selected sample slot** independently:
 
@@ -188,4 +188,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.1.41.**
+**Documentation version: Squirrel Studio Web 0.1.42.**

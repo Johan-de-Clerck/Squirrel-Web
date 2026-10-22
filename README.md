@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.41**
+**Current web version: 0.1.42**
 
 Squirrel Studio is a browser-based eight-track groovebox and step sequencer featuring synthesized instruments, sampled drums, MIDI, effects, and a draggable song arrangement.
 
@@ -18,7 +18,7 @@ Read **[HELP.md](HELP.md)** for the complete English user guide.
 
 ## Features
 
-- Eight tracks: Kick, Snare, Hi-Hat, Bass, Lead, Chord, and two configurable sampler slots.
+- Eight tracks: Drums 1, Drums 2, Drums 3, Bass, Lead, Chord, and two configurable sampler slots. The three drum tracks retain their original built-in synthesized kick/snare/hat defaults when no samples are loaded.
 - 16 patterns, custom pattern names, and independent 1–32 step lengths per track (default 32).
 - Song Mode with draggable pattern tiles; shorter tracks repeat until the longest one finishes.
 - Five loadable drum sample slots on each of tracks 1–3 (15 total), with per-step selection, remembered active slots, and four configurable choke groups.
@@ -56,7 +56,7 @@ Read **[HELP.md](HELP.md)** for the complete English user guide.
 
 - `index.html` — current web application\n- `squirrel-icon.webp` — squirrel mascot used as the web favicon and application logo
 - `demo.json` — the **Johan_01** demo (120 BPM, Main / Odd Track / Odd Snare), including embedded kick, clap, hi-hat and snare samples
-- `SquirrelStudio_Web_0.1.41.zip` — current web package
+- `SquirrelStudio_Web_0.1.42.zip` — current web package
 - `README.md` — overview
 - `HELP.md` — detailed English manual
 - `START_STUDIO.cmd` — local web server launcher
@@ -69,4 +69,4 @@ Older numbered HTML and ZIP copies were removed from the current branch to avoid
 
 The browser version uses **Web Audio**, not direct ASIO. The `windows/` JUCE desktop project is experimental and may not yet reproduce every web feature, especially newer drum-sample features.
 
-*User documentation for Squirrel Studio Web 0.1.41.*
+*User documentation for Squirrel Studio Web 0.1.42.*
