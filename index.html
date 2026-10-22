@@ -2049,8 +2049,9 @@ function releaseVoice(v,when){if(v.released)return;
    try{
     const gain=v.modGain.gain,fade=Math.max(.001,v.drumRelease??.018);
     // Use the current level, including an existing scheduled gate release.
-    const level=v.gateOff!==null&&v.gateOff!==undefined&&t>=v.gateOff
-     ?clamp(1-(t-v.gateOff)/fade,0,1):Math.max(0,gain.value);
+    const level=v.gateOff!==null&&v.gateOff!==undefined
+     ?(t<v.gateOff?1:clamp(1-(t-v.gateOff)/fade,0,1))
+     :Math.max(0,gain.value);
     if(typeof gain.cancelAndHoldAtTime==='function')gain.cancelAndHoldAtTime(t);
     else {gain.cancelScheduledValues(t);gain.setValueAtTime(level,t)}
     gain.linearRampToValueAtTime(0,t+fade);
