@@ -1,6 +1,12 @@
-# Squirrel Studio Web 0.1.73 — User Manual
+# Squirrel Studio Web 0.1.74 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Step FX D00 — SAMPLE CONTINUE (long drum and sampler audio)
+
+Choose **D · SAMPLE CONTINUE** in **Step FX** on a DRUM or SAMPLE note. The sample may play through the end of the current pattern into the next one, including a different Song Mode pattern. This is especially useful when a waveform is longer than a 4-, 16- or 32-step pattern. A looping drum sample with D00 on its note is not ended by the usual step gate. A D00 on a later empty FX row also marks a still-playing sample for continuation, although for a drum loop the best place is the original note step to bypass its gate.
+
+On a later step in the same track, select **C · NOTE OFF** (C00), with the note step turned OFF. C00 ends *all* continued sample voices on that track, even if they began in a previous pattern, using their RELEASE rather than a hard cut. Drum slots use their own RELEASE control; regular sampler tracks use the existing sampler release. Other tracks are unaffected. One-shots can still finish naturally before C00, and **STOP** always fades all sample voices. D00 needs no numerical FX parameter and is saved inside the pattern along with the other step effects.
 
 ## 1. Getting started
 
@@ -99,6 +105,8 @@ When creating or switching a track to **DRUM** under **OPTIONS**, that track imm
 Every DRUM slot also has its own **VOL** (0–200%), **PITCH** (-24 to +24 semitones), **FINE** (-100 to +100 cents), and **PAN** (-100 left to +100 right) controls in the DRUM SAMPLES page. Each control offers a slider and direct numerical entry. Use **RESET MIX** on a slot to restore VOL 100%, PITCH 0, FINE 0 and PAN 0 without changing its audio assignment, choke group, trim markers or loops.
 
 Between the slot mixer and the amplitude envelope, each slot has a **MULTIMODE FILTER** section. The **TYPE** selector offers **LOW-PASS**, **HIGH-PASS** and **BAND-PASS**. Low-pass darkens the sample by reducing high frequencies, high-pass removes bass/rumble, and band-pass isolates a frequency range around the selected cutoff. **FILTER ON** enables the chosen mode for that slot; filters are OFF by default so the original audio is unchanged. **CUTOFF (Hz)** ranges from 80 to 20,000 Hz and uses a logarithmic slider with a precise numeric field. **RESONANCE (Q)** ranges from 0.1 to 18. Cutoff, resonance and the selected filter type update already-playing *filtered* voices in real time, while the ON/OFF switch applies to newly triggered voices. **RESET FILTER** turns off the filter, sets the type back to LOW-PASS and restores 12,000 Hz cutoff / 0.7 resonance, without changing the sample or envelope. Filters are specific to each of the five slots, even if the slots share a sample from the central library.
+
+**GRAPHICAL CUTOFF SWEEP:** Below the DEPTH and TIME controls, the filter envelope has an interactive graph. Drag the amber point in the left region **vertically** for DEPTH and the green point in the right region **horizontally** for TIME. The curve shows the actual frequency sweep, including frequency clipping at the audio device's Nyquist limit. Sliders/numeric inputs update together with the graph. Dragging saves when released, and the graphic becomes inactive with FILTER OFF. Mouse, touch and pen are supported.
 
 **CUTOFF SWEEP:** Under the filter's main settings, use **DEPTH** (-48 to +48 semitones) and **TIME** (0–3000 ms) to automatically move the filter cutoff every time a drum sample triggers. Positive depth starts the cutoff above your main CUTOFF setting and sweeps down; negative depth starts below it and sweeps up. TIME controls how long the logarithmic sweep takes to return to the original cutoff. DEPTH 0 or TIME 0 turns the sweep OFF. The sweep also works with HIGH-PASS and BAND-PASS. Edit the settings while a filtered drum plays to update its remaining sweep. You can use the sliders or type exact values; changing one drum slot does not alter the other four. Filters remain OFF by default. **RESET FILTER** also clears both sweep settings. Projects and sample banks preserve the values, and older files load with sweep disabled.
 
