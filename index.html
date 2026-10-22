@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
-  <title>Squirrel Studio 0.1.31 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.1.32 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -408,7 +408,7 @@
  #view-sound .preview{padding:7px;margin-top:7px}
 }
 
-/* 0.1.31 — four parallel effects, uniform width even for unsupported distortion */
+/* 0.1.32 — four parallel effects, uniform width even for unsupported distortion */
 #view-send .send-title,#view-send .send-row{
  display:grid;grid-template-columns:minmax(95px,1.12fr) repeat(4,minmax(0,1fr));gap:clamp(8px,1.4vw,24px);align-items:center;
 }
@@ -446,7 +446,7 @@
 @media(max-width:850px){.song-mode-grid{grid-template-columns:1fr}#view-send .send-title,#view-send .send-row{min-width:660px;gap:10px}#view-send .sends-grid{overflow-x:auto}#view-send .send-global{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:1100px) and (max-height:850px){#view-send .send-row{min-height:43px;padding:5px 11px}}
 
-/* 0.1.31: per-track step length and muted beige playback follow. */
+/* 0.1.32: per-track step length and muted beige playback follow. */
 .grid-head,.seq-row{grid-template-columns:188px repeat(32,minmax(0,1fr))}
 .grid-board{min-width:1250px}
 .lane-length{flex:0 0 43px;width:43px;min-width:0;padding:3px 1px;border-radius:5px;border:1px solid #987047;background:#3d2c20;color:#f7dbb0;font:700 11px Consolas,monospace;text-align:center;cursor:pointer}
@@ -474,7 +474,7 @@
 .project-name-field input{width:min(100%,500px);padding:10px 12px;background:#3f3025;border:1px solid #78593d;border-radius:6px;color:#f3d3b4;font:inherit}
 .project-name-field input::placeholder{color:#a28c77}
 
-/* 0.1.31: prevent browser text highlighting across the application.
+/* 0.1.32: prevent browser text highlighting across the application.
    Keep editable fields selectable, without affecting pad selection,
    keyboard shortcuts, or Song Mode tile drag-and-drop. */
 body, body *{
@@ -489,7 +489,7 @@ input[type="password"],textarea,
   user-select:text;
 }
 
-/* 0.1.31: compact five-slot drum sampler (three independent drum tracks). */
+/* 0.1.32: compact five-slot drum sampler (three independent drum tracks). */
 .drum-panel-top{display:flex;gap:14px;align-items:center;margin:0 0 14px}
 .drum-panel-top .field{min-width:180px}
 .drum-panel-top select{background:#342820;color:#f0d0a2;border:1px solid #866245;padding:9px 11px;border-radius:7px}
@@ -502,11 +502,18 @@ input[type="password"],textarea,
 #stepDrumSampleField select{width:100%}
 @media(max-width:950px){.drum-slot-list{grid-template-columns:1fr}}
 @media(max-width:500px){.drum-slot-row{flex-wrap:wrap}.drum-slot-controls{width:100%;justify-content:flex-end}}
+
+/* Local demo.json controls — same location as index.html */
+.options-demo{margin-top:20px;border-top:1px solid #594533;padding-top:15px}
+.options-demo h3{font-size:14px;margin:0 0 10px;color:#f0c99c}
+.options-demo-actions{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.options-demo-switch{font-size:12px;color:#efcaa1;font-weight:650;display:flex;align-items:center;gap:8px;cursor:pointer}
+.options-demo-switch input{accent-color:#e3b887}
 </style>
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark" aria-hidden="true">S</div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.31</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark" aria-hidden="true">S</div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.32</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" value="120" aria-label="Tempo in BPM"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -536,7 +543,13 @@ input[type="password"],textarea,
       <div id="view-send" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Track effects · Delay / Reverb / Chorus / Distortion</h2><span class="pill">8 TRACKS</span></div><div class="sends-grid" id="sendsGrid"></div><div class="send-global" id="sendGlobal"></div></section></div>
       <div id="view-options" class="hidden"><section class="panel options-panel"><div class="panel-head"><h2 class="section-title">Pattern options</h2><span class="pill">MAX 32 STEPS</span></div><div id="optionsPatterns" class="options-patterns"></div>
         <div class="options-slots-head"><h3>Instrument slots</h3><span class="pill">7–8 · SAMPLER AVAILABLE</span></div>
-        <div id="optionsSlots" class="options-slots"></div><div class="new-song-actions"><button class="btn" type="button" id="newSongBtn">＋ NEW SONG</button></div></section></div>
+        <div id="optionsSlots" class="options-slots"></div>
+<div class="options-demo">
+ <h3>DEMO SONG</h3>
+ <div class="options-demo-actions"><button class="btn" type="button" id="loadDemoJsonBtn">↑ LOAD DEMO.JSON</button>
+ <label class="options-demo-switch"><input type="checkbox" id="autoDemoJson"> AUTO-LOAD ON START</label></div>
+</div>
+<div class="new-song-actions"><button class="btn" type="button" id="newSongBtn">＋ NEW SONG</button></div></section></div>
       <div id="view-setup" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">MIDI & audio</h2></div></div>
         <div class="setting-cols"><div class="setup-box"><h3>USB MIDI input</h3><select id="midiInput"><option value="">No MIDI input selected</option></select><div class="setup-actions"><button class="btn primary" id="connectMidiBtn">CONNECT MIDI</button><button class="mini-btn" id="refreshMidiBtn">REFRESH</button></div><div style="height:14px"></div><label class="field"><span class="field-head"><span>MIDI ROUTING</span></span><select id="midiRouting"><option value="selected">All channels → selected track</option><option value="channels">Per MIDI channel (CH 1–8)</option></select></label></div>
         <div class="setup-box"><h3>MIDI OUT · MiniFreak / Focusrite</h3>
@@ -555,7 +568,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-// Squirrel Studio Web 0.1.31 — Song Mode, eight-channel chorus, drum/sampler distortion.
+// Squirrel Studio Web 0.1.32 — Song Mode, eight-channel chorus, drum/sampler distortion.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 const NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -727,7 +740,14 @@ function fresh(withDemo=true){const tracks=bases.map(b=>({...b,muted:false,solo:
  set(4,[2,7,10,15]);patterns[0][3][3].fx=1;patterns[0][3][3].fxAmount=5;patterns[0][3][4].fx=1;patterns[0][3][4].fxAmount=0;patterns[0][3][11].fx=2;patterns[0][3][11].fxAmount=5;patterns[0][3][12].fx=2;patterns[0][3][12].fxAmount=0;patterns[0][4][10].fx=3;[60,62,67,64].forEach((n,i)=>patterns[0][4][[2,7,10,15][i]].note=n);set(5,[0,8]);patterns[0][5][0].note=48;patterns[0][5][8].note=53;}
  tracks.forEach(t=>{t.delaySend=0;t.reverbSend=0;t.chorusSend=0;t.distortion=0});
  return {version:17,drumSamples:Array.from({length:3},()=>Array.from({length:5},()=>({name:'',data:null}))),projectName:'',patternNames:Array.from({length:PATTERN_COUNT},(_,i)=>defaultPatternName(i)),songModeEnabled:false,songSequence:[],bpm:120,swing:0,master:75,keyboardOctave:3,editMode:false,pattern:0,patternLengths:Array(PATTERN_COUNT).fill(32),trackLengths:Array.from({length:PATTERN_COUNT},()=>Array(TRACK_COUNT).fill(32)),selectedTrack:3,selectedStep:0,tracks,patterns,lfos:defaultLFOs(),envelopes:defaultEnvelopes(),sendFX:defaultSendFX()};}
-let state=fresh();try{const raw=localStorage.getItem('squirrel-studio-0.1');if(raw)state=validate(JSON.parse(raw));}catch(e){console.warn('Invalid local storage:',e)}
+const LOCAL_PROJECT_KEY='squirrel-studio-0.1';
+const DEMO_AUTO_KEY='squirrel-studio-auto-demo';
+let hasLocalProject=false,autoDemoOnStart=false;
+try{hasLocalProject=!!localStorage.getItem(LOCAL_PROJECT_KEY);autoDemoOnStart=localStorage.getItem(DEMO_AUTO_KEY)==='1'}
+catch(e){console.warn('Local storage unavailable:',e)}
+let state=fresh();
+try{const raw=localStorage.getItem(LOCAL_PROJECT_KEY);if(raw)state=validate(JSON.parse(raw))}
+catch(e){console.warn('Invalid local storage:',e);hasLocalProject=false}
 let audio=null,midiAccess=null,selectedInput=null,selectedOutput=null,midiOutEnabled=false,midiHeld=new Map(),clipboard=null,playing=false,recording=false,songPosition=0,currentStep=0,lastVisualStep=-1,nextNoteTime=0,timer=null,view='seq',audioSink='default',messageTimeout=null;
 let activeLive=new Map(),scheduledVoices=new Set(),playheadQueue=[],lastBeatAt=0;
 // The desktop shell injects this optional bridge before application startup.
@@ -1895,6 +1915,48 @@ function setPatternLength(bank,value){
  currentStep=0;lastVisualStep=-1;playheadQueue=[];
  persist();renderAll();
 }
+
+async function applyLoadedProject(project){
+ stopTransport();
+ sampleSession++;sampleBuffers.clear();drumSampleBuffers.clear();
+ state=project;songPosition=0;fxEditMode=false;fxDigitBuffer='';
+ // Replace IndexedDB samples as a single project, never mixing the demo with the previous song.
+ for(let t=0;t<3;t++)for(let slot=0;slot<5;slot++){
+  const item=state.drumSamples[t][slot],key=drumSlotKey(t,slot);
+  try{if(item.data)await sampleDB('put',key,item);else await sampleDB('delete',key)}
+  catch(e){console.warn('Drum sample project storage:',e)}
+ }
+ for(let i=6;i<TRACK_COUNT;i++){
+  const track=state.tracks[i];
+  try{
+   if(track.sampleData)await sampleDB('put',i,{data:track.sampleData,name:track.sampleName,root:track.sampleRoot});
+   else await sampleDB('delete',i);
+  }catch(e){console.warn('Sampler project storage:',e)}
+ }
+ persist();hasLocalProject=true;
+ if(audio){await decodeAllSamplers();await decodeAllDrumSamples();applyTrackMix();applyLFOs()}
+ renderAll();
+}
+async function loadDemoJson(confirmReplace=true){
+ if(confirmReplace&&!window.confirm('Load demo.json? This will replace your current song. Save your project first if needed.'))return false;
+ try{
+  const response=await fetch(new URL('demo.json',document.baseURI),{cache:'no-store'});
+  if(!response.ok)throw Error('HTTP '+response.status);
+  const data=validate(await response.json());
+  await applyLoadedProject(data);
+  notify('Loaded demo.json');
+  return true;
+ }catch(e){
+  console.warn('demo.json:',e);
+  if(confirmReplace)notify('Could not load demo.json: '+e.message,true);
+  return false;
+ }
+}
+async function bootstrapDemoJson(){
+ // A saved project takes precedence unless the user explicitly opted into every-start loading.
+ if(hasLocalProject&&!autoDemoOnStart)return;
+ await loadDemoJson(false);
+}
 function newSong(){
   if(!window.confirm('NEW SONG? All patterns, notes, effects, mixer settings, LFOs, envelopes and sends will be reset. Save your current song first if needed.'))return;
   stopTransport();
@@ -1929,7 +1991,7 @@ function renderOptions(){
   row.append(label,select);grid.append(row);
  });
 }
-function renderAll(){renderGrid();renderStepEditor();renderFXEditor();if(view==='song')renderSongMode();if(view==='drum')renderDrumSamples();if(view==='sound')renderSound();if(view==='mixer')renderMixer();if(view==='mod'){renderLFO();renderEnvelopes()}if(view==='sample')renderSampleEditor();if(view==='send')renderSendFX();if(view==='options')renderOptions();$('bpmInput').value=state.bpm;$('octaveInput').value=String(state.keyboardOctave);$('editModeBtn').textContent=state.editMode?'✎ EDIT ON':'✎ EDIT OFF';$('editModeBtn').classList.toggle('active',state.editMode);$('editModeBtn').setAttribute('aria-pressed',String(state.editMode));$('swingInput').value=state.swing;$('swingOut').textContent=state.swing+'%';$('masterInput').value=state.master;$('masterOut').textContent=state.master+'%';[...$('patternSelect').options].forEach((opt,i)=>{opt.textContent=patternName(i)});$('patternSelect').value=String(state.pattern);$('patternNameInput').value=patternName(state.pattern);$('projectNameInput').value=state.projectName||''}
+function renderAll(){renderGrid();renderStepEditor();renderFXEditor();if(view==='song')renderSongMode();if(view==='drum')renderDrumSamples();if(view==='sound')renderSound();if(view==='mixer')renderMixer();if(view==='mod'){renderLFO();renderEnvelopes()}if(view==='sample')renderSampleEditor();if(view==='send')renderSendFX();if(view==='options')renderOptions();$('autoDemoJson').checked=autoDemoOnStart;$('bpmInput').value=state.bpm;$('octaveInput').value=String(state.keyboardOctave);$('editModeBtn').textContent=state.editMode?'✎ EDIT ON':'✎ EDIT OFF';$('editModeBtn').classList.toggle('active',state.editMode);$('editModeBtn').setAttribute('aria-pressed',String(state.editMode));$('swingInput').value=state.swing;$('swingOut').textContent=state.swing+'%';$('masterInput').value=state.master;$('masterOut').textContent=state.master+'%';[...$('patternSelect').options].forEach((opt,i)=>{opt.textContent=patternName(i)});$('patternSelect').value=String(state.pattern);$('patternNameInput').value=patternName(state.pattern);$('projectNameInput').value=state.projectName||''}
 function switchView(to){if(to!=='seq'){fxEditMode=false;fxDigitBuffer=''}view=to;for(const id of ['seq','song','drum','sound','mixer','mod','sample','send','options','setup'])$('view-'+id).classList.toggle('hidden',id!==to);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===to));if(to==='song')renderSongMode();if(to==='drum')renderDrumSamples();if(to==='sound')renderSound();if(to==='mixer')renderMixer();if(to==='mod'){renderLFO();renderEnvelopes()}if(to==='sample')renderSampleEditor();if(to==='send')renderSendFX();if(to==='options')renderOptions()}
 function installNotes(){const patternSelect=$('patternSelect');for(let i=0;i<PATTERN_COUNT;i++)patternSelect.add(new Option(patternName(i),String(i)));const el=$('stepNote');for(let n=24;n<=95;n++){const o=document.createElement('option');o.value=n;o.textContent=noteName(n);el.appendChild(o)}const preview=$('previewKeys');for(let i=0;i<12;i++){const btn=document.createElement('button');btn.className='key'+(NAMES[i].includes('#')?' black':'');btn.textContent=noteName(60+i);btn.onpointerdown=e=>{e.preventDefault();playPreview(state.selectedTrack,60+i)};preview.appendChild(btn)}}
 // Web MIDI output: timestamped messages follow the Web Audio scheduler.
@@ -2007,7 +2069,7 @@ function projectFileName(name,now=new Date()){
  if(safe)return safe+'.json';
  const pad=n=>String(n).padStart(2,'0');
  const stamp=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'_'+pad(now.getHours())+'-'+pad(now.getMinutes())+'-'+pad(now.getSeconds());
- return 'SquirrelStudio_0.1.31_'+stamp+'.json';
+ return 'SquirrelStudio_0.1.32_'+stamp+'.json';
 }
 function saveProject(){
  state.projectName=$('projectNameInput').value.trim().slice(0,80);
@@ -2056,17 +2118,22 @@ function bindings(){
  $('resetMixerBtn').onclick=()=>{state.tracks.forEach((t,i)=>{t.volume=bases[i].volume;t.pan=bases[i].pan;t.muted=false;t.solo=false});persist();applyTrackMix();renderAll()};
  $('midiOutput').onchange=selectMidiOutput;$('midiOutEnableBtn').onclick=()=>{if(!selectedOutput){notify('Select a MIDI OUT port (MiniFreak or Focusrite) first.',true);return}if(midiOutEnabled)midiAllNotesOff();midiOutEnabled=!midiOutEnabled;updateMidiOutputUI()};$('midiPanicBtn').onclick=()=>{midiAllNotesOff();notify('MIDI ALL NOTES OFF sent.')};
  $('connectMidiBtn').onclick=connectMidi;$('refreshMidiBtn').onclick=()=>{if(midiAccess)updateMidiPorts();else connectMidi()};$('midiInput').onchange=selectMidiInput;$('refreshAudioBtn').onclick=refreshOutputs;$('applyOutputBtn').onclick=applyOutput;$('chooseOutputBtn').onclick=chooseOutput;$('projectNameInput').oninput=()=>{state.projectName=$('projectNameInput').value.slice(0,80);persist()};
- $('saveBtn').onclick=saveProject;$('loadBtn').onclick=()=>$('loadFile').click();$('loadFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;
- try{const s=validate(JSON.parse(await f.text()));stopTransport();sampleSession++;sampleBuffers.clear();
- state=s;drumSampleBuffers.clear();songPosition=0;
- for(let t=0;t<3;t++)for(let slot=0;slot<5;slot++){
-  const item=state.drumSamples[t][slot],key=drumSlotKey(t,slot);
-  try{if(item.data)await sampleDB('put',key,item);else await sampleDB('delete',key)}
-  catch(e){console.warn('Drum sample project storage:',e)}
- }
- for(let i=6;i<TRACK_COUNT;i++){if(state.tracks[i].sampleData){try{await sampleDB('put',i,{data:state.tracks[i].sampleData,name:state.tracks[i].sampleName,root:state.tracks[i].sampleRoot})}catch(e){console.warn(e)}}else await removeStoredSample(i)}
- persist();if(audio){await decodeAllSamplers();await decodeAllDrumSamples()}applyTrackMix();renderAll();notify('Project loaded: '+f.name)
- }catch(err){notify('Failed to load project: '+err.message,true)}e.target.value=''};$('newSongBtn').onclick=newSong;$('demoBtn').onclick=()=>{if(!confirm('Restore demo? Unsaved changes in this session will be overwritten.'))return;stopTransport();sampleSession++;sampleBuffers.clear();for(let i=6;i<TRACK_COUNT;i++)removeStoredSample(i);state=fresh();drumSampleBuffers.clear();clearDrumSamplesStorage();songPosition=0;persist();applyTrackMix();renderAll();notify('Demo restored.')};
+ $('saveBtn').onclick=saveProject;$('loadBtn').onclick=()=>$('loadFile').click();
+ $('loadFile').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{const project=validate(JSON.parse(await f.text()));await applyLoadedProject(project);notify('Project loaded: '+f.name)}
+  catch(err){notify('Failed to load project: '+err.message,true)}
+  e.target.value='';
+ };$('loadDemoJsonBtn').onclick=()=>loadDemoJson(true);
+ $('autoDemoJson').onchange=()=>{
+  const desired=$('autoDemoJson').checked;
+  if(desired&&!window.confirm('Automatically load demo.json on every startup, replacing the locally saved song?')){
+   $('autoDemoJson').checked=false;return;
+  }
+  autoDemoOnStart=desired;
+  try{localStorage.setItem(DEMO_AUTO_KEY,desired?'1':'0')}catch(e){console.warn(e)}
+ };
+ $('newSongBtn').onclick=newSong;$('demoBtn').onclick=()=>{if(!confirm('Restore demo? Unsaved changes in this session will be overwritten.'))return;stopTransport();sampleSession++;sampleBuffers.clear();for(let i=6;i<TRACK_COUNT;i++)removeStoredSample(i);state=fresh();drumSampleBuffers.clear();clearDrumSamplesStorage();songPosition=0;persist();applyTrackMix();renderAll();notify('Demo restored.')};
   // Houd de padnavigatie direct bereikbaar na muis-/touchbediening van een slider.
   // Sliderinput blijft tijdens het slepen gefocust; na loslaten gaat de focus
   // terug naar de huidige step. Daardoor wijzigen de pijltjes daarna niet
@@ -2142,7 +2209,7 @@ function bindings(){
  });
  window.addEventListener('blur',()=>{for(const [key,voices] of activeLive){voices.forEach(v=>releaseVoice(v,audio?.ctx.currentTime||0))}activeLive.clear();keyboardDown.clear();keyboardAssignments.clear()});window.addEventListener('beforeunload',persist);
 }
-installNotes();bindings();bindSampleEditor();bindDrumSamples();renderAll();refreshOutputs();requestAnimationFrame(uiTick);
+installNotes();bindings();bindSampleEditor();bindDrumSamples();renderAll();refreshOutputs();requestAnimationFrame(uiTick);bootstrapDemoJson();
 </script>
 </body>
 </html>
