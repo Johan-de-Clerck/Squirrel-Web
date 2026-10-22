@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
-  <title>Squirrel Studio 0.1.27 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.1.28 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -408,7 +408,7 @@
  #view-sound .preview{padding:7px;margin-top:7px}
 }
 
-/* 0.1.27 — four parallel effects, uniform width even for unsupported distortion */
+/* 0.1.28 — four parallel effects, uniform width even for unsupported distortion */
 #view-send .send-title,#view-send .send-row{
  display:grid;grid-template-columns:minmax(95px,1.12fr) repeat(4,minmax(0,1fr));gap:clamp(8px,1.4vw,24px);align-items:center;
 }
@@ -446,7 +446,7 @@
 @media(max-width:850px){.song-mode-grid{grid-template-columns:1fr}#view-send .send-title,#view-send .send-row{min-width:660px;gap:10px}#view-send .sends-grid{overflow-x:auto}#view-send .send-global{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:1100px) and (max-height:850px){#view-send .send-row{min-height:43px;padding:5px 11px}}
 
-/* 0.1.27: per-track step length and muted beige playback follow. */
+/* 0.1.28: per-track step length and muted beige playback follow. */
 .grid-head,.seq-row{grid-template-columns:188px repeat(32,minmax(0,1fr))}
 .grid-board{min-width:1250px}
 .lane-length{flex:0 0 43px;width:43px;min-width:0;padding:3px 1px;border-radius:5px;border:1px solid #987047;background:#3d2c20;color:#f7dbb0;font:700 11px Consolas,monospace;text-align:center;cursor:pointer}
@@ -469,11 +469,15 @@
 .song-tile,.song-entry strong{overflow-wrap:anywhere;word-break:break-word}
 .song-entry{min-width:95px}
 @media(max-width:700px){.pattern-rename input{width:108px}.options-pattern-rename{width:120px}}
+/* Optional filename for project export. */
+.project-name-field{display:flex;flex-direction:column;align-items:flex-start;gap:7px;margin-top:12px;margin-bottom:11px}
+.project-name-field input{width:min(100%,500px);padding:10px 12px;background:#3f3025;border:1px solid #78593d;border-radius:6px;color:#f3d3b4;font:inherit}
+.project-name-field input::placeholder{color:#a28c77}
 </style>
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark" aria-hidden="true">S</div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.27</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark" aria-hidden="true">S</div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.28</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" value="120" aria-label="Tempo in BPM"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -510,7 +514,7 @@
             <label class="field"><span class="field-head">MIDI CHANNEL</span><select id="midiOutChannel"><option value="track">CH 1–8 (per track)</option></select></label>
           </div><div class="midi-out-indicator" id="midiOutStatus">MIDI OUT OFF</div></div>
         <div class="setup-box"><h3>Audio output / Focusrite</h3><select id="audioOutput"><option value="default">Default audio output (Windows)</option></select><div class="setup-actions"><button class="btn primary" id="applyOutputBtn">SET OUTPUT</button><button class="mini-btn" id="refreshAudioBtn">REFRESH DEVICES</button><button class="mini-btn" id="chooseOutputBtn">CHOOSE DEVICE…</button></div><p id="outputHelp" class="hidden" aria-hidden="true"></p><div class="midi-out-indicator">WEB AUDIO / WINDOWS AUDIO · ASIO NOT AVAILABLE IN BROWSER</div></div></div>
-        <div class="setup-box"><h3>Save & load project</h3><div class="setup-actions"><button class="btn" id="saveBtn">↓ SAVE PROJECT (.JSON)</button><button class="btn" id="loadBtn">↑ LOAD PROJECT</button><button class="mini-btn" id="demoBtn">RESTORE DEMO PATTERN</button><input type="file" id="loadFile" accept=".json,application/json" class="hidden"></div></div>
+        <div class="setup-box"><h3>Save & load project</h3><label class="project-name-field"><span class="small-label">PROJECT NAME</span><input id="projectNameInput" type="text" maxlength="80" autocomplete="off" spellcheck="false" placeholder="Optional" aria-label="Project name"></label><div class="setup-actions"><button class="btn" id="saveBtn">↓ SAVE PROJECT (.JSON)</button><button class="btn" id="loadBtn">↑ LOAD PROJECT</button><button class="mini-btn" id="demoBtn">RESTORE DEMO PATTERN</button><input type="file" id="loadFile" accept=".json,application/json" class="hidden"></div></div>
         </section></div>
       <div id="notice" role="status" class="notice" aria-live="polite"></div>
     </main>
@@ -518,7 +522,7 @@
 </div>
 <script>
 'use strict';
-// Squirrel Studio Web 0.1.27 — Song Mode, eight-channel chorus, drum/sampler distortion.
+// Squirrel Studio Web 0.1.28 — Song Mode, eight-channel chorus, drum/sampler distortion.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 const NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -689,7 +693,7 @@ function fresh(withDemo=true){const tracks=bases.map(b=>({...b,muted:false,solo:
  if(withDemo){set(0,[0,4,8,12]);set(1,[4,12]);set(2,[2,6,10,14],90);set(2,[0,4,8,12],75);set(3,[0,3,6,8,11,14]);[36,36,39,43,36,41,39].forEach((n,i)=>{const idx=[0,3,6,8,11,14,15][i];patterns[0][3][idx].on=true;patterns[0][3][idx].note=n;});
  set(4,[2,7,10,15]);patterns[0][3][3].fx=1;patterns[0][3][3].fxAmount=5;patterns[0][3][4].fx=1;patterns[0][3][4].fxAmount=0;patterns[0][3][11].fx=2;patterns[0][3][11].fxAmount=5;patterns[0][3][12].fx=2;patterns[0][3][12].fxAmount=0;patterns[0][4][10].fx=3;[60,62,67,64].forEach((n,i)=>patterns[0][4][[2,7,10,15][i]].note=n);set(5,[0,8]);patterns[0][5][0].note=48;patterns[0][5][8].note=53;}
  tracks.forEach(t=>{t.delaySend=0;t.reverbSend=0;t.chorusSend=0;t.distortion=0});
- return {version:15,patternNames:Array.from({length:PATTERN_COUNT},(_,i)=>defaultPatternName(i)),songModeEnabled:false,songSequence:[],bpm:120,swing:0,master:75,keyboardOctave:3,editMode:false,pattern:0,patternLengths:Array(PATTERN_COUNT).fill(32),trackLengths:Array.from({length:PATTERN_COUNT},()=>Array(TRACK_COUNT).fill(32)),selectedTrack:3,selectedStep:0,tracks,patterns,lfos:defaultLFOs(),envelopes:defaultEnvelopes(),sendFX:defaultSendFX()};}
+ return {version:16,projectName:'',patternNames:Array.from({length:PATTERN_COUNT},(_,i)=>defaultPatternName(i)),songModeEnabled:false,songSequence:[],bpm:120,swing:0,master:75,keyboardOctave:3,editMode:false,pattern:0,patternLengths:Array(PATTERN_COUNT).fill(32),trackLengths:Array.from({length:PATTERN_COUNT},()=>Array(TRACK_COUNT).fill(32)),selectedTrack:3,selectedStep:0,tracks,patterns,lfos:defaultLFOs(),envelopes:defaultEnvelopes(),sendFX:defaultSendFX()};}
 let state=fresh();try{const raw=localStorage.getItem('squirrel-studio-0.1');if(raw)state=validate(JSON.parse(raw));}catch(e){console.warn('Invalid local storage:',e)}
 let audio=null,midiAccess=null,selectedInput=null,selectedOutput=null,midiOutEnabled=false,midiHeld=new Map(),clipboard=null,playing=false,recording=false,songPosition=0,currentStep=0,lastVisualStep=-1,nextNoteTime=0,timer=null,view='seq',audioSink='default',messageTimeout=null;
 let activeLive=new Map(),scheduledVoices=new Set(),playheadQueue=[],lastBeatAt=0;
@@ -814,13 +818,13 @@ function srcChordDefault(data){
  return data.tracks?.[5]?.sound?.chord==='major'?'major':'minor';
 }
 function validate(data){
- if(!data||![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].includes(data.version)||!Array.isArray(data.tracks)||![AUDIO_TRACK_COUNT,TRACK_COUNT].includes(data.tracks.length)||!Array.isArray(data.patterns)||![4,PATTERN_COUNT].includes(data.patterns.length))throw Error('Invalid project file format');
+ if(!data||![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16].includes(data.version)||!Array.isArray(data.tracks)||![AUDIO_TRACK_COUNT,TRACK_COUNT].includes(data.tracks.length)||!Array.isArray(data.patterns)||![4,PATTERN_COUNT].includes(data.patterns.length))throw Error('Invalid project file format');
  if(data.patterns.length===4){
   const patterns=Array(PATTERN_COUNT).fill(null),lengths=Array(PATTERN_COUNT).fill(16);
   for(let i=0;i<4;i++){patterns[i*4]=data.patterns[i];lengths[i*4]=data.patternLengths?.[i]||16}
   data={...data,patterns,patternLengths:lengths,pattern:Math.min(3,Math.max(0,Number(data.pattern)||0))*4};
  }
- const s=fresh();s.patternNames=Array.from({length:PATTERN_COUNT},(_,i)=>typeof data.patternNames?.[i]==='string'?(data.patternNames[i].trim().replace(/\s+/g,' ').slice(0,24)||defaultPatternName(i)):defaultPatternName(i));s.songSequence=Array.isArray(data.songSequence)?data.songSequence.slice(0,256).filter(n=>Number.isInteger(n)&&n>=0&&n<PATTERN_COUNT):[];s.songModeEnabled=!!data.songModeEnabled&&s.songSequence.length>0;s.bpm=clamp(Number(data.bpm)||120,50,240);s.swing=clamp(Number(data.swing)||0,0,65);s.master=clamp(Number(data.master)??75,0,100);s.keyboardOctave=clamp(Math.round(Number(data.keyboardOctave??3)),1,6);s.editMode=!!data.editMode;s.pattern=clamp(Number(data.pattern)||0,0,PATTERN_COUNT-1);s.selectedTrack=clamp(Number(data.selectedTrack)||3,0,TRACK_COUNT-1);s.trackLengths=Array.from({length:PATTERN_COUNT},(_,b)=>Array.from({length:TRACK_COUNT},(_,t)=>{const value=data.trackLengths?.[b]?.[t]??data.patternLengths?.[b]??(data.version>=14?32:16);return clamp(Math.round(Number(value)||32),1,MAX_STEPS)}));s.patternLengths=s.trackLengths.map(row=>Math.max(...row));s.selectedStep=clamp(Number(data.selectedStep)||0,0,s.trackLengths[s.pattern][s.selectedTrack]-1);
+ const s=fresh();s.projectName=typeof data.projectName==='string'?data.projectName.slice(0,80):'';s.patternNames=Array.from({length:PATTERN_COUNT},(_,i)=>typeof data.patternNames?.[i]==='string'?(data.patternNames[i].trim().replace(/\s+/g,' ').slice(0,24)||defaultPatternName(i)):defaultPatternName(i));s.songSequence=Array.isArray(data.songSequence)?data.songSequence.slice(0,256).filter(n=>Number.isInteger(n)&&n>=0&&n<PATTERN_COUNT):[];s.songModeEnabled=!!data.songModeEnabled&&s.songSequence.length>0;s.bpm=clamp(Number(data.bpm)||120,50,240);s.swing=clamp(Number(data.swing)||0,0,65);s.master=clamp(Number(data.master)??75,0,100);s.keyboardOctave=clamp(Math.round(Number(data.keyboardOctave??3)),1,6);s.editMode=!!data.editMode;s.pattern=clamp(Number(data.pattern)||0,0,PATTERN_COUNT-1);s.selectedTrack=clamp(Number(data.selectedTrack)||3,0,TRACK_COUNT-1);s.trackLengths=Array.from({length:PATTERN_COUNT},(_,b)=>Array.from({length:TRACK_COUNT},(_,t)=>{const value=data.trackLengths?.[b]?.[t]??data.patternLengths?.[b]??(data.version>=14?32:16);return clamp(Math.round(Number(value)||32),1,MAX_STEPS)}));s.patternLengths=s.trackLengths.map(row=>Math.max(...row));s.selectedStep=clamp(Number(data.selectedStep)||0,0,s.trackLengths[s.pattern][s.selectedTrack]-1);
  for(let t=0;t<TRACK_COUNT;t++){const src=data.tracks[t];if(!src||typeof src!=='object')continue;const target=s.tracks[t];target.volume=clamp(Number(src.volume??target.volume),0,100);target.pan=clamp(Number(src.pan??target.pan),-100,100);target.muted=!!src.muted;target.solo=!!src.solo;
  if(target.type==='empty'){
   target.slotKind=validSlotKind(src.slotKind);
@@ -1767,7 +1771,7 @@ function renderOptions(){
   row.append(label,select);grid.append(row);
  });
 }
-function renderAll(){renderGrid();renderStepEditor();renderFXEditor();if(view==='song')renderSongMode();if(view==='sound')renderSound();if(view==='mixer')renderMixer();if(view==='mod'){renderLFO();renderEnvelopes()}if(view==='sample')renderSampleEditor();if(view==='send')renderSendFX();if(view==='options')renderOptions();$('bpmInput').value=state.bpm;$('octaveInput').value=String(state.keyboardOctave);$('editModeBtn').textContent=state.editMode?'✎ EDIT ON':'✎ EDIT OFF';$('editModeBtn').classList.toggle('active',state.editMode);$('editModeBtn').setAttribute('aria-pressed',String(state.editMode));$('swingInput').value=state.swing;$('swingOut').textContent=state.swing+'%';$('masterInput').value=state.master;$('masterOut').textContent=state.master+'%';[...$('patternSelect').options].forEach((opt,i)=>{opt.textContent=patternName(i)});$('patternSelect').value=String(state.pattern);$('patternNameInput').value=patternName(state.pattern)}
+function renderAll(){renderGrid();renderStepEditor();renderFXEditor();if(view==='song')renderSongMode();if(view==='sound')renderSound();if(view==='mixer')renderMixer();if(view==='mod'){renderLFO();renderEnvelopes()}if(view==='sample')renderSampleEditor();if(view==='send')renderSendFX();if(view==='options')renderOptions();$('bpmInput').value=state.bpm;$('octaveInput').value=String(state.keyboardOctave);$('editModeBtn').textContent=state.editMode?'✎ EDIT ON':'✎ EDIT OFF';$('editModeBtn').classList.toggle('active',state.editMode);$('editModeBtn').setAttribute('aria-pressed',String(state.editMode));$('swingInput').value=state.swing;$('swingOut').textContent=state.swing+'%';$('masterInput').value=state.master;$('masterOut').textContent=state.master+'%';[...$('patternSelect').options].forEach((opt,i)=>{opt.textContent=patternName(i)});$('patternSelect').value=String(state.pattern);$('patternNameInput').value=patternName(state.pattern);$('projectNameInput').value=state.projectName||''}
 function switchView(to){if(to!=='seq'){fxEditMode=false;fxDigitBuffer=''}view=to;for(const id of ['seq','song','sound','mixer','mod','sample','send','options','setup'])$('view-'+id).classList.toggle('hidden',id!==to);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===to));if(to==='song')renderSongMode();if(to==='sound')renderSound();if(to==='mixer')renderMixer();if(to==='mod'){renderLFO();renderEnvelopes()}if(to==='sample')renderSampleEditor();if(to==='send')renderSendFX();if(to==='options')renderOptions()}
 function installNotes(){const patternSelect=$('patternSelect');for(let i=0;i<PATTERN_COUNT;i++)patternSelect.add(new Option(patternName(i),String(i)));const el=$('stepNote');for(let n=24;n<=95;n++){const o=document.createElement('option');o.value=n;o.textContent=noteName(n);el.appendChild(o)}const preview=$('previewKeys');for(let i=0;i<12;i++){const btn=document.createElement('button');btn.className='key'+(NAMES[i].includes('#')?' black':'');btn.textContent=noteName(60+i);btn.onpointerdown=e=>{e.preventDefault();playPreview(state.selectedTrack,60+i)};preview.appendChild(btn)}}
 // Web MIDI output: timestamped messages follow the Web Audio scheduler.
@@ -1839,7 +1843,25 @@ function liveNoteOff(t,note,ch=0){if(!audio)return;const key=t+':'+ch+':'+note;c
 async function refreshOutputs(){const s=$('audioOutput'),prev=s.value;s.replaceChildren(new Option('Default audio output (Windows)','default'));if(!navigator.mediaDevices?.enumerateDevices){$('outputHelp').textContent='This browser cannot list audio outputs. Set Focusrite as the default Windows device.';return}try{const dev=await navigator.mediaDevices.enumerateDevices();for(const d of dev.filter(x=>x.kind==='audiooutput')){if(d.deviceId==='default')continue;s.add(new Option(d.label||'Audio output '+(s.options.length),d.deviceId))}s.value=Array.from(s.options).some(o=>o.value===prev)?prev:'default'}catch(e){notify('Failed to list audio devices: '+e.message,true)}}
 async function applyOutput(){if(!await initAudio())return;const id=$('audioOutput').value;if(id==='default'){try{if(audio.outputElement){audio.outputElement.pause();audio.outputElement.srcObject=null}audio.analyser.disconnect();audio.analyser.connect(audio.ctx.destination);audioSink=id;notify('Audio routed to the default Windows output.')}catch(e){notify('Failed to reset audio: '+e.message,true)}return}try{if(typeof audio.ctx.setSinkId==='function'){if(audio.outputElement){audio.outputElement.pause();audio.outputElement.srcObject=null}audio.analyser.disconnect();audio.analyser.connect(audio.ctx.destination);await audio.ctx.setSinkId(id);audioSink=id;notify('Audio output set: '+$('audioOutput').selectedOptions[0].textContent);return}if(!HTMLMediaElement.prototype.setSinkId)throw Error('This browser does not support selecting a specific audio output.');if(!audio.streamDest)audio.streamDest=audio.ctx.createMediaStreamDestination();if(!audio.outputElement){audio.outputElement=document.createElement('audio');audio.outputElement.autoplay=true;audio.outputElement.srcObject=audio.streamDest.stream}await audio.outputElement.setSinkId(id);audio.analyser.disconnect();audio.analyser.connect(audio.streamDest);await audio.outputElement.play();audioSink=id;notify('Audio output selected through MediaStream: '+$('audioOutput').selectedOptions[0].textContent)}catch(e){audio.analyser.disconnect();audio.analyser.connect(audio.ctx.destination);notify('Could not select audio output: '+e.message,true)}}
 async function chooseOutput(){if(!navigator.mediaDevices?.selectAudioOutput){notify('Select Focusrite in Windows Sound Settings; device selection is not supported.',true);return}try{const x=await navigator.mediaDevices.selectAudioOutput();await refreshOutputs();if(x?.deviceId&&![...$('audioOutput').options].some(o=>o.value===x.deviceId))$('audioOutput').add(new Option(x.label||'Selected output',x.deviceId));if(x?.deviceId)$('audioOutput').value=x.deviceId;notify('Audio device selected. Click SET OUTPUT.')}catch(e){notify('No device selected: '+e.message,true)}}
-function saveProject(){const project=JSON.stringify({...state,savedAt:new Date().toISOString(),app:'Squirrel Studio'},null,2);const url=URL.createObjectURL(new Blob([project],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='SquirrelStudio_0.1.27_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),800);notify('Project downloaded as JSON.')}
+function projectFileName(name,now=new Date()){
+ let safe=String(name||'').trim().replace(/[<>:"/\\|?*\u0000-\u001F]/g,'_').replace(/[. ]+$/g,'');
+ if(/^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\.|$)/i.test(safe))safe='_'+safe;
+ if(safe)return safe+'.json';
+ const pad=n=>String(n).padStart(2,'0');
+ const stamp=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'_'+pad(now.getHours())+'-'+pad(now.getMinutes())+'-'+pad(now.getSeconds());
+ return 'SquirrelStudio_0.1.28_'+stamp+'.json';
+}
+function saveProject(){
+ state.projectName=$('projectNameInput').value.trim().slice(0,80);
+ $('projectNameInput').value=state.projectName;
+ persist();
+ const now=new Date();
+ const project=JSON.stringify({...state,savedAt:now.toISOString(),app:'Squirrel Studio'},null,2);
+ const url=URL.createObjectURL(new Blob([project],{type:'application/json'}));
+ const a=document.createElement('a');a.href=url;a.download=projectFileName(state.projectName,now);a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),800);
+ notify('Project saved: '+a.download);
+}
 function typeFXDigit(key){
  const digit=key.toUpperCase();if(!/^[0-9A-F]$/.test(digit))return false;
  if(fxDigitBuffer.length===0&&!FX_OPTIONS.some(x=>fxCode(x.id)===digit))return true;
@@ -1874,7 +1896,8 @@ function bindings(){
  $('soundAuditionBtn').onclick=()=>playPreview(state.selectedTrack,bases[state.selectedTrack].note);
  $('resetMixerBtn').onclick=()=>{state.tracks.forEach((t,i)=>{t.volume=bases[i].volume;t.pan=bases[i].pan;t.muted=false;t.solo=false});persist();applyTrackMix();renderAll()};
  $('midiOutput').onchange=selectMidiOutput;$('midiOutEnableBtn').onclick=()=>{if(!selectedOutput){notify('Select a MIDI OUT port (MiniFreak or Focusrite) first.',true);return}if(midiOutEnabled)midiAllNotesOff();midiOutEnabled=!midiOutEnabled;updateMidiOutputUI()};$('midiPanicBtn').onclick=()=>{midiAllNotesOff();notify('MIDI ALL NOTES OFF sent.')};
- $('connectMidiBtn').onclick=connectMidi;$('refreshMidiBtn').onclick=()=>{if(midiAccess)updateMidiPorts();else connectMidi()};$('midiInput').onchange=selectMidiInput;$('refreshAudioBtn').onclick=refreshOutputs;$('applyOutputBtn').onclick=applyOutput;$('chooseOutputBtn').onclick=chooseOutput;$('saveBtn').onclick=saveProject;$('loadBtn').onclick=()=>$('loadFile').click();$('loadFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;
+ $('connectMidiBtn').onclick=connectMidi;$('refreshMidiBtn').onclick=()=>{if(midiAccess)updateMidiPorts();else connectMidi()};$('midiInput').onchange=selectMidiInput;$('refreshAudioBtn').onclick=refreshOutputs;$('applyOutputBtn').onclick=applyOutput;$('chooseOutputBtn').onclick=chooseOutput;$('projectNameInput').oninput=()=>{state.projectName=$('projectNameInput').value.slice(0,80);persist()};
+ $('saveBtn').onclick=saveProject;$('loadBtn').onclick=()=>$('loadFile').click();$('loadFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;
  try{const s=validate(JSON.parse(await f.text()));stopTransport();sampleSession++;sampleBuffers.clear();
  state=s;songPosition=0;for(let i=6;i<TRACK_COUNT;i++){if(state.tracks[i].sampleData){try{await sampleDB('put',i,{data:state.tracks[i].sampleData,name:state.tracks[i].sampleName,root:state.tracks[i].sampleRoot})}catch(e){console.warn(e)}}else await removeStoredSample(i)}
  persist();if(audio)await decodeAllSamplers();applyTrackMix();renderAll();notify('Project loaded: '+f.name)
