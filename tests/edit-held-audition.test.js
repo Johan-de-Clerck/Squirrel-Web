@@ -72,6 +72,17 @@ const run=new Function('window','document','localStorage','console','structuredC
  switchView('mixer');
  eq(editNotePreviews.size,0,'Switching workspace cancels held EDIT preview');
  eq(view,'mixer','Workspace still changes normally');
- return 'PASS: EDIT note hold/release, FX 950, MIDI, async start and navigation safety';
+ // Arrow keys navigate between steps and tracks without going through selectTrack.
+ view='seq';state.selectedTrack=7;state.selectedStep=0;
+ focusSelectedPad=()=>{};
+ startEditNotePreview('v',7,step);
+ moveGridSelection('ArrowUp');
+ eq(state.selectedTrack,6,'ArrowUp navigates to previous track');
+ eq(editNotePreviews.size,0,'Arrow track navigation ends held note');
+ startEditNotePreview('b',6,step);
+ moveGridSelection('ArrowRight');
+ eq(state.selectedStep,1,'ArrowRight changes selected step');
+ eq(editNotePreviews.size,0,'Arrow step navigation also ends held note');
+ return 'PASS: EDIT note hold/release, FX 950, MIDI, async startup, track/pattern/workspace/arrow navigation';
 `);
 console.log(run({}, {}, {getItem:()=>null,setItem:()=>{}},{warn:()=>{},log:()=>{},error:()=>{}},structuredClone));
