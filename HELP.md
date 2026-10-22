@@ -4,7 +4,7 @@ This manual covers the current **browser** edition of Squirrel Studio. Menu labe
 
 ### New: Four-operator FM — algorithms and operator controls
 
-Select a **BASS**, **LEAD**, or **CHORD** synthesizer track, open **SYNTH** and choose **FM · TWO OPERATORS** in SYNTHESIS ENGINE. Within the FM controls choose **OPERATORS → 4 OP · MULTI-ALGORITHM** to unlock four operators and their dedicated controls. Choose **OPERATORS → 2 OP · ORIGINAL FM** to return to the existing 2-operator engine. This second selector retains the original patch settings.
+Select a **BASS**, **LEAD**, or **CHORD** synthesizer track, open **SYNTH** and choose **FM · FREQUENCY MODULATION** in SYNTHESIS ENGINE. Within the FM controls choose **OPERATORS → 4 OP · MULTI-ALGORITHM** to unlock four operators and their dedicated controls. Choose **OPERATORS → 2 OP · ORIGINAL FM** to return to the existing 2-operator engine. This second selector retains the original patch settings.
 
 **FM ALGORITHM** controls how the oscillators connect:
 
@@ -22,7 +22,7 @@ Changing RATIO, LEVEL, INDEX or SUSTAIN updates already playing four-operator no
 Select a **BASS**, **LEAD**, or **CHORD** track, then open **SYNTH**. The **SYNTHESIS ENGINE** dropdown offers:
 
 - **VA · VIRTUAL ANALOG** — two independent main oscillators plus a suboscillator, with saw, square, triangle, sine and adjustable **PULSE** waves, detune, levels, low-pass filter and amplitude ADSR. All existing songs open in VA unless you choose otherwise.
-- **FM · TWO OPERATORS** — OP1 is the audible sine carrier; OP2 is the modulating sine oscillator. **OP2 RATIO** determines the modulator frequency relative to OP1 (0.25–16×); **FM INDEX** sets modulation strength (0–12). The independent **FM ATTACK**, **FM DECAY**, and **FM SUSTAIN** controls change the index over the note duration. Higher ratios / index amounts can create metallic or bell-like tones. Both engines share the track's existing low-pass filter and amplitude ADSR. Live changes to FM RATIO, INDEX and SUSTAIN update notes that are already playing. NOTE OFF follows the normal amplitude RELEASE and reduces FM modulation. The engine selection and sound parameters are saved in the project and preserved with track-kind patches.
+- **FM · FREQUENCY MODULATION** — OP1 is the audible sine carrier; OP2 is the modulating sine oscillator. **OP2 RATIO** determines the modulator frequency relative to OP1 (0.25–16×); **FM INDEX** sets modulation strength (0–12). The independent **FM ATTACK**, **FM DECAY**, and **FM SUSTAIN** controls change the index over the note duration. Higher ratios / index amounts can create metallic or bell-like tones. Both engines share the track's existing low-pass filter and amplitude ADSR. Live changes to FM RATIO, INDEX and SUSTAIN update notes that are already playing. NOTE OFF follows the normal amplitude RELEASE and reduces FM modulation. The engine selection and sound parameters are saved in the project and preserved with track-kind patches.
 
 ### LFO — Pulse Width modulation for VA
 
