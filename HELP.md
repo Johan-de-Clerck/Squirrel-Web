@@ -1,10 +1,12 @@
-# Squirrel Studio Web 0.1.75 — User Manual
+# Squirrel Studio Web 0.1.76 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
 ### Sample Editor — adjustable NOTE OFF release
 
 Select any **SAMPLE** track under **SAMPLE EDITOR**. The **SAMPLE RELEASE · C00** slider and numeric field set that track's note-off fade from **1 to 3000 milliseconds** (default **65 ms**). This applies after **C00** stops a sample that was carried into the next song pattern with **D00**, and also to manual keyboard/MIDI note releases. The setting affects newly triggered sample voices and does not forcibly shorten a currently playing one-shot. Sample loops can continue across patterns with D00 and fade out at C00 using the selected release. Each SAMPLE track has its own value; DRUM slots use their separate envelope RELEASE setting. Saved projects and sample banks retain this control, while older songs default to the previous 65 ms behavior.
+
+**D00 playback correction (0.1.76):** D00 now correctly works for **ordinary SAMPLE tracks**, not just DRUM samples. A sample started in A1 with D00 will continue into B1 until its natural sample ending or C00 triggers the track's RELEASE. If the sample has LOOP ON, it can continue until C00. A new note may overlap with an already-carried voice. No changes to your saved songs are needed.
 
 ### Step FX D00 — SAMPLE CONTINUE (long drum and sampler audio)
 
