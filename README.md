@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.69**  
+**Current web version: 0.1.70**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,15 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.70
+
+- **Draggable graphical drum envelopes:** each sample slot now has a visual **Attack / Decay / Release** editor on the **DRUM SAMPLES** page. Click or drag horizontally in any of its three labeled sections to change that slot's timing.
+- Each section has its own logarithmic millisecond scale, making short times (such as 2 ms attack and 18 ms release) easier to adjust while retaining the full 500 / 3000 / 2000 ms ranges. **DECAY OFF** appears as a sustained line.
+- The graph and the existing envelope sliders and exact numeric inputs stay synchronized. Graph dragging updates the controls immediately but saves once on pointer release/cancel, rather than writing every mousemove.
+- Mouse, touch and pen are supported via Pointer Events. Separate numeric/sliders remain available for accessibility and exact entry.
+- Graphs are individual per drum slot; each of the five slots can refer to the same shared library buffer but have separate settings. No project format migration is needed.
+- Added `tests/drum-envelope-graph.test.js` for logarithmic mapping, pointer dragging/cancellation, saving and project data integrity.
 
 ## What is new in 0.1.69
 
