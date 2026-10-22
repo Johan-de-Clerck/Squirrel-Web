@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.1.76 — User Manual
+# Squirrel Studio Web 0.1.77 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -7,6 +7,16 @@ This manual covers the current **browser** edition of Squirrel Studio. Menu labe
 Select any **SAMPLE** track under **SAMPLE EDITOR**. The **SAMPLE RELEASE · C00** slider and numeric field set that track's note-off fade from **1 to 3000 milliseconds** (default **65 ms**). This applies after **C00** stops a sample that was carried into the next song pattern with **D00**, and also to manual keyboard/MIDI note releases. The setting affects newly triggered sample voices and does not forcibly shorten a currently playing one-shot. Sample loops can continue across patterns with D00 and fade out at C00 using the selected release. Each SAMPLE track has its own value; DRUM slots use their separate envelope RELEASE setting. Saved projects and sample banks retain this control, while older songs default to the previous 65 ms behavior.
 
 **D00 playback correction (0.1.76):** D00 now correctly works for **ordinary SAMPLE tracks**, not just DRUM samples. A sample started in A1 with D00 will continue into B1 until its natural sample ending or C00 triggers the track's RELEASE. If the sample has LOOP ON, it can continue until C00. A new note may overlap with an already-carried voice. No changes to your saved songs are needed.
+
+### Per-step CONTINUE checkbox — no D00 required
+
+Open **SEQUENCER** and use a DRUM or SAMPLE track. Each step has a small checkbox at the upper-right corner of its note pad. **Tick it** for a long sample that should keep playing when the pattern changes. A green check means **CONTINUE** is enabled. You can also select a step and tick **STEP EDITOR → SAMPLE PLAYBACK → CONTINUE INTO NEXT PATTERN**, which changes the same per-step setting. The box works separately for every step in every pattern.
+
+**You no longer need D00.** Because CONTINUE is not an FX command, you can also use **9 · SAMPLE OFFSET (%)** or another Step FX at the same time. The checkbox works for normal one-shot SAMPLE tracks and loaded drum-sample slots. For a looping drum sound, tick the note's own step to prevent the ordinary step gate from cutting it.
+
+Put **C · NOTE OFF** (C00) on a later step on the same track, possibly in the next Song Mode pattern. The carried sample then fades according to its configured RELEASE. When there is no C00, a one-shot reaches its natural sample end, while a sample with LOOP ON can keep playing. **STOP** still fades everything. The checkbox is copied with the step and saved in project files.
+
+For compatibility, existing **D00** steps show a checked CONTINUE box; unchecking it removes D00. MIDI-only and synth tracks do not need this checkbox.
 
 ### Step FX D00 — SAMPLE CONTINUE (long drum and sampler audio)
 
