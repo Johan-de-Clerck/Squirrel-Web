@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.1.66 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.1.67 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -479,6 +479,17 @@
 @media(max-width:850px){.song-mode-grid{grid-template-columns:1fr}#view-send .send-title,#view-send .send-row{min-width:660px;gap:10px}#view-send .sends-grid{overflow-x:auto}#view-send .send-global{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:1100px) and (max-height:850px){#view-send .send-row{min-height:43px;padding:5px 11px}}
 
+/* 0.1.67: readable full-width drum sample slot mixer */
+#drumSlotList{grid-template-columns:1fr}
+#drumSlotList .drum-slot-row{flex-wrap:wrap;gap:9px}
+#drumSlotList .drum-slot-name{flex:1 1 180px}
+#drumSlotList .drum-slot-settings{order:2;flex:1 1 100%;gap:10px;min-width:0}
+#drumSlotList .drum-slot-controls{order:1;flex-wrap:wrap;gap:5px}
+#drumSlotList .drum-slot-setting{min-width:175px;gap:6px}
+#drumSlotList .drum-slot-setting input[type=range]{width:80px;flex:1 1 70px;min-width:40px;accent-color:#83ba8a}
+#drumSlotList .drum-slot-setting input[type=number]{width:53px;min-width:53px;flex:0 0 53px;background:#2b221e;border:1px solid #715741;border-radius:5px;color:#d7ebd6;padding:5px 3px;font:11px Consolas,monospace;text-align:center}
+#drumSlotList .drum-slot-reset{white-space:nowrap;margin-left:auto;border-color:#61916a;color:#b5e4bc}
+@media(max-width:800px){#drumSlotList .drum-slot-controls{order:3;width:100%;justify-content:flex-start}}
 /* 0.1.66: stereo panorama for each drum slot, using per-voice StereoPannerNode. */
 /* 0.1.65: per-drum-slot sound adjustments */
 .drum-slot-settings{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:210px}
@@ -725,7 +736,7 @@ input[type="password"],textarea,
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.66</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.67</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -988,7 +999,7 @@ function applyFXVoice(voices, when, result){
    continue;
   }
   if(voice.released && (!voice.releaseScheduled || when>=voice.releaseScheduled))continue;
-  for(const pitch of voice.pitchParams||[])pitch.setValueAtTime(result.cents,when);
+  for(const pitch of voice.pitchParams||[])pitch.setValueAtTime((voice.baseDetune||0)+result.cents,when);
   if(voice.modGain)voice.modGain.gain.setValueAtTime(result.level,when);
  }
 }
@@ -1016,7 +1027,16 @@ function applyFXCommand(rt, step){
  rt.activeAmount=amount||rt.memory[effect]||0;
 }
 const DRUM_LIBRARY_SIZE=15;
-function defaultDrumSlot(name='',data=null,chokeGroup=0){return {name,data,chokeGroup,libraryIndex:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,slotVolume:100,slotPitch:0,slotPan:0}}
+function defaultDrumSlot(name='',data=null,chokeGroup=0){return {name,data,chokeGroup,libraryIndex:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,slotVolume:100,slotPitch:0,slotFine:0,slotPan:0}}
+function drumSlotDetuneCents(item){
+ return clamp(Number(item?.slotPitch??0)||0,-24,24)*100+clamp(Number(item?.slotFine??0)||0,-100,100);
+}
+function drumSlotPlaybackRate(item){return Math.pow(2,drumSlotDetuneCents(item)/1200)}
+function resetDrumSlotMix(track,slot){
+ const item=state.drumSamples?.[track]?.[slot];if(!item)return;
+ item.slotVolume=100;item.slotPitch=0;item.slotFine=0;item.slotPan=0;
+ persist();renderDrumSamples();
+}
 function fresh(withDemo=true){const tracks=bases.map((b,i)=>({...b,trackKind:i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample',drumType:['kick','snare','hat'][i%3],name:kindName(i,i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample'),volume:i>=6?78:b.volume,muted:false,solo:false,slotKind:i>=6?'sampler':'empty',sound:defaultSound(b),kindPatches:{},midiOnly:false,midiChannel:clamp(b.channel-1,0,15),sampleName:'',sampleRoot:48,sampleData:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,sampleCutoff:12000,sampleResonance:.7,chorusSend:0,distortion:0}));const patterns=Array.from({length:PATTERN_COUNT},()=>tracks.map((_,t)=>Array.from({length:MAX_STEPS},()=>makeStep(t))));
  const set=(t,ns,note=null,vel=null)=>{for(const s of ns){const p=patterns[0][t][s];p.on=true;if(note!==null)p.note=note;if(vel!==null)p.velocity=vel;}};
  if(withDemo){set(0,[0,4,8,12]);set(1,[4,12]);set(2,[2,6,10,14],90);set(2,[0,4,8,12],75);set(3,[0,3,6,8,11,14]);[36,36,39,43,36,41,39].forEach((n,i)=>{const idx=[0,3,6,8,11,14,15][i];patterns[0][3][idx].on=true;patterns[0][3][idx].note=n;});
@@ -1193,7 +1213,11 @@ async function loadDrumSampleFile(t,slot,file){
   const data=await fileToDataURL(file);
   if(generation!==sampleSession)return;
   const name=file.name.slice(0,160);
-  state.drumSamples[t][slot]=defaultDrumSlot(name,data,state.drumSamples[t][slot]?.chokeGroup||0);
+  const previous=state.drumSamples[t][slot];
+  // Keep mixer and choke settings when replacing the sound file.
+  state.drumSamples[t][slot]={...defaultDrumSlot(name,data,previous?.chokeGroup||0),
+   slotVolume:previous?.slotVolume??100,slotPitch:previous?.slotPitch??0,
+   slotFine:previous?.slotFine??0,slotPan:previous?.slotPan??0};
   rememberDrumSlot(t,slot);
   drumSampleBuffers.set(drumSlotKey(t,slot),decoded);
   try{await sampleDB('put',drumSlotKey(t,slot),state.drumSamples[t][slot])}
@@ -1216,7 +1240,8 @@ function drumSampleVoice(t,slot,velocity,when,offsetPercent=0,gate=null){
  sanitizeSampleMarkers(item);
  const plan=samplePlaybackPlan(item,buffer.duration,offsetPercent);
  src.buffer=buffer;
- src.detune.setValueAtTime(clamp(Number(item.slotPitch??0),-24,24)*100,when);
+ const baseDetune=drumSlotDetuneCents(item);
+ src.detune.setValueAtTime(baseDetune,when);
  if(plan.loop){
   src.loop=true;
   if(plan.pingPong){
@@ -1245,7 +1270,7 @@ function drumSampleVoice(t,slot,velocity,when,offsetPercent=0,gate=null){
    prior.clear();
   }
  }
- const voice={pitchParams:[src.detune],modGain,drum:true,released:false,trackIndex:t,src};
+ const voice={pitchParams:[src.detune],baseDetune,modGain,drum:true,released:false,trackIndex:t,src};
  scheduledVoices.add(voice);
  const groupEntry={src,gain,level:clamp(velocity/127,0,1)*clamp(Number(item.slotVolume??100),0,200)/100};
  if(group){
@@ -1261,7 +1286,10 @@ function drumSampleVoice(t,slot,velocity,when,offsetPercent=0,gate=null){
  if(plan.loop){
   // A drum loop held from the keyboard ends on keyup; patterns obey GATE.
   if(gate!==null)src.stop(when+Math.max(.03,gate));
- }else src.stop(when+Math.max(.001,plan.endAt-plan.startAt)+.01);
+ }else{
+  // End position uses buffer seconds, while playback duration depends on tuning.
+  src.stop(when+Math.max(.001,(plan.endAt-plan.startAt)/drumSlotPlaybackRate(item))+.01);
+ }
  return voice;
 }
 async function restoreDrumLibrary(){
@@ -1374,16 +1402,32 @@ function renderDrumSamples(){
   };
   chokeLabel.append(chokeText,choke);
    const slotSettings=document.createElement('div');slotSettings.className='drum-slot-settings';
-   for(const [field,label,min,max,unit] of [['slotVolume','VOL',0,200,'%'],['slotPitch','PITCH',-24,24,' st'],['slotPan','PAN',-100,100,'']]){
+   for(const [field,label,min,max,fallback,unit] of [
+    ['slotVolume','VOL',0,200,100,'%'],['slotPitch','PITCH',-24,24,0,' st'],
+    ['slotFine','FINE',-100,100,0,' ct'],['slotPan','PAN',-100,100,0,'']
+   ]){
     const wrap=document.createElement('label');wrap.className='drum-slot-setting';
-    const cap=document.createElement('span');cap.textContent=label;
+    const caption=document.createElement('span');caption.textContent=label;
     const slider=document.createElement('input');slider.type='range';slider.min=String(min);slider.max=String(max);slider.step='1';
-    slider.value=String(item[field]??(field==='slotVolume'?100:0));
-    slider.setAttribute('aria-label','Drum slot '+(slot+1)+' '+label);
-    const out=document.createElement('output');out.textContent=slider.value+unit;
-    slider.oninput=()=>{item[field]=clamp(Number(slider.value),min,max);out.textContent=slider.value+unit;persist()};
-    wrap.append(cap,slider,out);slotSettings.append(wrap);
+    const number=document.createElement('input');number.type='number';number.className='drum-slot-numeric';
+    number.min=String(min);number.max=String(max);number.step='1';
+    const initial=clamp(Number(item[field]??fallback)||0,min,max);
+    slider.value=String(initial);number.value=String(initial);
+    slider.setAttribute('aria-label','Drum slot '+(slot+1)+' '+label+' slider');
+    number.setAttribute('aria-label','Drum slot '+(slot+1)+' '+label+' value ('+unit.trim()+')');
+    const change=v=>{
+     const next=Number.isFinite(v)?clamp(Math.round(v),min,max):item[field]??fallback;
+     item[field]=next;slider.value=String(next);number.value=String(next);persist();
+    };
+    slider.oninput=()=>change(Number(slider.value));
+    number.onchange=()=>change(number.value.trim()===''?NaN:Number(number.value));
+    wrap.append(caption,slider,number);slotSettings.append(wrap);
    }
+   const resetMix=document.createElement('button');resetMix.type='button';resetMix.className='mini-btn drum-slot-reset';
+   resetMix.textContent='RESET MIX';
+   resetMix.title='Restore volume 100%, pitch 0, fine 0 and pan center; preserve audio, loop and choke';
+   resetMix.onclick=()=>resetDrumSlotMix(drumEditorTrack,slot);
+   slotSettings.append(resetMix);
   const use=document.createElement('button');use.className='mini-btn drum-slot-use';
   use.textContent=drumLastSlot(drumEditorTrack)===slot?'ACTIVE':'USE';
   use.setAttribute('aria-pressed',String(drumLastSlot(drumEditorTrack)===slot));
@@ -1518,6 +1562,7 @@ s.drumSamples=Array.from({length:TRACK_COUNT},(_,t)=>Array.from({length:5},(_,sl
   normalized.sampleLoop=!!item.sampleLoop;normalized.loopPingPong=!!item.loopPingPong;
   normalized.slotVolume=clamp(Number(item.slotVolume??100)||0,0,200);
   normalized.slotPitch=clamp(Number(item.slotPitch??0)||0,-24,24);
+  normalized.slotFine=clamp(Number(item.slotFine??0)||0,-100,100);
   normalized.slotPan=clamp(Number(item.slotPan??0)||0,-100,100);
   normalized.libraryIndex=Number.isInteger(item.libraryIndex)&&item.libraryIndex>=0&&item.libraryIndex<DRUM_LIBRARY_SIZE?item.libraryIndex:null;
   sanitizeSampleMarkers(normalized);
@@ -3416,6 +3461,7 @@ function validateSampleBank(pack){
   output.sampleLoop=!!item.sampleLoop;output.loopPingPong=!!item.loopPingPong;
   output.slotVolume=clamp(Number(item.slotVolume??100)||0,0,200);
   output.slotPitch=clamp(Number(item.slotPitch??0)||0,-24,24);
+  output.slotFine=clamp(Number(item.slotFine??0)||0,-100,100);
   output.slotPan=clamp(Number(item.slotPan??0)||0,-100,100);
   output.libraryIndex=Number.isInteger(item.libraryIndex)&&item.libraryIndex>=0&&item.libraryIndex<DRUM_LIBRARY_SIZE?item.libraryIndex:null;
   sanitizeSampleMarkers(output);return output;
