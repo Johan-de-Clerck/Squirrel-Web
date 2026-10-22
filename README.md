@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.73**  
+**Current web version: 0.1.74**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,16 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.74
+
+- **New tracker Step FX D00 — SAMPLE CONTINUE:** place D00 on a drum-sample or sample-track note to keep the resulting sample voice running beyond the current lane/pattern boundary, including across different patterns in Song Mode. Looping drum samples are not cut by the normal step gate when D00 is on their trigger.
+- **C00 — NOTE OFF** stops voices continued from previous patterns on that track by entering their normal release stage: the drum slot's configured RELEASE (0–2000 ms), or the existing sampler voice release (65 ms). C00 still works on a step with no new note.
+- A D00 command on a later empty FX row can also retain an already-running voice. For drum loops needing gate bypass, put D00 on the actual note trigger; a previously scheduled drum gate cannot be undone after it fires.
+- Carried voices persist independently from the transient tracker FX runtime, so a new pattern or another note on the same track does not unexpectedly cut them. A normal transport STOP still fades all voices and clears continuation bookkeeping. Natural one-shot sample endings are unchanged.
+- **Graphical cutoff sweep editor:** beneath DEPTH/TIME controls in DRUM SAMPLES, the left graph region/amber handle edits DEPTH vertically (-48 to +48 semitones), while the right graph region/green handle edits TIME horizontally (0–3000 ms). The curve displays the actual clamped frequency sweep. Sliders and numeric values stay in sync; dragging commits once on release.
+- The graph respects FILTER OFF, mouse/touch/pen pointer input, low/high/band-pass filters, the cutoff setting and Nyquist clamping. All settings remain saved using project v23 and sample bank v3.
+- Added `tests/sample-continue-pattern.test.js` and `tests/drum-filter-sweep-graph.test.js` for Song Mode carry/release and graphical editor interaction regressions.
 
 ## What is new in 0.1.73
 
