@@ -1549,6 +1549,13 @@ function applyTrackMix(){for(let i=0;i<TRACK_COUNT;i++)nativeUpdateVAMix(i);if(!
  audio.delaySends[i].gain.setTargetAtTime((t.delaySend/100)*.7,audio.ctx.currentTime,.03);
  audio.reverbSends[i].gain.setTargetAtTime((t.reverbSend/100)*.85,audio.ctx.currentTime,.03);audio.chorusSends[i].gain.setTargetAtTime((t.chorusSend/100)*.45,audio.ctx.currentTime,.03)});audio.masterGain.gain.setTargetAtTime((state.master/100)*.84,audio.ctx.currentTime,.018);updateDistortionEngine();applyLFOs()}
 function getNoise(){if(audio.noise)return audio.noise;const length=Math.round(audio.ctx.sampleRate*1.5),arr=new Float32Array(length);for(let i=0;i<length;i++)arr[i]=(Math.random()*2-1);const b=audio.ctx.createBuffer(1,length,audio.ctx.sampleRate);b.getChannelData(0).set(arr);audio.noise=b;return b}
+function refreshAudioPowerUI(){
+ const running=!!audio&&audio.ctx.state==='running';
+ const btn=$('audioBtn');
+ if(btn){btn.classList.toggle('audio-ready',running);btn.classList.toggle('playing',running);btn.textContent=running?'✓ AUDIO ON':'▶ START AUDIO'}
+ const led=$('audioLed');if(led)led.className=running?'led on':'led';
+ const status=$('audioStatus');if(status)status.textContent=running?'AUDIO ACTIVE':'AUDIO OFF';
+}
 async function initAudio(){
  if(!audio){const Ctx=window.AudioContext||window.webkitAudioContext;
  if(!Ctx){notify('Web Audio is not supported in this browser.',true);return false}
@@ -1587,9 +1594,10 @@ async function initAudio(){
  const lfoNodes=[];for(let i=0;i<4;i++){const osc=ctx.createOscillator(),depthNode=ctx.createGain();depthNode.gain.value=0;osc.connect(depthNode);osc.start();lfoNodes.push({osc,depthNode,route:'off'})}
  audio={ctx,masterGain,analyser,compressor,trackGains,trackModGains,trackPans,delaySends,reverbSends,chorusSends,distortionStages,cutoffBuses,delayNode,delayFeedback,delayDamping,delayReturn,reverb,reverbReturn,chorusInput,chorusDelayLeft,chorusDelayRight,chorusOsc,chorusDepthLeft,chorusDepthRight,irDecay:0,lfoNodes,noise:null,streamDest:null,outputElement:null};
  updateSendEngine();applyTrackMix();applyLFOs();
+ ctx.addEventListener('statechange',refreshAudioPowerUI);
  }
- try{await restoredSamples;await restoredDrumSamples;await audio.ctx.resume();await decodeAllSamplers();await decodeAllDrumSamples();if(audio.ctx.state!=='running')throw Error('AudioContext is not running');$('audioLed').className='led on';$('audioStatus').textContent='AUDIO ACTIVE';$('audioBtn').textContent='✓ AUDIO ON';$('audioBtn').classList.add('playing');return true}
- catch(e){notify('Could not start audio: '+e.message,true);return false}
+ try{await restoredSamples;await restoredDrumSamples;await audio.ctx.resume();await decodeAllSamplers();await decodeAllDrumSamples();if(audio.ctx.state!=='running')throw Error('AudioContext is not running');refreshAudioPowerUI();return true}
+ catch(e){refreshAudioPowerUI();notify('Could not start audio: '+e.message,true);return false}
 }
 function envelopeOffsetAt(entry,time){
  const env=entry.settings,elapsed=Math.max(0,time-entry.started),a=Math.max(.003,env.attack),d=Math.max(.01,env.decay),s=env.sustain/100;
