@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.1.47 — User Manual
+# Squirrel Studio Web 0.1.48 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -33,9 +33,11 @@ Use **SEQUENCER**, **SONG MODE**, **SYNTH**, **MIXER**, **LFO / ENVELOPES**, **D
 
 ## 3. Sequencer and entering notes
 
+When you press **Enter** on a focused sequencer step, the note toggles. If the step becomes active, its instrument is auditioned immediately. **Keep Enter pressed to continue the preview**, and **release Enter to send a note-off**. For example, a five-second sample stops when Enter is released, even if the sound file has not finished. This applies to drum samples, Sample instruments, synth notes and MIDI-only tracks. The AUDIO ON button has a green state while the Web Audio engine is active.
+
 ### Larger step text without larger cells
 
-In 0.1.47, active notes and FX text are slightly larger, centered and clipped within the existing step dimensions. The step layout and sequencer height do not change.
+Starting with 0.1.47, active notes and FX text are slightly larger, centered and clipped within the existing step dimensions. The step layout and sequencer height do not change.
 
 ### Stable sequencer height
 
@@ -48,7 +50,7 @@ The **ProTracker keyboard layout** uses two rows. The **lower octave** starts at
 
 | Key / control | Action |
 | --- | --- |
-| Enter (sequencer cell focused) | Turn the selected note on/off |
+| Enter (sequencer cell focused) | Turn the selected step on/off; hold Enter to audition its note and release to stop the sound |
 | Delete | Remove the selected note, retaining FX |
 | Home / End | Jump to step 1 / final step in the selected track |
 | Left / Right | Previous / next step |
@@ -68,7 +70,9 @@ The **ProTracker keyboard layout** uses two rows. The **lower octave** starts at
 
 ## 4. Patterns, lengths and Song Mode
 
-There are **16 patterns** (A1–D4 initially). Choose one using the **PATTERN** drop-down. Use the **NAME** input to rename it, such as `Intro`, `Verse`, or `Chorus`. Names are saved in the project JSON and displayed in Song Mode.
+**Backwards compatibility:** On import, the app upgrades old 16-pattern A1–D4 projects to 32-pattern A1–D8 projects. Existing A1–D4 patterns retain their names, notes, effects, lengths and song arrangement order. The additional A5–A8, B5–B8, C5–C8 and D5–D8 slots start empty.
+
+There are **32 patterns** (A1–D8), grouped as A1–A8, B1–B8, C1–C8 and D1–D8. Choose a **bank letter (A–D)**, then choose a **pattern from 1–8** using the two compact dropdowns in the sequencer. The Options panel also provides a grouped pattern picker. Use the **NAME** input to rename it, such as `Intro`, `Verse`, or `Chorus`. Names are saved in the project JSON and displayed in Song Mode.
 
 Each track has an independent **step length from 1 to 32**, initially **32**. You can change it next to the track or in **OPTIONS**.
 
@@ -100,7 +104,7 @@ Tracks configured as **BASS, LEAD or CHORD**, at any track number, use two oscil
 
 The **Chord** instrument provides chord modes per step: Major, Minor, sus2, sus4, diminished, augmented, seventh, major/minor seventh, ninth types and power chords.
 
-**SEND FX** provides Delay, Reverb, Chorus and Distortion for Drum/Sample instruments. Available effects vary by track. **LFO / ENVELOPES** contains four LFOs (free or tempo-synced divisions) and two filter envelopes with target routing.
+**SEND FX** provides Delay, Reverb, Chorus and Distortion for Drum, Sample, Bass and Lead instruments. Available effects vary by track. **LFO / ENVELOPES** contains four LFOs (free or tempo-synced divisions) and two filter envelopes with target routing.
 
 Tracker FX in **Step FX** include:
 
@@ -188,4 +192,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.1.47.**
+**Documentation version: Squirrel Studio Web 0.1.48.**
