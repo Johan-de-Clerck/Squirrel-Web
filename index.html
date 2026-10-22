@@ -1165,7 +1165,9 @@ function drumSampleVoice(t,slot,velocity,when,offsetPercent=0,gate=null){
  const buffer=drumSlotBuffer(t,slot);
  if(!buffer||!audio)return null;
  const c=audio.ctx,src=c.createBufferSource(),gain=c.createGain(),modGain=c.createGain();
- const item=state.drumSamples[t][slot],plan=samplePlaybackPlan(item,buffer.duration,offsetPercent);
+ const item=state.drumSamples[t][slot];
+ sanitizeSampleMarkers(item);
+ const plan=samplePlaybackPlan(item,buffer.duration,offsetPercent);
  src.buffer=buffer;
  if(plan.loop){
   src.loop=true;
