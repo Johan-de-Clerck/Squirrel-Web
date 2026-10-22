@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.1.69 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.1.70 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -479,6 +479,11 @@
 @media(max-width:850px){.song-mode-grid{grid-template-columns:1fr}#view-send .send-title,#view-send .send-row{min-width:660px;gap:10px}#view-send .sends-grid{overflow-x:auto}#view-send .send-global{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:1100px) and (max-height:850px){#view-send .send-row{min-height:43px;padding:5px 11px}}
 
+/* 0.1.70: draggable per-slot ADR envelope visualizer. */
+#drumSlotList .drum-envelope-graph-wrap{flex:1 1 100%;min-width:0;padding:5px 8px;background:#211b17;border:1px solid #524137;border-radius:8px}
+#drumSlotList .drum-envelope-graph{display:block;width:100%;height:112px;overflow:visible;user-select:none;touch-action:none}
+#drumSlotList .drum-envelope-graph rect[data-env-field]:hover{stroke:#a6d8ad;stroke-width:1.5}
+@media(max-width:600px){#drumSlotList .drum-envelope-graph{height:104px}}
 /* 0.1.68: independent attack and decay row for each of the five drum slots. */
 #drumSlotList .drum-slot-envelope{display:flex;order:3;flex:1 1 100%;align-items:center;flex-wrap:wrap;gap:10px;padding-top:7px;border-top:1px solid #594637}
 #drumSlotList .drum-slot-envelope .drum-env-title{flex:1 1 100%;color:#add2b0;font:700 10px Consolas,monospace;letter-spacing:.35px}
@@ -742,7 +747,7 @@ input[type="password"],textarea,
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.69</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.70</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1065,6 +1070,91 @@ function scheduleDrumSlotEnvelope(param,plan){
   param.linearRampToValueAtTime(plan.peak,plan.attackEnd);
  }
  if(plan.decayEnd!==null)param.linearRampToValueAtTime(0,plan.decayEnd);
+}
+// Graph ranges are split by phase so even a very short 2 ms attack is
+// easy to grab. Logarithmic horizontal scaling improves short-time editing.
+const DRUM_ENV_GRAPH_PHASES=[
+ {field:'slotAttack',label:'ATTACK',max:500,x0:25,x1:162},
+ {field:'slotDecay',label:'DECAY',max:3000,x0:207,x1:344},
+ {field:'slotRelease',label:'RELEASE',max:2000,x0:389,x1:526}
+];
+function drumEnvGraphPosition(ms,max){return Math.log1p(clamp(Number(ms)||0,0,max))/Math.log1p(max)}
+function drumEnvGraphMilliseconds(position,max){return Math.round(Math.expm1(clamp(Number(position)||0,0,1)*Math.log1p(max)))}
+function createDrumEnvelopeGraph(item,slot,onChange){
+ const ns='http://www.w3.org/2000/svg',root=document.createElement('div');
+ root.className='drum-envelope-graph-wrap';
+ const svg=document.createElementNS(ns,'svg');
+ svg.classList.add('drum-envelope-graph');svg.setAttribute('viewBox','0 0 552 112');
+ svg.setAttribute('preserveAspectRatio','none');
+ svg.setAttribute('role','img');
+ svg.setAttribute('aria-label','Slot '+(slot+1)+' attack, decay and release graph. Drag horizontally to adjust each phase; exact values remain available in the controls above.');
+ const el=(tag,attrs={})=>{
+  const element=document.createElementNS(ns,tag);
+  for(const [key,value]of Object.entries(attrs))element.setAttribute(key,String(value));
+  svg.append(element);return element;
+ };
+ const redraw=()=>{
+  svg.replaceChildren();
+  for(const phase of DRUM_ENV_GRAPH_PHASES){
+   const current=clamp(Number(item[phase.field])||0,0,phase.max);
+   const handleX=phase.x0+(phase.x1-phase.x0)*drumEnvGraphPosition(current,phase.max);
+   const disabled=phase.field==='slotDecay'&&current===0;
+   const handleY=phase.field==='slotAttack'||disabled?22:73;
+   el('rect',{x:phase.x0-8,y:7,width:phase.x1-phase.x0+16,height:77,rx:6,fill:'#2b241f',stroke:'#654d3a','stroke-width':1});
+   for(const alpha of [0,.5,1]){
+    const x=phase.x0+(phase.x1-phase.x0)*alpha;
+    el('path',{d:'M'+x+' 14 V80',stroke:'#534133','stroke-width':.7,'stroke-dasharray':'2 5'});
+   }
+   let shape;
+   if(phase.field==='slotAttack')shape='M'+phase.x0+' 73 L'+handleX+' 22 L'+phase.x1+' 22';
+   else if(disabled)shape='M'+phase.x0+' 22 L'+phase.x1+' 22';
+   else shape='M'+phase.x0+' 22 L'+handleX+' 73 L'+phase.x1+' 73';
+   el('path',{d:shape,fill:'none',stroke:'#9bd4a1','stroke-width':2.5,'stroke-linecap':'round','stroke-linejoin':'round'});
+   el('circle',{cx:handleX,cy:handleY,r:5.5,fill:'#eac78f',stroke:'#fff0cd','stroke-width':1.5});
+   const label=el('text',{x:(phase.x0+phase.x1)/2,y:99,fill:'#e9c59d','font-size':11,'font-family':'Consolas,monospace','text-anchor':'middle'});
+   label.textContent=phase.label+' '+(disabled?'OFF':current+' ms');
+   const hit=el('rect',{x:phase.x0-8,y:7,width:phase.x1-phase.x0+16,height:77,fill:'transparent','data-env-field':phase.field,cursor:'ew-resize'});
+   hit.setAttribute('aria-label',phase.label+' '+current+' milliseconds. Drag horizontally to edit.');
+  }
+ };
+ let dragging=null,changed=false;
+ const valueFromPointer=(event,phase)=>{
+  const bounds=svg.getBoundingClientRect();
+  if(!bounds.width)return Number(item[phase.field])||0;
+  // The SVG is deliberately stretched to its container, making this transform
+  // correct at all responsive widths without browser-specific SVG APIs.
+  const x=(event.clientX-bounds.left)*552/bounds.width;
+  const fraction=(x-phase.x0)/(phase.x1-phase.x0);
+  return drumEnvGraphMilliseconds(fraction,phase.max);
+ };
+ svg.onpointerdown=event=>{
+  const attr=event.target?.getAttribute?.('data-env-field');
+  const phase=DRUM_ENV_GRAPH_PHASES.find(p=>p.field===attr);
+  if(!phase)return;
+  event.preventDefault();
+  dragging=phase;changed=false;
+  try{svg.setPointerCapture(event.pointerId)}catch(_){}
+  const value=valueFromPointer(event,phase);
+  if(value!==(Number(item[phase.field])||0)){onChange(phase.field,value,false);changed=true}
+ };
+ svg.onpointermove=event=>{
+  if(!dragging)return;
+  event.preventDefault();
+  const value=valueFromPointer(event,dragging);
+  if(value!==(Number(item[dragging.field])||0)){onChange(dragging.field,value,false);changed=true}
+ };
+ const done=event=>{
+  if(!dragging)return;
+  dragging=null;
+  try{if(svg.hasPointerCapture(event.pointerId))svg.releasePointerCapture(event.pointerId)}catch(_){}
+  if(changed){persist();changed=false}
+ };
+ svg.onpointerup=done;svg.onpointercancel=done;
+ // Touch editing must not pan the page while a handle is being dragged.
+ svg.style.touchAction='none';
+ root.append(svg);
+ redraw();
+ return {root,redraw};
 }
 function resetDrumSlotEnvelope(track,slot){
  const item=state.drumSamples?.[track]?.[slot];if(!item)return;
@@ -1475,6 +1565,8 @@ function renderDrumSamples(){
     wrap.append(caption,slider,number);slotSettings.append(wrap);
    }
    const envSettings=document.createElement('div');envSettings.className='drum-slot-envelope';
+   let updateGraph=()=>{};
+   const envelopeInputs=new Map();
    const envelopeTitle=document.createElement('span');envelopeTitle.className='drum-env-title';
    envelopeTitle.textContent='AMPLITUDE ENVELOPE · DECAY 0 = OFF · RELEASE AT NOTE-OFF';
    envSettings.append(envelopeTitle);
@@ -1489,14 +1581,21 @@ function renderDrumSamples(){
     slider.value=String(initial);number.value=String(initial);
     slider.setAttribute('aria-label','Drum slot '+(slot+1)+' '+label+' milliseconds');
     number.setAttribute('aria-label','Drum slot '+(slot+1)+' '+label+' milliseconds numerical value');
-    const change=v=>{
+    const change=(v,commit=true)=>{
      const next=Number.isFinite(v)?clamp(Math.round(v),0,max):item[field]??fallback;
-     item[field]=next;slider.value=String(next);number.value=String(next);persist();
+     item[field]=next;slider.value=String(next);number.value=String(next);
+     updateGraph();if(commit)persist();
     };
+    envelopeInputs.set(field,change);
     slider.oninput=()=>change(Number(slider.value));
     number.onchange=()=>change(number.value.trim()===''?NaN:Number(number.value));
     wrap.append(caption,slider,number);envSettings.append(wrap);
    }
+   const graph=createDrumEnvelopeGraph(item,slot,(field,value,commit)=>{
+    envelopeInputs.get(field)?.(value,commit);
+   });
+   updateGraph=graph.redraw;
+   envSettings.append(graph.root);
    const resetEnvelope=document.createElement('button');resetEnvelope.type='button';
    resetEnvelope.className='mini-btn drum-slot-reset';resetEnvelope.textContent='RESET ENV';
    resetEnvelope.title='Restore 2 ms attack, decay off and 18 ms release; keep sample, mix, trim, loop and choke';
