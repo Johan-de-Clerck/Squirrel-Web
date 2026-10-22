@@ -1099,7 +1099,7 @@ let restoredDrumSamples=restoreStoredDrumSamples();
 async function restoreStoredDrumSamples(){
  const generation=sampleSession;
  for(let t=0;t<TRACK_COUNT;t++)for(let slot=0;slot<5;slot++){
-  const item=state.drumSamples[t][slot];if(item.data)continue;
+  const item=state.drumSamples[t][slot];if(item.data||item.libraryIndex!==null&&item.libraryIndex!==undefined)continue;
   try{
    const saved=await sampleDB('get',drumSlotKey(t,slot));
    if(generation!==sampleSession)return;
@@ -1158,7 +1158,7 @@ async function clearDrumSample(t,slot){
 }
 const activeChokeVoices=new Map();
 function drumSampleVoice(t,slot,velocity,when,offsetPercent=0,gate=null){
- const buffer=drumSampleBuffers.get(drumSlotKey(t,slot));
+ const buffer=drumSlotBuffer(t,slot);
  if(!buffer||!audio)return null;
  const c=audio.ctx,src=c.createBufferSource(),gain=c.createGain(),modGain=c.createGain();
  const item=state.drumSamples[t][slot],plan=samplePlaybackPlan(item,buffer.duration,offsetPercent);
@@ -1209,6 +1209,76 @@ function drumSampleVoice(t,slot,velocity,when,offsetPercent=0,gate=null){
  }else src.stop(when+Math.max(.001,plan.endAt-plan.startAt)+.01);
  return voice;
 }
+async function restoreDrumLibrary(){
+ const generation=sampleSession;
+ for(let i=0;i<DRUM_LIBRARY_SIZE;i++){
+  const item=drumLibraryItem(i);if(item?.data)continue;
+  try{const stored=await sampleDB('get',drumLibraryKey(i));
+   if(generation!==sampleSession)return;
+   if(stored?.data){item.data=stored.data;item.name=stored.name||'';}
+  }catch(e){console.warn('Drum library restore:',e)}
+ }
+ if(view==='drum')renderDrumSamples();
+ if(view==='sample')renderSampleEditor();
+}
+let restoredDrumLibrary=restoreDrumLibrary();
+async function decodeDrumLibrary(){
+ if(!audio)return;
+ for(let i=0;i<DRUM_LIBRARY_SIZE;i++){
+  const item=drumLibraryItem(i);
+  if(!item?.data||drumLibraryBuffers.has(i))continue;
+  try{
+   const raw=atob(item.data.slice(item.data.indexOf(',')+1)),bytes=new Uint8Array(raw.length);
+   for(let j=0;j<raw.length;j++)bytes[j]=raw.charCodeAt(j);
+   const buffer=await audio.ctx.decodeAudioData(bytes.buffer);
+   if(buffer.length)drumLibraryBuffers.set(i,buffer);
+  }catch(e){console.warn('Drum library decoding failed:',i,e)}
+ }
+}
+async function loadDrumLibraryFile(index,file){
+ if(index<0||index>=DRUM_LIBRARY_SIZE)return;
+ if(file.size>MAX_SAMPLE_BYTES){notify('Sample too large (16 MB max).',true);return}
+ const generation=sampleSession;
+ try{
+  if(!await initAudio())return;
+  const decoded=await audio.ctx.decodeAudioData(await file.arrayBuffer());
+  if(!decoded.length)throw Error('Empty audio sample');
+  const data=await fileToDataURL(file);
+  if(generation!==sampleSession)return;
+  state.drumLibrary[index]={name:file.name.slice(0,160),data};
+  drumLibraryBuffers.set(index,decoded);
+  await sampleDB('put',drumLibraryKey(index),state.drumLibrary[index]).catch(e=>console.warn('Drum library IndexedDB:',e));
+  persist();renderAll();renderDrumSamples();notify('Drum library '+(index+1)+': '+file.name);
+ }catch(e){notify('Could not load drum library sample: '+e.message,true)}
+}
+function assignDrumLibrary(t,slot,index){
+ if(!state.drumSamples[t]?.[slot])return;
+ const item=state.drumSamples[t][slot];
+ item.libraryIndex=index>=0&&index<DRUM_LIBRARY_SIZE?index:null;
+ item.data=null;item.name='';
+ drumSampleBuffers.delete(drumSlotKey(t,slot));
+ // Only one audio file belongs to the library: the slot stores its own trim/loop metadata.
+ persist();renderAll();renderDrumSamples();
+}
+function renderDrumLibrary(){
+ const root=$('drumLibraryList');if(!root)return;root.replaceChildren();
+ for(let i=0;i<DRUM_LIBRARY_SIZE;i++){
+  const item=drumLibraryItem(i),row=document.createElement('div');
+  row.className='drum-slot-row';
+  const title=document.createElement('strong');title.textContent=String(i+1).padStart(2,'0');
+  const label=document.createElement('span');label.className='drum-slot-name';label.textContent=item?.name||'EMPTY';
+  const upload=document.createElement('button');upload.type='button';upload.className='mini-btn';
+  upload.textContent='LOAD';upload.onclick=()=>{drumFileTarget={library:i};$('drumSampleFileInput').click()};
+  const audition=document.createElement('button');audition.type='button';audition.className='mini-btn';
+  audition.textContent='▶';audition.disabled=!item?.data;
+  audition.onclick=async()=>{if(!await initAudio())return;const track=state.tracks.findIndex((_,t)=>isDrum(t));
+   if(track<0)return;
+   const src=audio.ctx.createBufferSource(),gn=audio.ctx.createGain();src.buffer=drumLibraryBuffers.get(i);
+   if(!src.buffer)return;gn.gain.value=.6;src.connect(gn).connect(audio.trackGains[track]);src.start();
+  };
+  row.append(title,label,upload,audition);root.appendChild(row);
+ }
+}
 function renderDrumSamples(){
  const select=$('drumTrackSelect'),list=$('drumSlotList');
  if(!select||!list)return;
@@ -1219,13 +1289,14 @@ function renderDrumSamples(){
  if(!available.length){select.add(new Option('NO DRUM TRACKS — CHOOSE DRUM IN OPTIONS','0'));select.disabled=true;}
  else {select.disabled=false;select.value=String(drumEditorTrack);}
  list.replaceChildren();
+ renderDrumLibrary();
  if(!available.length)return;
  for(let slot=0;slot<5;slot++){
   const item=state.drumSamples[drumEditorTrack][slot];
   const row=document.createElement('div');row.className='drum-slot-row'+(drumLastSlot(drumEditorTrack)===slot?' active':'');
   const id=document.createElement('strong');id.className='drum-slot-number';id.textContent='SLOT '+(slot+1);
-  const name=document.createElement('span');name.className='drum-slot-name';name.textContent=item.name||'EMPTY';
-  name.title=item.name||'';
+  const name=document.createElement('span');name.className='drum-slot-name';name.textContent=drumName(drumEditorTrack,slot)||'EMPTY';
+  name.title=drumName(drumEditorTrack,slot);
   const actions=document.createElement('div');actions.className='drum-slot-controls';
   const chokeLabel=document.createElement('label');chokeLabel.className='drum-choke-control';
   const chokeText=document.createElement('span');chokeText.textContent='CHOKE';
@@ -1243,13 +1314,22 @@ function renderDrumSamples(){
   use.textContent=drumLastSlot(drumEditorTrack)===slot?'ACTIVE':'USE';
   use.setAttribute('aria-pressed',String(drumLastSlot(drumEditorTrack)===slot));
   use.onclick=()=>{rememberDrumSlot(drumEditorTrack,slot);renderDrumSamples();if(state.selectedTrack===drumEditorTrack)renderStepEditor()};
-  const load=document.createElement('button');load.className='mini-btn';load.textContent='LOAD';load.onclick=()=>{drumFileTarget={track:drumEditorTrack,slot};$('drumSampleFileInput').click()};
-  const preview=document.createElement('button');preview.className='mini-btn';preview.textContent='▶';preview.setAttribute('aria-label','Preview '+drumName(drumEditorTrack,slot));preview.disabled=!item.data;preview.onclick=async()=>{
+  const assign=document.createElement('select');assign.className='drum-choke-select';
+  assign.setAttribute('aria-label','Sample library assignment for drum slot '+(slot+1));
+  assign.add(new Option('NO LIBRARY SAMPLE',''));
+  for(let i=0;i<DRUM_LIBRARY_SIZE;i++)assign.add(new Option(String(i+1).padStart(2,'0')+' · '+(drumLibraryItem(i)?.name||'EMPTY'),String(i)));
+  assign.value=item.libraryIndex??'';
+  assign.onchange=()=>assignDrumLibrary(drumEditorTrack,slot,assign.value===''?-1:Number(assign.value));
+  const load=document.createElement('button');load.className='mini-btn';load.textContent='LOAD DIRECT';load.onclick=()=>{drumFileTarget={track:drumEditorTrack,slot};$('drumSampleFileInput').click()};
+  const edit=document.createElement('button');edit.className='mini-btn';edit.textContent='EDIT';
+  edit.disabled=!drumSlotHasAudio(drumEditorTrack,slot);
+  edit.onclick=()=>{selectedSampleEditorTrack=drumEditorTrack;selectedSampleEditorDrumSlot=slot;switchView('sample')};
+  const preview=document.createElement('button');preview.className='mini-btn';preview.textContent='▶';preview.setAttribute('aria-label','Preview '+drumName(drumEditorTrack,slot));preview.disabled=!drumSlotHasAudio(drumEditorTrack,slot);preview.onclick=async()=>{
    if(!await initAudio())return;
    drumSampleVoice(drumEditorTrack,slot,115,audio.ctx.currentTime+.008,0,1.25);
   };
-  const clear=document.createElement('button');clear.className='mini-btn';clear.textContent='×';clear.setAttribute('aria-label','Clear '+drumName(drumEditorTrack,slot));clear.disabled=!item.data;clear.onclick=()=>clearDrumSample(drumEditorTrack,slot);
-  actions.append(use,load,preview,clear);row.append(id,name,chokeLabel,actions);list.append(row);
+  const clear=document.createElement('button');clear.className='mini-btn';clear.textContent='×';clear.setAttribute('aria-label','Clear '+drumName(drumEditorTrack,slot));clear.disabled=!drumSlotHasAudio(drumEditorTrack,slot);clear.onclick=()=>clearDrumSample(drumEditorTrack,slot);
+  actions.append(use,assign,edit,load,preview,clear);row.append(id,name,chokeLabel,actions);list.append(row);
  }
 }
 function bindDrumSamples(){
@@ -1257,7 +1337,8 @@ function bindDrumSamples(){
  $('drumSampleFileInput').onchange=async e=>{
   const file=e.target.files?.[0],target=drumFileTarget;
   e.target.value='';drumFileTarget=null;
-  if(file&&target&&isDrum(target.track))await loadDrumSampleFile(target.track,target.slot,file);
+  if(file&&target&&Number.isInteger(target.library))await loadDrumLibraryFile(target.library,file);
+  else if(file&&target&&isDrum(target.track))await loadDrumSampleFile(target.track,target.slot,file);
  };
 }
 async function decodeSampler(trackIndex){
@@ -1712,7 +1793,7 @@ async function initAudio(){
  updateSendEngine();applyTrackMix();applyLFOs();
  ctx.addEventListener('statechange',refreshAudioPowerUI);
  }
- try{await restoredSamples;await restoredDrumSamples;await audio.ctx.resume();await decodeAllSamplers();await decodeAllDrumSamples();if(audio.ctx.state!=='running')throw Error('AudioContext is not running');refreshAudioPowerUI();return true}
+ try{await restoredSamples;await restoredDrumSamples;await restoredDrumLibrary;await audio.ctx.resume();await decodeAllSamplers();await decodeAllDrumSamples();await decodeDrumLibrary();if(audio.ctx.state!=='running')throw Error('AudioContext is not running');refreshAudioPowerUI();return true}
  catch(e){refreshAudioPowerUI();notify('Could not start audio: '+e.message,true);return false}
 }
 function envelopeOffsetAt(entry,time){
