@@ -2383,6 +2383,7 @@ function updateSendEngine(){if(!audio)return;const now=audio.ctx.currentTime,f=s
 const LFO_PAN_TRACKS=Object.fromEntries(bases.map((_,i)=>['track'+i+'-pan',i]));
 const LFO_VOLUME_TRACKS=Object.fromEntries(bases.map((_,i)=>['track'+i+'-volume',i]));
 const LFO_CUTOFF_TRACKS=Object.fromEntries(bases.map((_,i)=>['track'+i+'-cutoff',i]));
+const LFO_PWM_TRACKS=Object.fromEntries(bases.map((_,i)=>['track'+i+'-pulseWidth',i]));
 function filterBaseCutoff(index){return isSample(index)?state.tracks[index].sampleCutoff:state.tracks[index].sound.cutoff}
 function filterBaseResonance(index){return isSample(index)?state.tracks[index].sampleResonance:state.tracks[index].sound.resonance}
 function lfoModulationAmount(l,target,normalizer){
@@ -2394,6 +2395,7 @@ function lfoModulationAmount(l,target,normalizer){
  }
  if(target.endsWith('-volume'))return ratio*.9;
  if(Object.hasOwn(LFO_CUTOFF_TRACKS,target))return ratio*.8*filterBaseCutoff(LFO_CUTOFF_TRACKS[target]);
+ if(Object.hasOwn(LFO_PWM_TRACKS,target))return isSynth(LFO_PWM_TRACKS[target])?ratio:0;
  return 0;
 }
 function applyLFOs(){if(!audio)return;const now=audio.ctx.currentTime;
@@ -2404,6 +2406,8 @@ function applyLFOs(){if(!audio)return;const now=audio.ctx.currentTime;
    if(Object.hasOwn(LFO_VOLUME_TRACKS,target))node.depthNode.connect(audio.trackModGains[LFO_VOLUME_TRACKS[target]].gain);
    if(Object.hasOwn(LFO_CUTOFF_TRACKS,target))node.depthNode.connect(audio.cutoffBuses[LFO_CUTOFF_TRACKS[target]]);
    if(Object.hasOwn(LFO_PAN_TRACKS,target))node.depthNode.connect(audio.trackPans[LFO_PAN_TRACKS[target]].pan);
+   if(Object.hasOwn(LFO_PWM_TRACKS,target)&&audio.pwmBuses)
+    node.depthNode.connect(audio.pwmBuses[LFO_PWM_TRACKS[target]]);
   }
   if(node.osc.type!==l.wave)node.osc.type=l.wave;
   node.osc.frequency.setTargetAtTime(lfoFrequency(l),now,.025);
@@ -2488,8 +2492,10 @@ async function initAudio(){
    trackGains.push(volume);trackModGains.push(lfoVolume);trackPans.push(pan);trackMeters.push(meter);delaySends.push(d);reverbSends.push(r);chorusSends.push(chorus);cutoffBuses.push(cutoffBus);
  }
  compressor.connect(masterGain).connect(analyser).connect(ctx.destination);
+ const pwmBuses=Array.from({length:TRACK_COUNT},()=>ctx.createGain());
+ pwmBuses.forEach(bus=>bus.gain.value=1);
  const lfoNodes=[];for(let i=0;i<4;i++){const osc=ctx.createOscillator(),depthNode=ctx.createGain();depthNode.gain.value=0;osc.connect(depthNode);osc.start();lfoNodes.push({osc,depthNode,route:'off'})}
- audio={ctx,masterGain,analyser,compressor,trackGains,trackModGains,trackPans,trackMeters,delaySends,reverbSends,chorusSends,distortionStages,cutoffBuses,delayNode,delayFeedback,delayDamping,delayReturn,reverb,reverbReturn,chorusInput,chorusDelayLeft,chorusDelayRight,chorusOsc,chorusDepthLeft,chorusDepthRight,irDecay:0,lfoNodes,noise:null,streamDest:null,outputElement:null};
+ audio={ctx,masterGain,analyser,compressor,trackGains,trackModGains,trackPans,trackMeters,delaySends,reverbSends,chorusSends,distortionStages,cutoffBuses,pwmBuses,delayNode,delayFeedback,delayDamping,delayReturn,reverb,reverbReturn,chorusInput,chorusDelayLeft,chorusDelayRight,chorusOsc,chorusDepthLeft,chorusDepthRight,irDecay:0,lfoNodes,noise:null,streamDest:null,outputElement:null};
  updateSendEngine();applyTrackMix();applyLFOs();
  ctx.addEventListener('statechange',refreshAudioPowerUI);
  }
@@ -2572,6 +2578,23 @@ function oscillatorMixGain(s,osc){
  if(osc===0)return s.osc1On===false?0:.46*clamp(s.osc1Level??100,0,100)/100;
  if(osc===1)return s.osc2On===false?0:.27*clamp(s.osc2Level??100,0,100)/100;
  return s.subOn===false?0:.25*clamp(s.subLevel??35,0,100)/100;
+}
+function updateLivePulseWidth(trackIndex){
+ if(!audio)return;
+ const sound=state.tracks[trackIndex]?.sound;if(!sound)return;
+ const duty=clamp(Number(sound.pulseWidth??50),5,95)/100,now=audio.ctx.currentTime;
+ for(const voice of scheduledVoices){
+  if(voice.trackIndex!==trackIndex||voice.released)continue;
+  for(const part of voice.pwmParts||[]){
+   const width=part.delay.delayTime,amplitude=part.depthGain.gain;
+   const base=duty/part.frequency;
+   const depth=Math.max(0,Math.min(duty-.05,.95-duty))/part.frequency;
+   if(typeof width.setTargetAtTime==='function')width.setTargetAtTime(base,now,.012);
+   else width.setValueAtTime(base,now);
+   if(typeof amplitude.setTargetAtTime==='function')amplitude.setTargetAtTime(depth,now,.012);
+   else amplitude.setValueAtTime(depth,now);
+  }
+ }
 }
 function updateLiveOscillatorMix(trackIndex){
  nativeUpdateVAMix(trackIndex);
@@ -2659,18 +2682,34 @@ function synthVoice(track,note,velocity,when,gate=null){
  g1.gain.value=oscillatorMixGain(s,0);g2.gain.value=oscillatorMixGain(s,1);subGain.gain.value=oscillatorMixGain(s,2);
  const osc1=c.createOscillator(),osc2=c.createOscillator(),subOsc=c.createOscillator();
  for(const [osc,wave] of [[osc1,s.wave1],[osc2,s.wave2],[subOsc,s.subWave||'sine']]){
-  if(wave==='pulse')osc.setPeriodicWave(pulseWave(c,s.pulseWidth));else osc.type=wave;
+  // Saw plus phase-delayed inverted saw produces an audio-rate modulated pulse.
+  osc.type=wave==='pulse'?'sawtooth':wave;
  }
  const subOctave=s.subOctave===-24?-24:-12;
  osc1.frequency.setValueAtTime(f,when);
  osc2.frequency.setValueAtTime(f*Math.pow(2,s.detune/1200),when);
  subOsc.frequency.setValueAtTime(f*Math.pow(2,subOctave/12)*Math.pow(2,(s.subDetune||0)/1200),when);
- osc1.connect(g1).connect(filt);osc2.connect(g2).connect(filt);subOsc.connect(subGain).connect(filt);
+ const pwmParts=[];
+ const routeOsc=(osc,wave,gain,frequency)=>{
+  if(wave!=='pulse'){osc.connect(gain);return}
+  const delay=c.createDelay(.25),inverse=c.createGain(),depthGain=c.createGain();
+  const duty=clamp(Number(s.pulseWidth??50),5,95)/100;
+  inverse.gain.value=-1;
+  delay.delayTime.setValueAtTime(duty/frequency,when);
+  depthGain.gain.value=Math.max(0,Math.min(duty-.05,.95-duty))/frequency;
+  osc.connect(gain);osc.connect(delay).connect(inverse).connect(gain);
+  if(audio.pwmBuses?.[trackIndex])audio.pwmBuses[trackIndex].connect(depthGain).connect(delay.delayTime);
+  pwmParts.push({delay,inverse,depthGain,frequency});
+ };
+ routeOsc(osc1,s.wave1,g1,f);
+ routeOsc(osc2,s.wave2,g2,f*Math.pow(2,s.detune/1200));
+ routeOsc(subOsc,s.subWave||'sine',subGain,f*Math.pow(2,subOctave/12)*Math.pow(2,(s.subDetune||0)/1200));
+ g1.connect(filt);g2.connect(filt);subGain.connect(filt);
  filt.connect(out).connect(modGain).connect(audio.trackGains[trackIndex]);
  gainEnv(out.gain,when,velocity,s.attack,s.decay,s.sustain);
  for(const osc of [osc1,osc2,subOsc])osc.start(when);
  const v={env:out,oscs:[osc1,osc2,subOsc],pitchParams:[osc1.detune,osc2.detune,subOsc.detune],
-  modGain,oscGains:[g1,g2,subGain],release:Math.max(.02,s.release),released:false,trackIndex,filter:filt,filterEnvelopes,
+  modGain,oscGains:[g1,g2,subGain],pwmParts,engine:'va',release:Math.max(.02,s.release),released:false,trackIndex,filter:filt,filterEnvelopes,
   ampEnvelope:{start:when,peak:Math.max(.0002,velocity/127*.5),attack:Math.max(.003,s.attack),
                decay:Math.max(.01,s.decay),sustain:s.sustain}};
  scheduledVoices.add(v);
@@ -2678,6 +2717,10 @@ function synthVoice(track,note,velocity,when,gate=null){
   scheduledVoices.delete(v);
   try{
    osc1.disconnect();osc2.disconnect();subOsc.disconnect();g1.disconnect();g2.disconnect();subGain.disconnect();
+   for(const part of pwmParts){
+    try{audio.pwmBuses?.[trackIndex]?.disconnect(part.depthGain)}catch(_){}
+    part.delay.disconnect();part.inverse.disconnect();part.depthGain.disconnect();
+   }
    audio.cutoffBuses[trackIndex].disconnect(filt.frequency);
    filterEnvelopes.forEach(e=>{try{e.source.stop();e.source.disconnect()}catch(_){}});
    filt.disconnect();out.disconnect();modGain.disconnect();
@@ -3381,6 +3424,7 @@ function soundFieldControl(s,f){
   s[f.k]=f.type==='select'&&f.k!=='subOctave'?ctrl.value:Number(ctrl.value);
   show();persist();
   if(f.k==='cutoff')updateLiveCutoff(state.selectedTrack);
+   if(f.k==='pulseWidth')updateLivePulseWidth(state.selectedTrack);
   if(['osc1Level','osc2Level','subLevel'].includes(f.k))updateLiveOscillatorMix(state.selectedTrack);
   drawWave();
  };
