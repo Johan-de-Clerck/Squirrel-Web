@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.40**
+**Current web version: 0.1.41**
 
 Squirrel Studio is a browser-based eight-track groovebox and step sequencer featuring synthesized instruments, sampled drums, MIDI, effects, and a draggable song arrangement.
 
@@ -26,6 +26,7 @@ Read **[HELP.md](HELP.md)** for the complete English user guide.
 - Bass, Lead and Chord synthesizers: dual oscillators, sub oscillator, filter and envelopes.
 - Step FX, delay, reverb, chorus, supported-track distortion, four LFOs, and two filter envelopes.
 - Mouse-drag step range selection (including across tracks); Delete clears the range's notes without changing FX.
+- Fixed Step Sequencer height when changing tracks: the Step Editor and Step FX panels have stable height and scroll independently.
 - UNDO / REDO with Ctrl+Z, Ctrl+Y or Ctrl+Shift+Z, plus editor buttons.
 - Per-track **MIDI OUT ONLY** mode with individually selectable MIDI channel 1–16; the internal synth/sample is silent on that track.
 - Web MIDI input/output through supported browsers; external MIDI OUT requires port selection and activation.
@@ -55,7 +56,7 @@ Read **[HELP.md](HELP.md)** for the complete English user guide.
 
 - `index.html` — current web application\n- `squirrel-icon.webp` — squirrel mascot used as the web favicon and application logo
 - `demo.json` — the **Johan_01** demo (120 BPM, Main / Odd Track / Odd Snare), including embedded kick, clap, hi-hat and snare samples
-- `SquirrelStudio_Web_0.1.40.zip` — current web package
+- `SquirrelStudio_Web_0.1.41.zip` — current web package
 - `README.md` — overview
 - `HELP.md` — detailed English manual
 - `START_STUDIO.cmd` — local web server launcher
@@ -68,4 +69,4 @@ Older numbered HTML and ZIP copies were removed from the current branch to avoid
 
 The browser version uses **Web Audio**, not direct ASIO. The `windows/` JUCE desktop project is experimental and may not yet reproduce every web feature, especially newer drum-sample features.
 
-*User documentation for Squirrel Studio Web 0.1.40.*
+*User documentation for Squirrel Studio Web 0.1.41.*

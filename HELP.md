@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.1.40 — User Manual
+# Squirrel Studio Web 0.1.41 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -26,6 +26,11 @@ Avoid opening `index.html` directly as a `file://` URL if you rely on automatic 
 Use **SEQUENCER**, **SONG MODE**, **SYNTH**, **MIXER**, **LFO / ENVELOPES**, **DRUM SAMPLES**, **SAMPLE EDITOR**, **SEND FX**, **OPTIONS**, and **MIDI / AUDIO** to open each editor.
 
 ## 3. Sequencer and entering notes
+
+### Stable sequencer height
+
+Switching between Kick, Snare, Hi-Hat, Bass, Lead, Chord, Sampler or MIDI-only tracks no longer changes the **height of the Step Sequencer**. The **Step Editor** and **Step FX** panels below it keep a fixed, responsive height. If selecting a track reveals more settings than fit inside either editor, **scroll within that editor panel**; the sequencer remains at the same height. This applies to the compact desktop layout and smaller screens as well.
+
 
 Clicking any note cell **only selects** that cell: it does not insert or erase a note. **Hold the left mouse button and drag** from one step to another to select a highlighted, rectangular range; this also works across multiple tracks. Release the button to finish. Drag-selecting does not change the music. Press **Delete** to clear the notes in the range (FX remain). Clicking once elsewhere clears the range and selects a single step. An active step displays its note or the relevant drum sample slot. Select a cell and use **Enter** to toggle it on/off, **Delete** to clear its note, or enter a pitch with the computer keyboard while **EDIT ON**.
 
@@ -183,4 +188,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.1.40.**
+**Documentation version: Squirrel Studio Web 0.1.41.**
