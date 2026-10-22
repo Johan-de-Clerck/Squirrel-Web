@@ -824,7 +824,7 @@ function assignTrackKind(i,kind){
  t.name=kindName(i,kind);
  if(t.volume===0)t.volume=78;
  if(kind==='drum')drumEditorTrack=i;
- if(kind==='sample')selectedSampleEditorTrack=i;
+ if(kind==='sample'){selectedSampleEditorTrack=i;selectedSampleEditorDrumSlot=null}
  applyTrackMix();persist();renderAll();
 }
 function slotSelect(i){
@@ -2582,15 +2582,22 @@ function renderSampleEditor(){
  drawSampleWaveform();
 }
 function bindSampleEditor(){
- $('sampleEditTrack').onchange=()=>{selectedSampleEditorTrack=Number($('sampleEditTrack').value);renderSampleEditor()};
+ $('sampleEditTrack').onchange=()=>{const choice=$('sampleEditTrack').value.split(':');selectedSampleEditorTrack=Number(choice[1]);selectedSampleEditorDrumSlot=choice[0]==='d'?Number(choice[2]):null;renderSampleEditor()};
  $('sampleEditorLoad').onclick=()=>{$('sampleEditorFileInput').click()};
- $('sampleEditorFileInput').onchange=async e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;if(!isSample(selectedSampleEditorTrack))return;await loadSamplerFile(selectedSampleEditorTrack,file);renderSampleEditor()};
- $('sampleEditorPreview').onclick=()=>playPreview(selectedSampleEditorTrack,state.tracks[selectedSampleEditorTrack].sampleRoot,110);
+ $('sampleEditorFileInput').onchange=async e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;
+  if(sampleEditorIsDrum()){notify('Load or replace drum samples in the DRUM SAMPLES library.',true);return;}
+  if(isSample(selectedSampleEditorTrack))await loadSamplerFile(selectedSampleEditorTrack,file);
+  renderSampleEditor()};
+ $('sampleEditorPreview').onclick=async()=>{
+  if(sampleEditorIsDrum()){
+   if(await initAudio())drumSampleVoice(selectedSampleEditorTrack,selectedSampleEditorDrumSlot,110,audio.ctx.currentTime+.008,0,1.25);
+  }else playPreview(selectedSampleEditorTrack,state.tracks[selectedSampleEditorTrack].sampleRoot,110);
+ };
  const canvas=$('sampleWaveCanvas');let dragging=null;
  const position=e=>clamp((e.clientX-canvas.getBoundingClientRect().left)/Math.max(1,canvas.getBoundingClientRect().width),0,1);
- canvas.addEventListener('pointerdown',e=>{if(!isSample(selectedSampleEditorTrack))return;const track=state.tracks[selectedSampleEditorTrack],p=position(e),candidates=SAMPLE_MARKERS.filter(([key])=>track.sampleLoop||!key.startsWith('loop'));candidates.sort((a,b)=>Math.abs(track[a[0]]-p)-Math.abs(track[b[0]]-p));dragging=candidates[0][0];canvas.setPointerCapture(e.pointerId);sampleMarkerChanges(track,dragging,p);drawSampleWaveform()});
- canvas.addEventListener('pointermove',e=>{if(!dragging||!isSample(selectedSampleEditorTrack))return;sampleMarkerChanges(state.tracks[selectedSampleEditorTrack],dragging,position(e));drawSampleWaveform()});
- const end=()=>{dragging=null};canvas.addEventListener('pointerup',end);canvas.addEventListener('pointercancel',end);
+ canvas.addEventListener('pointerdown',e=>{if(!isSample(selectedSampleEditorTrack)&&!sampleEditorIsDrum())return;const track=sampleEditorItem(),p=position(e),candidates=SAMPLE_MARKERS.filter(([key])=>track.sampleLoop||!key.startsWith('loop'));candidates.sort((a,b)=>Math.abs(track[a[0]]-p)-Math.abs(track[b[0]]-p));dragging=candidates[0][0];canvas.setPointerCapture(e.pointerId);sampleMarkerChanges(track,dragging,p);drawSampleWaveform()});
+ canvas.addEventListener('pointermove',e=>{if(!dragging||(!isSample(selectedSampleEditorTrack)&&!sampleEditorIsDrum()))return;sampleMarkerChanges(sampleEditorItem(),dragging,position(e));drawSampleWaveform()});
+ const end=()=>{if(dragging&&sampleEditorIsDrum())saveSampleEditorChanges();dragging=null};canvas.addEventListener('pointerup',end);canvas.addEventListener('pointercancel',end);
 }
 function drawWave(){
  const t=state.tracks[state.selectedTrack];if(!t.sound)return;
@@ -2996,7 +3003,7 @@ function updatePatternPicker(){
  picker.value=String(state.pattern%PATTERNS_PER_GROUP);
 }
 function renderAll(){renderGrid();renderStepEditor();renderFXEditor();if(view==='song')renderSongMode();if(view==='drum')renderDrumSamples();if(view==='sound')renderSound();renderMixerIfChanged();if(view==='mod'){renderLFO();renderEnvelopes()}if(view==='sample')renderSampleEditor();if(view==='send')renderSendFX();if(view==='options')renderOptions();$('autoDemoJson').checked=autoDemoOnStart;$('bpmInput').value=state.bpm.toFixed(1);$('octaveInput').value=String(state.keyboardOctave);$('editModeBtn').textContent=state.editMode?'✎ EDIT ON':'✎ EDIT OFF';$('editModeBtn').classList.toggle('active',state.editMode);$('editModeBtn').setAttribute('aria-pressed',String(state.editMode));$('swingInput').value=state.swing;$('swingOut').textContent=state.swing+'%';$('masterInput').value=state.master;$('masterOut').textContent=state.master+'%';updatePatternPicker();$('patternNameInput').value=patternName(state.pattern);$('projectNameInput').value=state.projectName||'';$('pasteStepBtn').disabled=!stepClipboard;$('pasteStepBtn').textContent=stepClipboard?.kind==='range'?'PASTE RANGE':'PASTE STEP';$('copyStepBtn').textContent=rangeCells().length>1?'COPY RANGE':'COPY STEP';updateUndoButtons()}
-function switchView(to){if(to!==view){stopEnterPreview();stopAllEditNotePreviews()}if(to!=='seq'){fxEditMode=false;fxDigitBuffer=''}if(to==='drum'&&isDrum(state.selectedTrack))drumEditorTrack=state.selectedTrack;if(to==='sample'&&isSample(state.selectedTrack))selectedSampleEditorTrack=state.selectedTrack;view=to;for(const id of ['seq','song','drum','sound','mixer','mod','sample','send','options','setup'])$('view-'+id).classList.toggle('hidden',id!==to);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===to));if(to==='song')renderSongMode();if(to==='drum')renderDrumSamples();if(to==='sound')renderSound();if(to==='mixer')renderMixerIfChanged();if(to==='mod'){renderLFO();renderEnvelopes()}if(to==='sample')renderSampleEditor();if(to==='send')renderSendFX();if(to==='options')renderOptions()}
+function switchView(to){if(to!==view){stopEnterPreview();stopAllEditNotePreviews()}if(to!=='seq'){fxEditMode=false;fxDigitBuffer=''}if(to==='drum'&&isDrum(state.selectedTrack))drumEditorTrack=state.selectedTrack;if(to==='sample'&&isSample(state.selectedTrack)){selectedSampleEditorTrack=state.selectedTrack;selectedSampleEditorDrumSlot=null}view=to;for(const id of ['seq','song','drum','sound','mixer','mod','sample','send','options','setup'])$('view-'+id).classList.toggle('hidden',id!==to);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===to));if(to==='song')renderSongMode();if(to==='drum')renderDrumSamples();if(to==='sound')renderSound();if(to==='mixer')renderMixerIfChanged();if(to==='mod'){renderLFO();renderEnvelopes()}if(to==='sample')renderSampleEditor();if(to==='send')renderSendFX();if(to==='options')renderOptions()}
 function installNotes(){const group=$('patternGroup');for(let g=0;g<4;g++)group.add(new Option(PATTERN_GROUPS[g],String(g)));updatePatternPicker();const el=$('stepNote');for(let n=24;n<=95;n++){const o=document.createElement('option');o.value=n;o.textContent=noteName(n);el.appendChild(o)}const preview=$('previewKeys');for(let i=0;i<12;i++){const btn=document.createElement('button');btn.className='key'+(NAMES[i].includes('#')?' black':'');btn.textContent=noteName(60+i);btn.onpointerdown=e=>{e.preventDefault();playPreview(state.selectedTrack,60+i)};preview.appendChild(btn)}}
 // Web MIDI output: timestamped messages follow the Web Audio scheduler.
 // The port is opt-in. The default is OFF to avoid accidental external playback.
