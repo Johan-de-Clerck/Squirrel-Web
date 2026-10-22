@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.1.56 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.1.57 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -178,7 +178,7 @@
     .options-slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
     .options-slots .slot-select-field{border:1px solid #614a37;border-radius:9px;background:#30261e;padding:13px}
     .options-slots .slot-select-field select{padding:8px;color:#f2d1ae;background:#211912;border:1px solid #77583b;border-radius:6px;width:100%}
-    /* 0.1.56: eight independently assignable instrument lanes. */
+    /* 0.1.57: eight independently assignable instrument lanes. */
     .options-slots .track-kind-card{border:1px solid #614a37;border-radius:9px;background:#30261e;padding:13px;min-width:0}
     .track-kind-card{display:flex;flex-direction:column;gap:10px;min-width:0}
     .track-kind-card .field-head{font-weight:750;letter-spacing:.5px}
@@ -435,7 +435,7 @@
  #view-sound .preview{padding:7px;margin-top:7px}
 }
 
-/* 0.1.56 — four parallel effects, uniform width even for unsupported distortion */
+/* 0.1.57 — four parallel effects, uniform width even for unsupported distortion */
 #view-send .send-title,#view-send .send-row{
  display:grid;grid-template-columns:minmax(95px,1.12fr) repeat(4,minmax(0,1fr));gap:clamp(8px,1.4vw,24px);align-items:center;
 }
@@ -473,7 +473,7 @@
 @media(max-width:850px){.song-mode-grid{grid-template-columns:1fr}#view-send .send-title,#view-send .send-row{min-width:660px;gap:10px}#view-send .sends-grid{overflow-x:auto}#view-send .send-global{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:1100px) and (max-height:850px){#view-send .send-row{min-height:43px;padding:5px 11px}}
 
-/* 0.1.56: per-track step length and muted beige playback follow. */
+/* 0.1.57: per-track step length and muted beige playback follow. */
 .grid-head,.seq-row{grid-template-columns:188px repeat(32,minmax(0,1fr))}
 .grid-board{min-width:1250px}
 .lane-length{flex:0 0 43px;width:43px;min-width:0;padding:3px 1px;border-radius:5px;border:1px solid #987047;background:#3d2c20;color:#f7dbb0;font:700 11px Consolas,monospace;text-align:center;cursor:pointer}
@@ -501,7 +501,7 @@
 .project-name-field input{width:min(100%,500px);padding:10px 12px;background:#3f3025;border:1px solid #78593d;border-radius:6px;color:#f3d3b4;font:inherit}
 .project-name-field input::placeholder{color:#a28c77}
 
-/* 0.1.56: prevent browser text highlighting across the application.
+/* 0.1.57: prevent browser text highlighting across the application.
    Keep editable fields selectable, without affecting pad selection,
    keyboard shortcuts, or Song Mode tile drag-and-drop. */
 body, body *{
@@ -516,7 +516,7 @@ input[type="password"],textarea,
   user-select:text;
 }
 
-/* 0.1.56: compact five-slot drum sampler (three independent drum tracks). */
+/* 0.1.57: compact five-slot drum sampler (three independent drum tracks). */
 .drum-panel-top{display:flex;gap:14px;align-items:center;margin:0 0 14px}
 .drum-panel-top .field{min-width:180px}
 .drum-panel-top select{background:#342820;color:#f0d0a2;border:1px solid #866245;padding:9px 11px;border-radius:7px}
@@ -537,18 +537,18 @@ input[type="password"],textarea,
 .options-demo-switch{font-size:12px;color:#efcaa1;font-weight:650;display:flex;align-items:center;gap:8px;cursor:pointer}
 .options-demo-switch input{accent-color:#e3b887}
 
-/* 0.1.56 – portable self-contained sample banks. */
+/* 0.1.57 – portable self-contained sample banks. */
 .sample-bank-tools{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
 .sample-bank-tools .pill{white-space:nowrap}
 @media(max-width:750px){.sample-bank-tools .btn{padding:8px}}
 
-/* 0.1.56 – active sample remembers the most recently chosen drum slot */
+/* 0.1.57 – active sample remembers the most recently chosen drum slot */
 .drum-slot-row.active{border-color:#d2ad7c;background:#443325;box-shadow:inset 0 0 0 1px #b18a5e}
 .drum-slot-row.active .drum-slot-number{color:#ffe0aa}
 .drum-slot-use[aria-pressed="true"]{background:#745037;color:#fff0d5;border-color:#e0bd8e}
 @media(max-width:1000px){.drum-slot-controls{flex-wrap:wrap;justify-content:flex-end}}
 
-/* 0.1.56: mouse-drag selection in the note / FX step grid. */
+/* 0.1.57: mouse-drag selection in the note / FX step grid. */
 #gridBoard .pad.range-selected,#gridBoard .fx-pad.range-selected{
  outline:2px solid #efcd98;
  outline-offset:-2px;
@@ -579,7 +579,7 @@ input[type="password"],textarea,
 .lane-midi-badge{font:700 9px Consolas,monospace;color:#f2c995;border:1px solid #88633e;border-radius:3px;padding:2px 3px;margin-left:auto}
 @media(max-width:900px){.midi-track-list{grid-template-columns:1fr}}
 
-/* 0.1.56: The lower Step Editor / Step FX panels must never resize the
+/* 0.1.57: The lower Step Editor / Step FX panels must never resize the
    step sequencer above them when switching between drum, synth, chord,
    MIDI-only or sampler tracks. Each editor scrolls within its own panel. */
 #view-seq > .two-cols{
@@ -624,7 +624,7 @@ input[type="password"],textarea,
     max-height:210px;
   }
 }
-/* 0.1.56: larger tracker note and FX lettering, without resizing steps. */
+/* 0.1.57: larger tracker note and FX lettering, without resizing steps. */
 #gridBoard .pad{
  overflow:hidden;
  padding:0 1px;
@@ -671,7 +671,7 @@ input[type="password"],textarea,
  #gridBoard .fx-pad{font-size:10px}
  #gridBoard .fx-pad.chord-quality{font-size:9.5px}
 }
-/* 0.1.56: compact A-D bank + 1-8 pattern menu; restored green audio-on button. */
+/* 0.1.57: compact A-D bank + 1-8 pattern menu; restored green audio-on button. */
 .pattern-selector{display:flex;align-items:center;gap:5px;min-width:0}
 .pattern-selector #patternGroup{width:49px;min-width:49px;padding-inline:7px;text-align:center;font-weight:800}
 .pattern-selector #patternSelect{width:115px;min-width:90px;max-width:145px}
@@ -683,7 +683,7 @@ input[type="password"],textarea,
  box-shadow:inset 0 1px 0 #daf4c158,0 0 11px #4e9d6480;
 }
 #audioBtn.audio-ready:hover{filter:brightness(1.13)}
-/* 0.1.56: reserve space for decimal BPM such as 120.3 without clipping. */
+/* 0.1.57: reserve space for decimal BPM such as 120.3 without clipping. */
 #bpmInput{width:78px;min-width:78px;font-variant-numeric:tabular-nums}
 /* Green SOLO, red MUTE. Auto-mutes reflect solo state without altering stored mute flags. */
 #view-mixer .mixer-strip .btn.mute-on,.lane-toggle.muted{
@@ -701,7 +701,7 @@ input[type="password"],textarea,
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.56</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.57</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -766,7 +766,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-// Squirrel Studio Web 0.1.56 — Song Mode, eight-channel chorus, drum/sampler distortion.
+// Squirrel Studio Web 0.1.57 — Song Mode, eight-channel chorus, drum/sampler distortion.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 const NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -1370,7 +1370,7 @@ for(let b=0;b<PATTERN_COUNT;b++){if(!Array.isArray(data.patterns[b])||data.patte
  if(data.sendFX&&typeof data.sendFX==='object'){const f=data.sendFX;s.sendFX.delayTime=clamp(Number(f.delayTime??s.sendFX.delayTime),.07,1.2);s.sendFX.feedback=clamp(Number(f.feedback??s.sendFX.feedback),0,85);s.sendFX.reverbDecay=clamp(Number(f.reverbDecay??s.sendFX.reverbDecay),.5,4);s.sendFX.chorusRate=clamp(Number(f.chorusRate??s.sendFX.chorusRate),.1,5);s.sendFX.chorusDepth=clamp(Number(f.chorusDepth??s.sendFX.chorusDepth),0,10)}
  return s;}
 
-/* Undo/redo 0.1.56: only editable project state is recorded.
+/* Undo/redo 0.1.57: only editable project state is recorded.
    Selection, playback position and audio file bytes are deliberately excluded.
    Sample file loading/import is not a reversible edit. */
 const HISTORY_LIMIT=48;
@@ -1462,7 +1462,7 @@ function toggleSelectedNote(){
  persist();renderAll();focusSelectedPad(false);
 }
 
-/* 0.1.56: Copy rectangular selections including off steps and their FX. */
+/* 0.1.57: Copy rectangular selections including off steps and their FX. */
 function copySelectedStep(){
  const cells=rangeCells();
  if(cells.length>1){
@@ -1899,6 +1899,37 @@ function startEnterPreview(){
  if(audio&&audio.ctx.state==='running')begin();
  else initAudio().then(ok=>{if(ok)begin()}).catch(e=>console.warn('Enter preview:',e));
 }
+/* EDIT ON note previews last until keyup. Sessions are cancellable even
+   when Web Audio initializes asynchronously, preventing ghost notes. */
+const editNotePreviews=new Map();
+function stopEditNotePreview(key){
+ const session=editNotePreviews.get(key);
+ if(!session)return;
+ editNotePreviews.delete(key);
+ session.cancelled=true;
+ if(session.midiOnly)midiOffTrack(session.track);
+ if(audio&&session.voices)for(const voice of session.voices)releaseVoice(voice,audio.ctx.currentTime);
+}
+function stopAllEditNotePreviews(){
+ for(const key of [...editNotePreviews.keys()])stopEditNotePreview(key);
+}
+function startEditNotePreview(key,track,step){
+ const noteKey=String(key).toLowerCase();
+ // One edit preview at a time prevents overlapping sample tails and MIDI
+ // note-offs from one preview accidentally affecting the next.
+ stopAllEditNotePreviews();
+ const snapshot=structuredClone(step);
+ const session={track,step:snapshot,voices:null,midiOnly:!!state.tracks[track].midiOnly,cancelled:false};
+ editNotePreviews.set(noteKey,session);
+ const begin=()=>{
+  if(session.cancelled||editNotePreviews.get(noteKey)!==session||!audio||audio.ctx.state!=='running')return;
+  const now=audio.ctx.currentTime+.005,quality=kindOf(state.tracks[track])==='chord'?snapshot.chordMode:null;
+  if(session.midiOnly)midiPlayStep(track,snapshot.note,snapshot.velocity,now,true,null,quality);
+  else session.voices=playTrack(track,snapshot.note,snapshot.velocity,now,null,0,quality,snapshot.sampleSlot||0,sampleOffsetFraction(snapshot.fx,snapshot.fxAmount));
+ };
+ if(audio&&audio.ctx.state==='running')begin();
+ else initAudio().then(ok=>{if(ok)begin()}).catch(e=>console.warn('Edit note preview:',e));
+}
 function stepDuration(){return 60/state.bpm/4}
 // Bass en Lead zijn mono-step-hold: nieuwe noten vervangen de huidige,
 // C00 geeft Note Off, en anders blijft sustain doorgaan tot de pattern-wrap.
@@ -2014,7 +2045,7 @@ function stopTransport(){
  renderSongPosition();
  $('playBtn').classList.remove('playing');$('playBtn').textContent='▶ PLAY';
  $('recBtn').classList.remove('recording');renderPlayhead(-1);
- stopEnterPreview();
+ stopEnterPreview();stopAllEditNotePreviews();
  if(audio){
   const now=audio.ctx.currentTime;
   for(const v of [...scheduledVoices])fadeTransportVoice(v,now);
@@ -3098,7 +3129,7 @@ function projectFileName(name,now=new Date()){
  if(safe)return safe+'.json';
  const pad=n=>String(n).padStart(2,'0');
  const stamp=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'_'+pad(now.getHours())+'-'+pad(now.getMinutes())+'-'+pad(now.getSeconds());
- return 'SquirrelStudio_0.1.56_'+stamp+'.json';
+ return 'SquirrelStudio_0.1.57_'+stamp+'.json';
 }
 async function saveProject(){
  // Samples restore asynchronously from IndexedDB after the page opens.
@@ -3136,7 +3167,7 @@ function bindings(){
  channelSelect.value='0';
  channelSelect.onchange=()=>midiAllNotesOff();trackSelect.onchange=()=>midiAllNotesOff();
  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>switchView(b.dataset.view));$('songEnable').onchange=e=>{if(playing)stopTransport();if(e.target.checked&&!state.songSequence.length){e.target.checked=false;notify('Add at least one pattern to the arrangement.',true);return}state.songModeEnabled=e.target.checked;songPosition=0;persist();renderSongMode()};$('songAddCurrent').onclick=()=>addSongPattern(state.pattern);$('songClear').onclick=()=>{if(!state.songSequence.length)return;if(!confirm('Clear the entire song arrangement?'))return;if(playing)stopTransport();state.songSequence=[];state.songModeEnabled=false;songPosition=0;persist();renderSongMode()};$('audioBtn').onclick=initAudio;$('playBtn').onclick=togglePlay;$('stopBtn').onclick=stopTransport;$('recBtn').onclick=toggleRecord;
- $('editModeBtn').onclick=()=>{state.editMode=!state.editMode;keyboardDown.clear();keyboardAssignments.clear();persist();renderAll();if(view==='seq')focusSelectedPad(false)};$('octaveInput').onchange=()=>{state.keyboardOctave=Number($('octaveInput').value);persist();if(view==='seq')focusSelectedPad(false)};
+ $('editModeBtn').onclick=()=>{state.editMode=!state.editMode;if(!state.editMode)stopAllEditNotePreviews();keyboardDown.clear();keyboardAssignments.clear();persist();renderAll();if(view==='seq')focusSelectedPad(false)};$('octaveInput').onchange=()=>{state.keyboardOctave=Number($('octaveInput').value);persist();if(view==='seq')focusSelectedPad(false)};
  $('bpmInput').onchange=()=>{state.bpm=normalizeBpm($('bpmInput').value);applyLFOs();persist();renderAll()};$('swingInput').oninput=()=>{state.swing=Number($('swingInput').value);$('swingOut').textContent=state.swing+'%';persist()};$('masterInput').oninput=()=>{state.master=Number($('masterInput').value);$('masterOut').textContent=state.master+'%';applyTrackMix();persist()};$('patternNameInput').onchange=()=>setPatternName(state.pattern,$('patternNameInput').value);$('patternNameInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('patternNameInput').blur()}};
  $('patternGroup').onchange=()=>choosePattern(patternIndex(Number($('patternGroup').value),0));$('patternSelect').onchange=()=>choosePattern(patternIndex(Number($('patternGroup').value),Number($('patternSelect').value)));$('copyPatternBtn').onclick=()=>{clipboard={lanes:structuredClone(state.patterns[state.pattern]),lengths:[...state.trackLengths[state.pattern]]};notify('Pattern '+patternName(state.pattern)+' copied.')};$('pastePatternBtn').onclick=()=>{if(!clipboard){notify('Copy a pattern first.',true);return}if(playing)stopTransport();state.patterns[state.pattern]=structuredClone(clipboard.lanes);state.trackLengths[state.pattern]=clipboard.lengths?[...clipboard.lengths]:Array(TRACK_COUNT).fill(clipboard.length||32);state.patternLengths[state.pattern]=patternLength();state.selectedStep=Math.min(state.selectedStep,trackLength()-1);persist();renderAll();notify('Pattern and track lengths pasted.')};
  $('stepTrackKind').onchange=()=>assignTrackKind(state.selectedTrack,$('stepTrackKind').value);
@@ -3266,7 +3297,7 @@ function bindings(){
    const track=state.selectedTrack,stepIndex=state.selectedStep;
    const step=state.patterns[state.pattern][track][stepIndex];
    step.on=true;step.note=note;if(isDrum(track))step.sampleSlot=drumLastSlot(track);
-   if(audio)playPreview(track,note,step.velocity);
+   startEditNotePreview(e.key.toLowerCase(),track,step);
    state.selectedStep=Math.min(stepIndex+1,trackLength()-1);
    persist();renderAll();focusSelectedPad(false);
    return;
@@ -3279,13 +3310,14 @@ function bindings(){
  document.addEventListener('keyup',e=>{
   if(e.key==='Enter')stopEnterPreview();
   const key=e.key.toLowerCase();
+  stopEditNotePreview(key);
   if(noteKeyboard[key]!==undefined&&keyboardDown.has(key)){
    keyboardDown.delete(key);
    const assignment=keyboardAssignments.get(key);keyboardAssignments.delete(key);
    if(assignment)liveNoteOff(assignment.track,assignment.note,15);
   }
  });
- window.addEventListener('blur',()=>{stopEnterPreview();for(const [key,voices] of activeLive){voices.forEach(v=>releaseVoice(v,audio?.ctx.currentTime||0))}activeLive.clear();keyboardDown.clear();keyboardAssignments.clear()});window.addEventListener('beforeunload',persist);
+ window.addEventListener('blur',()=>{stopEnterPreview();stopAllEditNotePreviews();for(const [key,voices] of activeLive){voices.forEach(v=>releaseVoice(v,audio?.ctx.currentTime||0))}activeLive.clear();keyboardDown.clear();keyboardAssignments.clear()});window.addEventListener('beforeunload',persist);
 }
 installNotes();bindings();bindSampleEditor();bindDrumSamples();bindSampleBank();attachStepRangeSelection();resetUndoHistory();renderAll();refreshOutputs();requestAnimationFrame(uiTick);bootstrapDemoJson();
 </script>
