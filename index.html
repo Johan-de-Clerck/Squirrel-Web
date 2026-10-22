@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.1.74 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.1.75 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -479,6 +479,11 @@
 @media(max-width:850px){.song-mode-grid{grid-template-columns:1fr}#view-send .send-title,#view-send .send-row{min-width:660px;gap:10px}#view-send .sends-grid{overflow-x:auto}#view-send .send-global{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:1100px) and (max-height:850px){#view-send .send-row{min-height:43px;padding:5px 11px}}
 
+/* 0.1.75: precise sample-track release after D00 and C00 */
+.sample-release-field{display:flex;flex-direction:column;gap:6px;min-width:170px}
+.sample-release-field .field-head{display:flex;justify-content:space-between;gap:8px}
+.sample-release-field input[type=range]{width:100%;accent-color:#83ba8a}
+.sample-release-numeric{width:100%;min-height:30px;padding:4px 7px;border:1px solid #725640;border-radius:5px;background:#2b221e;color:#d9eadb;font:12px Consolas,monospace}
 /* 0.1.74: drag-controlled cutoff-sweep visualization and editing. */
 #drumSlotList .drum-filter-sweep-graph-wrap{flex:1 1 100%;min-width:0;background:#211b17;border:1px solid #554438;border-radius:8px;padding:5px 8px}
 #drumSlotList .drum-filter-sweep-graph{display:block;width:100%;height:166px;touch-action:none;user-select:none}
@@ -774,7 +779,7 @@ input[type="password"],textarea,
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.74</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.75</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1380,7 +1385,7 @@ function resetDrumSlotEnvelope(track,slot){
  item.slotAttack=2;item.slotDecay=0;item.slotRelease=18;
  persist();renderDrumSamples();
 }
-function fresh(withDemo=true){const tracks=bases.map((b,i)=>({...b,trackKind:i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample',drumType:['kick','snare','hat'][i%3],name:kindName(i,i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample'),volume:i>=6?78:b.volume,muted:false,solo:false,slotKind:i>=6?'sampler':'empty',sound:defaultSound(b),kindPatches:{},midiOnly:false,midiChannel:clamp(b.channel-1,0,15),sampleName:'',sampleRoot:48,sampleData:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,sampleCutoff:12000,sampleResonance:.7,chorusSend:0,distortion:0}));const patterns=Array.from({length:PATTERN_COUNT},()=>tracks.map((_,t)=>Array.from({length:MAX_STEPS},()=>makeStep(t))));
+function fresh(withDemo=true){const tracks=bases.map((b,i)=>({...b,trackKind:i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample',drumType:['kick','snare','hat'][i%3],name:kindName(i,i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample'),volume:i>=6?78:b.volume,muted:false,solo:false,slotKind:i>=6?'sampler':'empty',sound:defaultSound(b),kindPatches:{},midiOnly:false,midiChannel:clamp(b.channel-1,0,15),sampleName:'',sampleRoot:48,sampleData:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,sampleCutoff:12000,sampleResonance:.7,sampleRelease:65,chorusSend:0,distortion:0}));const patterns=Array.from({length:PATTERN_COUNT},()=>tracks.map((_,t)=>Array.from({length:MAX_STEPS},()=>makeStep(t))));
  const set=(t,ns,note=null,vel=null)=>{for(const s of ns){const p=patterns[0][t][s];p.on=true;if(note!==null)p.note=note;if(vel!==null)p.velocity=vel;}};
  if(withDemo){set(0,[0,4,8,12]);set(1,[4,12]);set(2,[2,6,10,14],90);set(2,[0,4,8,12],75);set(3,[0,3,6,8,11,14]);[36,36,39,43,36,41,39].forEach((n,i)=>{const idx=[0,3,6,8,11,14,15][i];patterns[0][3][idx].on=true;patterns[0][3][idx].note=n;});
  set(4,[2,7,10,15]);patterns[0][3][3].fx=1;patterns[0][3][3].fxAmount=5;patterns[0][3][4].fx=1;patterns[0][3][4].fxAmount=0;patterns[0][3][11].fx=2;patterns[0][3][11].fxAmount=5;patterns[0][3][12].fx=2;patterns[0][3][12].fxAmount=0;patterns[0][4][10].fx=3;[60,62,67,64].forEach((n,i)=>patterns[0][4][[2,7,10,15][i]].note=n);set(5,[0,8]);patterns[0][5][0].note=48;patterns[0][5][8].note=53;}
@@ -2122,6 +2127,7 @@ s.drumSamples=Array.from({length:TRACK_COUNT},(_,t)=>Array.from({length:5},(_,sl
   target.sampleLoop=!!src.sampleLoop;target.loopPingPong=!!src.loopPingPong;
   target.sampleCutoff=clamp(Number(src.sampleCutoff??12000),80,12000);
   target.sampleResonance=clamp(Number(src.sampleResonance??.7),.1,18);
+  target.sampleRelease=clamp(Math.round(Number(src.sampleRelease??65)||0),1,3000);
   sanitizeSampleMarkers(target);
   target.sampleData=typeof src.sampleData==='string'&&/^data:[^;]*;base64,/i.test(src.sampleData)&&src.sampleData.length<=26000000?src.sampleData:null;
  }
@@ -2652,6 +2658,10 @@ function samplePlaybackPlan(track,duration,offsetPercent=0){
  const loop=!!track.sampleLoop&&at<loopEnd&&loopStart<loopEnd;
  return {startAt:at,endAt:end,loop,loopStart,loopEnd,pingPong:loop&&!!track.loopPingPong};
 }
+function sampleReleaseSeconds(track){
+ const ms=Number(track?.sampleRelease??65);
+ return clamp(Number.isFinite(ms)?ms:65,1,3000)/1000;
+}
 function sampleVoice(t,note,velocity,when,pitch=0,offsetPercent=0){
  const track=state.tracks[t],buffer=sampleBuffers.get(t);
  if(!buffer)return null;
@@ -2663,7 +2673,7 @@ function sampleVoice(t,note,velocity,when,pitch=0,offsetPercent=0){
  filter.type='lowpass';filter.frequency.setValueAtTime(track.sampleCutoff??12000,when);filter.Q.setValueAtTime(track.sampleResonance??.7,when);
  const filterEnvelopes=attachFilterEnvelopes(filter,t,when);audio.cutoffBuses[t].connect(filter.frequency);
  modGain.gain.value=1;src.connect(filter).connect(env).connect(modGain).connect(audio.trackGains[t]);
- const voice={env,oscs:[src],pitchParams:[src.detune],modGain,release:.065,released:false,sampleVoice:true,filter,
+ const voice={env,oscs:[src],pitchParams:[src.detune],modGain,release:sampleReleaseSeconds(track),released:false,sampleVoice:true,filter,
   trackIndex:t,filterEnvelopes,ampEnvelope:{start:when,peak:Math.max(.0002,velocity/127*.8),attack:.003,decay:.01,sustain:1}};
  scheduledVoices.add(voice);let playback=null;src.onended=()=>{
   if(playback)playback.ended=true;voice.released=true;scheduledVoices.delete(voice);forgetSampleContinuation(voice);
@@ -3400,7 +3410,28 @@ function renderSampleEditor(){
   reverse.append(ping,document.createTextNode('PING-PONG LOOP'));grid.append(reverse);
  }
  if(!drum){
-  for(const [key,label,min,max,step,unit] of [['sampleCutoff','FILTER CUTOFF',80,12000,10,' Hz'],['sampleResonance','RESONANCE',.1,18,.1,' Q']]){
+  const release=document.createElement('label');release.className='field sample-release-field';
+   const releaseTop=document.createElement('span');releaseTop.className='field-head';
+   const releaseOut=document.createElement('output');releaseOut.textContent=String(track.sampleRelease??65)+' ms';
+   releaseTop.append(document.createTextNode('SAMPLE RELEASE · C00'),releaseOut);
+   const releaseRange=document.createElement('input');releaseRange.type='range';
+   releaseRange.min='1';releaseRange.max='3000';releaseRange.step='1';
+   releaseRange.value=String(track.sampleRelease??65);
+   const releaseNumeric=document.createElement('input');releaseNumeric.type='number';
+   releaseNumeric.min='1';releaseNumeric.max='3000';releaseNumeric.step='1';
+   releaseNumeric.className='sample-release-numeric';releaseNumeric.value=releaseRange.value;
+   releaseRange.setAttribute('aria-label','Sample release milliseconds on C00 NOTE OFF');
+   releaseNumeric.setAttribute('aria-label','Precise sample release in milliseconds');
+   const updateRelease=value=>{
+    const number=Number(value);
+    const ms=Number.isFinite(number)?clamp(Math.round(number),1,3000):track.sampleRelease??65;
+    track.sampleRelease=ms;releaseRange.value=String(ms);releaseNumeric.value=String(ms);
+    releaseOut.textContent=ms+' ms';persist();
+   };
+   releaseRange.oninput=()=>updateRelease(releaseRange.value);
+   releaseNumeric.onchange=()=>updateRelease(releaseNumeric.value);
+   release.append(releaseTop,releaseRange,releaseNumeric);grid.append(release);
+   for(const [key,label,min,max,step,unit] of [['sampleCutoff','FILTER CUTOFF',80,12000,10,' Hz'],['sampleResonance','RESONANCE',.1,18,.1,' Q']]){
    const field=document.createElement('label');field.className='field';const top=document.createElement('span');top.className='field-head';const out=document.createElement('output');
    const fmt=()=>key==='sampleCutoff'?Math.round(track[key])+unit:track[key].toFixed(1)+unit;
    out.textContent=fmt();top.append(document.createTextNode(label),out);
@@ -3989,7 +4020,7 @@ function sampleBankSnapshot(){
   drumSamples:state.drumSamples.map(row=>row.map(item=>({...item}))),
   samplers:state.tracks.map(tr=>tr.sampleData?{
    name:tr.sampleName||'',data:tr.sampleData,root:tr.sampleRoot,start:tr.sampleStart,end:tr.sampleEnd,
-   loopStart:tr.loopStart,loopEnd:tr.loopEnd,loop:!!tr.sampleLoop,pingPong:!!tr.loopPingPong,cutoff:tr.sampleCutoff,resonance:tr.sampleResonance
+   loopStart:tr.loopStart,loopEnd:tr.loopEnd,loop:!!tr.sampleLoop,pingPong:!!tr.loopPingPong,cutoff:tr.sampleCutoff,resonance:tr.sampleResonance,release:tr.sampleRelease??65
   }:null)};
 }
 function validateSampleBank(pack){
@@ -4045,7 +4076,8 @@ function validateSampleBank(pack){
   const loopStart=num(item.loopStart,.2,start,end-.005),loopEnd=num(item.loopEnd,.8,loopStart+.005,end);
   return {name:nameOf(item.name),data,root:Math.round(num(item.root,48,24,95)),
    start,end,loopStart,loopEnd,loop:!!item.loop,pingPong:!!item.pingPong,
-   cutoff:num(item.cutoff,12000,80,12000),resonance:num(item.resonance,.7,.1,18)};
+   cutoff:num(item.cutoff,12000,80,12000),resonance:num(item.resonance,.7,.1,18),
+   release:Math.round(num(item.release,65,1,3000))};
  });
  return {drums,samplers,drumLibrary};
 }
@@ -4103,7 +4135,7 @@ async function importSampleBank(file){
     tr.sampleName=info.name;tr.sampleData=info.data;tr.sampleRoot=info.root;
     tr.sampleStart=info.start;tr.sampleEnd=info.end;
     tr.loopStart=info.loopStart;tr.loopEnd=info.loopEnd;tr.sampleLoop=info.loop;tr.loopPingPong=info.pingPong;
-    tr.sampleCutoff=info.cutoff;tr.sampleResonance=info.resonance;
+    tr.sampleCutoff=info.cutoff;tr.sampleResonance=info.resonance;tr.sampleRelease=info.release;
     sanitizeSampleMarkers(tr);if(tr.volume===0)tr.volume=78;
     sampleBuffers.set(t,decodedSamplers.get(t));
    }else{
