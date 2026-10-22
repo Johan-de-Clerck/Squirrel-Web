@@ -178,6 +178,15 @@
     .options-slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
     .options-slots .slot-select-field{border:1px solid #614a37;border-radius:9px;background:#30261e;padding:13px}
     .options-slots .slot-select-field select{padding:8px;color:#f2d1ae;background:#211912;border:1px solid #77583b;border-radius:6px;width:100%}
+    /* 0.1.43: eight independently assignable instrument lanes. */
+    .options-slots .track-kind-card{border:1px solid #614a37;border-radius:9px;background:#30261e;padding:13px;min-width:0}
+    .track-kind-card{display:flex;flex-direction:column;gap:10px;min-width:0}
+    .track-kind-card .field-head{font-weight:750;letter-spacing:.5px}
+    .track-kind-card .field select{padding:8px;color:#f2d1ae;background:#211912;border:1px solid #77583b;border-radius:6px;width:100%}
+    .track-kind-card .sample-controls{margin-top:1px}
+    #view-sound .track-kind-card{border:1px solid #674b37;border-radius:8px;padding:11px 14px;background:#30251d}
+    #stepTrackKind{background:#342820;color:#f0d0a2;border:1px solid #866245;border-radius:7px;padding:8px;min-width:0;width:100%}
+    
     .sample-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:12px}
     .sample-filename{font:12px Consolas,monospace;color:#f4c291;overflow:hidden;text-overflow:ellipsis;max-width:100%}
     .sample-controls .sample-filename{flex-basis:100%;white-space:nowrap}
