@@ -1,4 +1,6 @@
-<img src="squirrel-icon.webp" alt="Squirrel Studio mascot" width="128" height="128">\n\n# Squirrel Studio — Web Synth & Step Sequencer
+<img src="squirrel-icon.webp" alt="Squirrel Studio mascot" width="128" height="128">
+
+# Squirrel Studio — Web Synth & Step Sequencer
 
 **Current web version: 0.1.38**
 
