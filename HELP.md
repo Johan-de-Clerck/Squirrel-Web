@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.1.49 — User Manual
+# Squirrel Studio Web 0.1.50 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -67,6 +67,12 @@ The **ProTracker keyboard layout** uses two rows. The **lower octave** starts at
 | Mouse click on grid | Move selection only |
 
 **COPY RANGE / PASTE RANGE** buttons appear automatically when range copying is in use. The Step Editor includes **UNDO / REDO** buttons. They reverse changes to notes, step parameters, pattern lengths, pattern names and other editable project parameters. They do not undo loading a different project or importing/replacing the audio files. A copied step may be pasted onto a different track, step or pattern. **COPY PATTERN** and **PASTE PATTERN** copy the entire pattern and its per-track lengths. In the Step Editor you can also edit velocity, gate, ratchet, chance and the selected drum sample.
+
+### BPM precision (0.1 BPM)
+
+The BPM field accepts fractional tempos in **0.1 BPM steps**, from **50.0** to **240.0**. For example, select **120.3** (the browser may display a comma instead of a decimal point according to your locale). Use the keyboard arrow keys on the BPM input to adjust the tempo by one tenth.
+
+The chosen tempo controls sequencer playback and tempo-synchronized LFO rates. It is saved in your project JSON, restored when you reopen the project, and preserved when migrating compatible older songs.
 
 ## 4. Patterns, lengths and Song Mode
 
@@ -138,7 +144,7 @@ You can back up and transfer audio separately from a song using **EXPORT SAMPLE 
 
 **IMPORT SAMPLE BANK** replaces the current audio bank after confirmation but keeps the song arrangement, notes and patterns. Older version-1 sample banks with three drum banks and two sampler slots can still be imported. A Sample Bank is **not** a complete project backup; use **SAVE PROJECT** to preserve instrument configurations, synth patches and patterns as well.
 
-### Mixer signal meters (0.1.49)
+### Mixer signal meters (0.1.50)
 
 Every Mixer track has its own VU meter, connected after that track's volume and panning controls. The meter shows the actual output of **that track only**, before the shared compressor and effect returns. A note on another track cannot cause this meter to move. When a track is silent, its meter falls to zero; Mute and Solo affect which tracks can be heard and measured. Tracks configured as MIDI OUT ONLY have no browser audio to meter.
 
@@ -198,4 +204,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.1.49.**
+**Documentation version: Squirrel Studio Web 0.1.50.**
