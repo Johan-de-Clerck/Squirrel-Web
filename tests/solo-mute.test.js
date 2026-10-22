@@ -1,4 +1,4 @@
-// Squirrel Studio 0.1.53 — red MUTE / green exclusive SOLO regression.
+// Squirrel Studio 0.1.54 — red MUTE / green exclusive SOLO regression.
 // Run: node tests/solo-mute.test.js
 'use strict';
 const assert=require('node:assert/strict');
@@ -16,7 +16,8 @@ const run=new Function('window','document','localStorage','console','structuredC
  const eq=(a,b,msg)=>{if(JSON.stringify(a)!==JSON.stringify(b))throw Error(msg+': '+JSON.stringify(a)+' !== '+JSON.stringify(b))};
  const css=()=>({names:new Set(),add(v){this.names.add(v)},contains(v){return this.names.has(v)},toggle(v,on){if(on)this.names.add(v);else this.names.delete(v)}});
  const strips=[];
- const container={replaceChildren(){strips.length=0},appendChild(node){strips.push(node)}};
+ let mixerBuilds=0;
+ const container={replaceChildren(){mixerBuilds++;strips.length=0},appendChild(node){strips.push(node)}};
  document.getElementById=id=>id==='mixerStrips'?container:null;
  document.createElement=tag=>{
   const buttons=Array.from({length:2},()=>({classList:css(),disabled:false,title:'',attributes:{},setAttribute(k,v){this.attributes[k]=v}}));
@@ -34,13 +35,18 @@ const run=new Function('window','document','localStorage','console','structuredC
  updateDistortionEngine=()=>{};applyLFOs=()=>{};
  const midiOff=[];
  midiOffTrack=t=>midiOff.push(t);
- persist=()=>{};renderAll=()=>renderMixer();
- state=fresh(false);
+ persist=()=>{};renderAll=()=>renderMixerIfChanged();
+ state=fresh(false);view='seq';
  renderAll();
+ eq(mixerBuilds,1,'Hidden Mixer renders initially even on SEQUENCER tab');
+ renderAll();
+ eq(mixerBuilds,1,'Unchanged Mixer is not rebuilt every render, preserving VU/faders');
  eq([green(0),red(0),muteButton(0).disabled],[false,false,false],'Default mixer toggles are inactive');
  setTrackMute(0);
+ eq(mixerBuilds,2,'Sequencer MUTE refreshes hidden Mixer immediately');
  eq([state.tracks[0].muted,red(0),muteButton(0).attributes['aria-pressed']],[true,true,'true'],'Manual mute is red');
  setTrackSolo(3);
+ eq(mixerBuilds,3,'Sequencer SOLO updates hidden Mixer even before tab switch');
  eq(state.tracks.map(t=>t.solo),[false,false,false,true,false,false,false,false],'Solo is exclusive');
  eq(strips.map((_,i)=>green(i)),[false,false,false,true,false,false,false,false],'Only selected SOLO button green');
  eq(strips.map((_,i)=>red(i)),[true,true,true,false,true,true,true,true],'All other tracks show red MUTE');
@@ -49,21 +55,24 @@ const run=new Function('window','document','localStorage','console','structuredC
  eq(activeGains.map(g=>g.gain.value>0),[false,false,false,true,false,false,false,false],'Only solo track produces internal audio');
  eq(midiOff.includes(0)&&midiOff.includes(7),true,'Silenced tracks receive MIDI note-offs');
  setTrackSolo(4);
+ eq(mixerBuilds,4,'Moving SOLO updates the Mixer');
  eq(state.tracks.map(t=>t.solo),[false,false,false,false,true,false,false,false],'Clicking another SOLO moves exclusive selection');
  eq(strips.map((_,i)=>green(i)),[false,false,false,false,true,false,false,false],'Green SOLO moves to new track');
  setTrackSolo(4);
+ eq(mixerBuilds,5,'Turning SOLO off restores the Mixer display');
  eq(state.tracks.every(t=>!t.solo),true,'Toggling SOLO off releases all temporary solo mutes');
  eq(strips.map((_,i)=>red(i)),[true,false,false,false,false,false,false,false],'Only original manual mute remains red');
  eq(state.tracks.map(t=>t.muted),[true,false,false,false,false,false,false,false],'Original manual mute preserved');
  eq(activeGains.map(g=>g.gain.value>0),[false,true,true,true,true,true,true,true],'Other track audio restored');
  setTrackMute(0);
+ eq(mixerBuilds,6,'Unmuting via sequencer refreshes Mixer');
  eq(red(0),false,'Manual mute can be turned off');
  const saved=fresh(false);
  saved.tracks[2].solo=true;saved.tracks[5].solo=true;saved.tracks[7].muted=true;
  const migrated=validate(JSON.parse(JSON.stringify(saved)));
  eq(migrated.tracks.map(t=>t.solo),[false,false,true,false,false,false,false,false],'Legacy multiple solo flags normalize to first');
  eq(migrated.tracks[7].muted,true,'Manual mute survives project normalization');
- return 'PASS: green exclusive SOLO, red auto/manual MUTE, MIDI silence, audio routing and restore';
+ return 'PASS: live sequencer-to-mixer SOLO/MUTE sync, green/red controls, isolated audio and cached VU layout';
 `);
 console.log(run({}, {}, {getItem:()=>null,setItem:()=>{}},
  {log:()=>{},warn:()=>{},error:()=>{}},structuredClone));
