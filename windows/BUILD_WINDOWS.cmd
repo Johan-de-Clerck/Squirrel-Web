@@ -1,18 +1,76 @@
 @echo off
-setlocal
+setlocal EnableExtensions
 cd /d "%~dp0"
-echo Squirrel Studio Desktop 0.1.1 - Windows x64 build
+title Squirrel Studio - Local Windows Build
+
+echo ==========================================
+echo SQUIRREL STUDIO - LOCAL WINDOWS x64 BUILD
+echo ==========================================
+echo.
+
 if exist "..\index.html" (
-  if not exist web mkdir web
+  if not exist "web" mkdir "web"
   copy /Y "..\index.html" "web\index.html" >nul
 )
-if not exist "web\index.html" (echo web\index.html ontbreekt & pause & exit /b 1)
-where cmake >nul 2>&1 || (echo CMake ontbreekt. Installeer CMake 3.24+ & pause & exit /b 1)
-where nuget >nul 2>&1 || (echo NuGet CLI ontbreekt. Installeer nuget.exe of build via GitHub Actions. & pause & exit /b 1)
-if not exist third_party mkdir third_party
-nuget install Microsoft.Web.WebView2 -OutputDirectory third_party -NonInteractive -ExcludeVersion || exit /b 1
-cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DJUCE_WEBVIEW2_PACKAGE_LOCATION="%CD%\third_party" || exit /b 1
-cmake --build build --config Release --parallel 4 || exit /b 1
+if not exist "web\index.html" (
+  echo ERROR: windows\web\index.html ontbreekt.
+  goto :failed
+)
+
+where cmake >nul 2>&1
+if errorlevel 1 (
+  echo ERROR: CMake ontbreekt. Installeer CMake en voeg het toe aan PATH.
+  goto :failed
+)
+
+set "NUGET=nuget"
+where nuget >nul 2>&1
+if errorlevel 1 (
+  if exist "C:\Tools\NuGet\nuget.exe" (
+    set "NUGET=C:\Tools\NuGet\nuget.exe"
+  ) else (
+    echo ERROR: nuget.exe ontbreekt.
+    echo Zet nuget.exe in PATH of in C:\Tools\NuGet\
+    goto :failed
+  )
+)
+
+if not exist "third_party\Microsoft.Web.WebView2" (
+  if not exist "third_party" mkdir "third_party"
+  echo WebView2 SDK ophalen via NuGet...
+  "%NUGET%" install Microsoft.Web.WebView2 -OutputDirectory "third_party" -NonInteractive -ExcludeVersion
+  if errorlevel 1 goto :failed
+)
+
 echo.
-echo EXE: build\SquirrelStudioDesktop_artefacts\Release\SquirrelStudioDesktop.exe
+echo CMake configureren...
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DJUCE_WEBVIEW2_PACKAGE_LOCATION="%CD%\third_party"
+if errorlevel 1 goto :failed
+
+echo.
+echo Release compileren...
+cmake --build build --config Release --parallel 4
+if errorlevel 1 goto :failed
+
+set "EXE=build\SquirrelStudioDesktop_artefacts\Release\Squirrel Studio Desktop.exe"
+if not exist "%EXE%" (
+  echo ERROR: Windows EXE niet gevonden op: %EXE%
+  goto :failed
+)
+
+if not exist "..\dist" mkdir "..\dist"
+copy /Y "%EXE%" "..\dist\Squirrel Studio Desktop.exe" >nul
+if errorlevel 1 goto :failed
+
+echo.
+echo BUILD GESLAAGD!
+echo Windows app: %CD%\..\dist\Squirrel Studio Desktop.exe
+echo Geen GitHub Actions-minuten gebruikt.
 pause
+exit /b 0
+
+:failed
+echo.
+echo BUILD MISLUKT - zie de foutmelding hierboven.
+pause
+exit /b 1
