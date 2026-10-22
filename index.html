@@ -2562,14 +2562,14 @@ function voiceGainAt(v,t){
  return Math.max(.0002,sustain);
 }
 function releaseFMModulation(v,when){
- if(!v.fmDepth)return;
- const param=v.fmDepth.gain;
- // Oscillator FM depth follows the note's release even with a high sustain.
- try{
-  if(typeof param.cancelAndHoldAtTime==='function')param.cancelAndHoldAtTime(when);
-  else {param.cancelScheduledValues(when);param.setValueAtTime(Math.max(0,param.value),when)}
-  param.linearRampToValueAtTime(0,when+v.release);
- }catch(e){console.warn('FM release:',e)}
+ const params=v.fmDepths?.map(gain=>gain.gain)||(v.fmDepth?[v.fmDepth.gain]:[]);
+ for(const param of params){
+  try{
+   if(typeof param.cancelAndHoldAtTime==='function')param.cancelAndHoldAtTime(when);
+   else{param.cancelScheduledValues(when);param.setValueAtTime(Math.max(0,param.value),when)}
+   param.linearRampToValueAtTime(0,when+v.release);
+  }catch(e){console.warn('FM operator release:',e)}
+ }
 }
 function releaseVoice(v,when){if(v.released)return;
  if(v.nativeId){v.released=true;nativeVAMessage('off',{id:v.nativeId},when);scheduledVoices.delete(v);return;}
@@ -2645,7 +2645,23 @@ function updateLiveFM(trackIndex){
  const sound=state.tracks[trackIndex]?.sound;if(!sound||sound.engine!=='fm')return;
  const now=audio.ctx.currentTime;
  for(const v of scheduledVoices){
-  if(v.trackIndex!==trackIndex||v.engine!=='fm'||v.released)continue;
+  if(v.trackIndex!==trackIndex||v.released)continue;
+   if(v.engine==='fm4'){
+    const maxHz=audio.ctx.sampleRate?audio.ctx.sampleRate*.45:18000;
+    for(let i=0;i<4;i++)v.fmOperatorOscs[i].frequency.setTargetAtTime(
+     Math.min(maxHz,v.fmFundamental*clamp(Number(sound['fmOp'+(i+1)+'Ratio']??(i+1)),.25,16)),now,.015);
+    for(const {from,gain} of v.fmModLinks){
+     const level=clamp(Number(sound['fmOp'+(from+1)+'Level']??75),0,100)/100;
+     const target=Math.min(maxHz,v.fmFundamental*clamp(Number(sound.fmIndex??3),0,12))*level*clamp(Number(sound.fmSustain??30),0,100)/100;
+     gain.gain.cancelScheduledValues(now);
+     gain.gain.setTargetAtTime(target,now,.02);
+    }
+    for(const {index,gain} of v.fmCarrierGains)
+     gain.gain.setTargetAtTime(.65/v.fmCarrierGains.length*
+      clamp(Number(sound['fmOp'+(index+1)+'Level']??100),0,100)/100,now,.02);
+    continue;
+   }
+   if(v.engine!=='fm')continue;
   const f=v.fmFundamental,maxHz=audio.ctx.sampleRate?audio.ctx.sampleRate*.45:18000;
   v.fmModulator.frequency.setTargetAtTime(Math.min(f*clamp(Number(sound.fmRatio??2),.25,16),maxHz),now,.015);
   // Index edits reshape the remaining timbre without retriggering the note.
@@ -2653,6 +2669,64 @@ function updateLiveFM(trackIndex){
   v.fmDepth.gain.cancelScheduledValues(now);
   v.fmDepth.gain.setTargetAtTime(Math.min(f*clamp(Number(sound.fmIndex??3),0,12),maxHz)*sustain,now,.02);
  }
+}
+// Four independent sine operators, with selectable acyclic FM routing.
+function fmFourSynthVoice(track,note,velocity,when,gate=null){
+ const c=audio.ctx,s=track.sound,index=state.tracks.indexOf(track),f=hz(note);
+ const algorithm=fmFourConfig(s),maxHz=c.sampleRate?c.sampleRate*.45:18000;
+ const operators=Array.from({length:4},(_,i)=>{
+  const osc=c.createOscillator();osc.type='sine';
+  osc.frequency.setValueAtTime(Math.min(maxHz,f*clamp(Number(s['fmOp'+(i+1)+'Ratio']??(i+1)),.25,16)),when);
+  return osc;
+ });
+ const modLinks=[],fmDepths=[],carrierGains=[];
+ const attack=Math.max(.003,Number(s.fmAttack??.01));
+ const decay=Math.max(.01,Number(s.fmDecay??.3));
+ const sustain=clamp(Number(s.fmSustain??30),0,100)/100;
+ const indexDepth=clamp(Number(s.fmIndex??3),0,12);
+ for(const [from,to] of algorithm.edges){
+  const amount=c.createGain(),level=clamp(Number(s['fmOp'+(from+1)+'Level']??75),0,100)/100;
+  const peak=Math.min(maxHz,f*indexDepth)*level;
+  amount.gain.setValueAtTime(0,when);
+  amount.gain.linearRampToValueAtTime(peak,when+attack);
+  amount.gain.linearRampToValueAtTime(peak*sustain,when+attack+decay);
+  operators[from].connect(amount).connect(operators[to].frequency);
+  modLinks.push({from,to,gain:amount});fmDepths.push(amount);
+ }
+ const filter=c.createBiquadFilter(),out=c.createGain(),modGain=c.createGain();
+ filter.type='lowpass';filter.frequency.setValueAtTime(s.cutoff,when);filter.Q.value=s.resonance;
+ const filterEnvelopes=attachFilterEnvelopes(filter,index,when);
+ audio.cutoffBuses[index].connect(filter.frequency);
+ for(const op of algorithm.carriers){
+  const gain=c.createGain(),level=clamp(Number(s['fmOp'+(op+1)+'Level']??100),0,100)/100;
+  gain.gain.value=.65/algorithm.carriers.length*level;
+  operators[op].connect(gain).connect(filter);
+  carrierGains.push({index:op,gain});
+ }
+ modGain.gain.value=1;
+ filter.connect(out).connect(modGain).connect(audio.trackGains[index]);
+ gainEnv(out.gain,when,velocity,s.attack,s.decay,s.sustain);
+ const v={engine:'fm4',fmAlgorithm:s.fmAlgorithm,trackIndex:index,released:false,
+  env:out,oscs:operators,pitchParams:operators.map(op=>op.detune),modGain,
+  release:Math.max(.02,s.release),filter,filterEnvelopes,
+  fmFundamental:f,fmOperatorOscs:operators,fmModLinks:modLinks,fmDepths,fmCarrierGains:carrierGains,
+  ampEnvelope:{start:when,peak:Math.max(.0002,velocity/127*.5),
+   attack:Math.max(.003,s.attack),decay:Math.max(.01,s.decay),sustain:s.sustain}};
+ operators.forEach(osc=>osc.start(when));
+ scheduledVoices.add(v);
+ operators[0].onended=()=>{
+  scheduledVoices.delete(v);
+  try{
+   for(const osc of operators)osc.disconnect();
+   for(const {gain} of modLinks)gain.disconnect();
+   for(const {gain} of carrierGains)gain.disconnect();
+   audio.cutoffBuses[index].disconnect(filter.frequency);
+   filterEnvelopes.forEach(e=>{try{e.source.stop();e.source.disconnect()}catch(_){}});
+   filter.disconnect();out.disconnect();modGain.disconnect();
+  }catch(e){console.warn('FM4 cleanup:',e)}
+ };
+ if(gate!==null)releaseVoiceScheduled(v,when+Math.max(.035,gate));
+ return v;
 }
 function fmSynthVoice(track,note,velocity,when,gate=null){
  const c=audio.ctx,s=track.sound,index=state.tracks.indexOf(track),frequency=hz(note);
@@ -2702,7 +2776,7 @@ function fmSynthVoice(track,note,velocity,when,gate=null){
 }
 function synthVoice(track,note,velocity,when,gate=null){
  const c=audio.ctx,s=track.sound,f=hz(note),trackIndex=state.tracks.indexOf(track);
- if(s.engine==='fm')return fmSynthVoice(track,note,velocity,when,gate);
+ if(s.engine==='fm')return s.fmMode==='four'?fmFourSynthVoice(track,note,velocity,when,gate):fmSynthVoice(track,note,velocity,when,gate);
  // Windows native mode: JUCE renders this VA voice through ASIO/WASAPI.
  // Web mode falls back to the original Web Audio synthesis below unchanged.
  if(nativeVAEnabled() && trackIndex>=3 && trackIndex<=5 && isSynth(trackIndex)){
