@@ -725,9 +725,12 @@ input[type="password"],textarea,
       <div id="view-mod" class="hidden"><div class="mod-layout"><section class="panel"><div class="panel-head"><h2 class="section-title">LFO modulation</h2><span class="pill">4 LFO's</span></div><div class="lfo-grid" id="lfoGrid"></div></section><section class="panel"><div class="panel-head"><h2 class="section-title">Filter envelopes</h2><span class="pill">2 ADSR</span></div><div id="envelopeGrid" class="envelope-grid"></div></section></div></div>
       <div id="view-drum" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Drum samples</h2><div class="sample-bank-tools"><button class="mini-btn" id="drumExportBank" type="button">↓ EXPORT BANK</button><button class="mini-btn" id="drumImportBank" type="button">↑ IMPORT BANK</button><span class="pill">5 SLOTS / DRUM TRACK</span></div></div>
 <div class="drum-panel-top"><label class="field"><span class="field-head">DRUM TRACK</span><select id="drumTrackSelect"><option value="0">01 · DRUMS 1</option><option value="1">02 · DRUMS 2</option><option value="2">03 · DRUMS 3</option></select></label></div>
+<div class="panel-head"><h3 class="section-title">DRUM SAMPLE LIBRARY</h3><span class="pill">15 SAMPLES · SHARED</span></div>
+<div id="drumLibraryList" class="drum-slot-list"></div>
+<div class="panel-head"><h3 class="section-title">DRUM TRACK ASSIGNMENTS</h3><span class="pill">5 SLOTS PER TRACK</span></div>
 <div id="drumSlotList" class="drum-slot-list"></div>
 <input id="drumSampleFileInput" type="file" accept="audio/*,.wav,.wave,.aiff,.aif,.mp3,.ogg" class="hidden"></section></div>
-<div id="view-sample" class="hidden"><section class="panel sample-editor-panel"><div class="panel-head"><h2 class="section-title">Waveform sample editor</h2><span class="pill">8 FLEXIBLE TRACKS</span></div><div class="sample-editor-top"><label class="field"><span class="field-head">SAMPLE TRACK</span><select id="sampleEditTrack"><option value="6">07 · SAMPLER</option><option value="7">08 · SAMPLER</option></select></label><button class="btn" id="sampleEditorLoad">↑ LOAD WAV</button><button class="btn" id="sampleEditorPreview">▶ AUDITION</button><span id="sampleEditorFile" class="sample-filename">NO SAMPLE</span><span id="samplePlayStatus" class="sample-play-status" aria-live="off">POS —</span></div><div class="waveform-wrap"><canvas id="sampleWaveCanvas" width="1200" height="230" aria-label="Waveform with draggable START, END, LOOP START and LOOP END markers"></canvas><div class="sample-wave-legend"><span>START</span><span>LOOP START</span><span>LOOP END</span><span>END</span><span style="color:#b2f1ce">◆ PLAYHEAD</span></div></div><div id="sampleEditControls" class="sample-editor-controls"></div><input id="sampleEditorFileInput" type="file" accept=".wav,.wave,.mp3,.ogg,.aiff,.aif,audio/*" class="hidden"></section></div>
+<div id="view-sample" class="hidden"><section class="panel sample-editor-panel"><div class="panel-head"><h2 class="section-title">Waveform sample editor</h2><span class="pill">8 FLEXIBLE TRACKS</span></div><div class="sample-editor-top"><label class="field"><span class="field-head">SAMPLE / DRUM SLOT</span><select id="sampleEditTrack"><option value="6">07 · SAMPLER</option><option value="7">08 · SAMPLER</option></select></label><button class="btn" id="sampleEditorLoad">↑ LOAD WAV</button><button class="btn" id="sampleEditorPreview">▶ AUDITION</button><span id="sampleEditorFile" class="sample-filename">NO SAMPLE</span><span id="samplePlayStatus" class="sample-play-status" aria-live="off">POS —</span></div><div class="waveform-wrap"><canvas id="sampleWaveCanvas" width="1200" height="230" aria-label="Waveform with draggable START, END, LOOP START and LOOP END markers"></canvas><div class="sample-wave-legend"><span>START</span><span>LOOP START</span><span>LOOP END</span><span>END</span><span style="color:#b2f1ce">◆ PLAYHEAD</span></div></div><div id="sampleEditControls" class="sample-editor-controls"></div><input id="sampleEditorFileInput" type="file" accept=".wav,.wave,.mp3,.ogg,.aiff,.aif,audio/*" class="hidden"></section></div>
       <div id="view-send" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Track effects · Delay / Reverb / Chorus / Distortion</h2><span class="pill">8 TRACKS</span></div><div class="sends-grid" id="sendsGrid"></div><div class="send-global" id="sendGlobal"></div></section></div>
       <div id="view-options" class="hidden"><section class="panel options-panel"><div class="panel-head"><h2 class="section-title">Pattern options</h2><span class="pill">MAX 32 STEPS</span></div><div id="optionsPatterns" class="options-patterns"></div>
         <div class="options-slots-head"><h3>TRACK INSTRUMENT TYPES</h3><span class="pill">ANY TRACK · ANY INSTRUMENT</span></div>
@@ -2580,7 +2583,7 @@ function renderSound(){
 let selectedSampleEditorTrack=6,selectedSampleEditorDrumSlot=null;
 function sampleEditorIsDrum(){return selectedSampleEditorDrumSlot!==null&&isDrum(selectedSampleEditorTrack)}
 function sampleEditorItem(){return sampleEditorIsDrum()?state.drumSamples[selectedSampleEditorTrack][selectedSampleEditorDrumSlot]:state.tracks[selectedSampleEditorTrack]}
-function sampleEditorBuffer(){return sampleEditorIsDrum()?drumSampleBuffers.get(drumSlotKey(selectedSampleEditorTrack,selectedSampleEditorDrumSlot)):sampleBuffers.get(selectedSampleEditorTrack)}
+function sampleEditorBuffer(){return sampleEditorIsDrum()?drumSlotBuffer(selectedSampleEditorTrack,selectedSampleEditorDrumSlot):sampleBuffers.get(selectedSampleEditorTrack)}
 const SAMPLE_MARKERS=[['sampleStart','START'],['loopStart','LOOP START'],['loopEnd','LOOP END'],['sampleEnd','END']];
 function sampleMarkerChanges(track,key,value){
  const q=.002, v=clamp(value,0,1);
@@ -2618,7 +2621,7 @@ function drawSampleWaveform(){
 function saveSampleEditorChanges(){
  const item=sampleEditorItem();
  persist();
- if(sampleEditorIsDrum()&&item?.data)sampleDB('put',drumSlotKey(selectedSampleEditorTrack,selectedSampleEditorDrumSlot),item)
+ if(sampleEditorIsDrum())sampleDB('put',drumSlotKey(selectedSampleEditorTrack,selectedSampleEditorDrumSlot),item)
   .catch(e=>console.warn('Could not store drum editor settings:',e));
 }
 function renderSampleEditor(){
@@ -2628,7 +2631,7 @@ function renderSampleEditor(){
    label:String(i+1).padStart(2,'0')+' · '+state.tracks[i].name+' (SAMPLE)'});
   if(isDrum(i))for(let slot=0;slot<5;slot++){
    const drum=state.drumSamples[i][slot];
-   if(drum?.data)available.push({track:i,slot,value:'d:'+i+':'+slot,
+   if(drumSlotHasAudio(i,slot))available.push({track:i,slot,value:'d:'+i+':'+slot,
     label:String(i+1).padStart(2,'0')+' · '+state.tracks[i].name+' / SLOT '+(slot+1)+' · '+(drum.name||'SAMPLE')});
   }
  }
@@ -2645,7 +2648,7 @@ function renderSampleEditor(){
  if(!choice){$('sampleEditorFile').textContent='LOAD A SAMPLE OR CHOOSE SAMPLE IN OPTIONS';drawSampleWaveform();return}
  const drum=sampleEditorIsDrum(),track=sampleEditorItem();
  sanitizeSampleMarkers(track);
- $('sampleEditorFile').textContent=drum?'DRUM SLOT '+(selectedSampleEditorDrumSlot+1)+' · '+(track.name||'SAMPLE'):track.sampleName||'NO SAMPLE LOADED';
+ $('sampleEditorFile').textContent=drum?'DRUM SLOT '+(selectedSampleEditorDrumSlot+1)+' · '+drumName(selectedSampleEditorTrack,selectedSampleEditorDrumSlot):track.sampleName||'NO SAMPLE LOADED';
  if(!drum){
   const root=document.createElement('label');root.className='field';root.innerHTML='<span class="field-head">ROOT NOTE</span>';
   const rootSelect=document.createElement('select');for(let n=24;n<=95;n++)rootSelect.add(new Option(noteName(n),String(n)));
