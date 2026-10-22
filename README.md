@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.65**  
+**Current web version: 0.1.66**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,12 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.66
+
+- Every drum sample slot has an independent **PAN** control, from -100 (left) to +100 (right), default 0 (center).
+- The audio graph uses a separate StereoPannerNode per triggered drum voice, before the track's own volume/pan processing. Five slots can reuse the same decoded library sample but have different stereo positions.
+- Pan values are preserved in project saves and sample bank imports/exports. Legacy projects default to center.
 
 ## What is new in 0.1.65
 
