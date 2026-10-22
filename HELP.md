@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.1.58 — User Manual
+# Squirrel Studio Web 0.1.59 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -44,11 +44,11 @@ Starting with 0.1.47, active notes and FX text are slightly larger, centered and
 Switching between Drums 1, Drums 2, Drums 3, Bass, Lead, Chord, Sampler or MIDI-only tracks no longer changes the **height of the Step Sequencer**. The **Step Editor** and **Step FX** panels below it keep a fixed, responsive height. If selecting a track reveals more settings than fit inside either editor, **scroll with the mouse wheel or touchpad inside that panel (the scrollbar is hidden)**; the sequencer remains at the same height. This applies to the compact desktop layout and smaller screens as well.
 
 
-**Held note preview while EDIT ON (0.1.58):** Changing to another track, pattern or workspace also releases any held sample, drum, synth or MIDI note preview immediately. This prevents old notes from continuing to sound after navigation.
+**Held note preview while EDIT ON (0.1.59):** Changing to another track, pattern or workspace also releases any held sample, drum, synth or MIDI note preview immediately. This prevents old notes from continuing to sound after navigation.
 
-**Held note preview while EDIT ON (0.1.58):** When entering a note with a ProTracker keyboard key, the note is auditioned while the key is held, even if the sample is longer than the current pattern. Releasing the key stops the voice. Note entry still advances the cursor automatically. The selected Drum sample and FX 9 sample offset are used, and MIDI OUT ONLY receives a corresponding note-on and note-off. The EDIT ON button remains red to indicate editing. STOP, EDIT OFF or leaving browser focus ends the audition so samples cannot keep playing unexpectedly.
+**Held note preview while EDIT ON (0.1.59):** When entering a note with a ProTracker keyboard key, the note is auditioned while the key is held, even if the sample is longer than the current pattern. Releasing the key stops the voice. Note entry still advances the cursor automatically. The selected Drum sample and FX 9 sample offset are used, and MIDI OUT ONLY receives a corresponding note-on and note-off. The EDIT ON button remains red to indicate editing. STOP, EDIT OFF or leaving browser focus ends the audition so samples cannot keep playing unexpectedly.
 
-**EDIT mode indicator (0.1.58):** The **EDIT ON** button in the top toolbar turns **red** while step editing via the computer keyboard is enabled. Clicking it again changes the label to **EDIT OFF** and restores the normal neutral color. The underlying note-entry shortcuts are unchanged.
+**EDIT mode indicator (0.1.59):** The **EDIT ON** button in the top toolbar turns **red** while step editing via the computer keyboard is enabled. Clicking it again changes the label to **EDIT OFF** and restores the normal neutral color. The underlying note-entry shortcuts are unchanged.
 
 Clicking any note cell **only selects** that cell: it does not insert or erase a note. **Hold the left mouse button and drag** from one step to another to select a highlighted, rectangular range; this also works across multiple tracks. Release the button to finish. Drag-selecting does not change the music. **Ctrl+C** copies the entire rectangular selection, including inactive (off) notes and their step FX; click the first destination step on another track and press **Ctrl+V** to paste every copied step at matching offsets. Copying multiple tracks pastes on consecutive destination tracks. Steps outside the target track length or beyond track 8 are skipped. The clipboard is a snapshot and can be pasted multiple times or into another pattern. If no range is selected, Ctrl+C/V continues to copy/paste one step. Press **Delete** to clear the notes in the range (FX remain). Clicking once elsewhere clears the range and selects a single step. An active step displays its note or the relevant drum sample slot. Select a cell and use **Enter** to toggle it on/off, **Delete** to clear its note, or enter a pitch with the computer keyboard while **EDIT ON**.
 
@@ -92,11 +92,19 @@ The effective pattern length is the **longest** enabled track length. For exampl
 
 ## 5. Drum samples — any track configured as DRUM
 
-Open **DRUM SAMPLES** and choose any track whose instrument type is **DRUM**. Each Drum track has five independently loadable sample slots (up to 40 across all eight tracks). Press **LOAD**, **USE**, **PREVIEW** or **CLEAR** for a slot. File decoding depends on the browser; WAV is recommended. Each sample may be at most 16 MB.
+Open **DRUM SAMPLES** and choose any track whose instrument type is **DRUM**. The upper section is the shared **15-SAMPLE DRUM LIBRARY**. Use LOAD beside a library position to import a WAV, AIFF, MP3 or OGG sample; it can then be assigned to any of the five slots of a Drum track. You can assign the same library sample to several slots or tracks without duplicating the audio file. Use the per-slot assignment dropdown to select a library number; clear it to unassign. Each Drum track still has five slots (up to 40 assignments if all eight tracks are DRUM). Direct LOAD remains available for older individually loaded samples. Press **LOAD**, **USE**, **PREVIEW** or **CLEAR** for a slot. File decoding depends on the browser; WAV is recommended. Each sample may be at most 16 MB.
 
 Each track remembers its most recently selected drum slot. A drum note uses the slot specified by that sequencer step. The Step Editor lets you change an existing step's sample slot independently.
 
 If no usable sample is present, the track plays its built-in Drum sound (Kick, Snare or Hi-hat), selectable using **DRUM SOUND (IF NO SAMPLES)**.
+
+### Editing a drum sample in the Sample Editor (0.1.59)
+
+Once a drum slot has a loaded or assigned audio sample, click **EDIT** beside that slot in DRUM SAMPLES. The waveform opens in **SAMPLE EDITOR**. You can change START, END, LOOP START and LOOP END by dragging the waveform handles or editing the sliders. These marker settings belong to the **drum slot**, not to the shared library sample, so two slots using the same WAV may play different sections of it.
+
+**PING-PONG LOOP** is available whenever LOOP ON is enabled. Ordinary looping plays forwards; Ping-Pong plays the selected section forwards, then backwards, then forwards again. It works with both mono and stereo samples. Ping-Pong does not reverse or overwrite the stored audio file; the browser creates a cached reversed playback section.
+
+The **DRUM LIBRARY** button in Sample Editor returns to the DRUM SAMPLES page. The drum slot preview auditions its selected trim and loop. The old drum tracks and directly loaded drum samples from earlier project formats remain supported.
 
 ### Choke groups
 
@@ -134,7 +142,7 @@ Choose **9 · SAMPLE OFFSET (%)** on a step with a sample note, then set a decim
 | `975` | 75%, three quarters |
 | `999` | 99%, near the end |
 
-The offset is relative to the sample's **START–END region** on Sample tracks and to the **full sample** on a Drum slot. When LOOP is enabled, FX 9 keeps the original LOOP START and LOOP END handles intact. A note starting **before LOOP END** follows the normal loop. A note starting **at or after LOOP END** plays the remaining sample region as a one-shot, so the percentage remains accurate and the loop range stays valid (0.1.58). You can hear the correct offset using the **AUDITION** button in the Step Editor, or by holding Enter on the selected note. The normal Synth/Sample instrument preview still starts from its usual position. This effect does not change synthesizer oscillator sound or synthesized fallback drum sounds. The new percentage parameter uses **decimal notation**; the existing tracker effects keep hexadecimal parameters. FX 9 is saved in projects and copied with steps and selections.
+The offset is relative to the sample's **START–END region** on Sample tracks and to the **full sample** on a Drum slot. When LOOP is enabled, FX 9 keeps the original LOOP START and LOOP END handles intact. A note starting **before LOOP END** follows the normal loop. A note starting **at or after LOOP END** plays the remaining sample region as a one-shot, so the percentage remains accurate and the loop range stays valid (0.1.59). You can hear the correct offset using the **AUDITION** button in the Step Editor, or by holding Enter on the selected note. The normal Synth/Sample instrument preview still starts from its usual position. This effect does not change synthesizer oscillator sound or synthesized fallback drum sounds. The new percentage parameter uses **decimal notation**; the existing tracker effects keep hexadecimal parameters. FX 9 is saved in projects and copied with steps and selections.
 
 Tracker FX in **Step FX** include:
 
@@ -167,15 +175,15 @@ Large sample-filled songs produce larger JSON files, because audio is embedded i
 
 You can back up and transfer audio separately from a song using **EXPORT SAMPLE BANK** in Options or Drum Samples. Sample Bank version 2 includes **all eight drum banks** (five slots per track) and **eight sampler slots** (one per track). Included sampler settings cover the root note, start/end markers, loop markers, filter and resonance.
 
-**IMPORT SAMPLE BANK** replaces the current audio bank after confirmation but keeps the song arrangement, notes and patterns. Older version-1 sample banks with three drum banks and two sampler slots can still be imported. A Sample Bank is **not** a complete project backup; use **SAVE PROJECT** to preserve instrument configurations, synth patches and patterns as well.
+**IMPORT SAMPLE BANK** replaces the current audio bank after confirmation but keeps the song arrangement, notes and patterns. Older version-1 and version-2 sample banks with existing drum banks and two sampler slots can still be imported. A Sample Bank is **not** a complete project backup; use **SAVE PROJECT** to preserve instrument configurations, synth patches and patterns as well.
 
-### Live Mixer / Sequencer synchronization (0.1.58)
+### Live Mixer / Sequencer synchronization (0.1.59)
 
 Mute and Solo buttons stay synchronized between the **Step Sequencer** and the **Mixer**. You can press **S** or **M** beside a sequencer track, then open the Mixer and immediately see the correct green SOLO / red MUTE states; you do not need to change the Mixer tab to trigger an update. Using the large buttons in the Mixer likewise updates the sequencer controls. Tracks not selected by SOLO appear temporarily muted, without replacing their manually stored MUTE settings.
 
 Mixer strips are updated only when a meaningful track setting changes. This avoids resetting the VU indicators or faders during ordinary sequencer editing.
 
-### Mixer MUTE / SOLO buttons (0.1.58)
+### Mixer MUTE / SOLO buttons (0.1.59)
 
 **SOLO overrides MUTE on the same track:** if a channel is manually muted (red MUTE) and you click its SOLO button, that channel's MUTE is cleared and SOLO becomes green. The selected track is audible immediately. If you move SOLO to another manually muted channel, the new track's MUTE is also cleared. Switching SOLO off does not turn that channel's MUTE back on. Other tracks keep their saved manual MUTE settings.
 
@@ -184,7 +192,7 @@ Mixer strips are updated only when a meaningful track setting changes. This avoi
 
 SOLO is exclusive, so only one track is soloed at a time. The red MUTE buttons of other tracks are temporarily locked while SOLO is on to avoid changing saved mute settings. Any manually muted tracks retain their mute setting after SOLO is disabled. Track-specific MIDI output respects these mute/solo changes, with note-off sent to excluded tracks.
 
-### Mixer signal meters (0.1.58)
+### Mixer signal meters (0.1.59)
 
 Every Mixer track has its own VU meter, connected after that track's volume and panning controls. The meter shows the actual output of **that track only**, before the shared compressor and effect returns. A note on another track cannot cause this meter to move. When a track is silent, its meter falls to zero; Mute and Solo affect which tracks can be heard and measured. Tracks configured as MIDI OUT ONLY have no browser audio to meter.
 
@@ -244,4 +252,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.1.58.**
+**Documentation version: Squirrel Studio Web 0.1.59.**
