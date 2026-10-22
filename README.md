@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.71**  
+**Current web version: 0.1.72**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,15 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.72
+
+- **Multi-mode drum-slot filter:** choose **LOW-PASS**, **HIGH-PASS** or **BAND-PASS** independently for each of the five sample slots of any DRUM track. Existing cutoff (80–20,000 Hz) and resonance (Q 0.1–18) controls remain.
+- **LOW-PASS** removes high frequencies, **HIGH-PASS** removes low frequencies, and **BAND-PASS** emphasizes frequencies around cutoff while reducing frequencies above and below it.
+- Changing the filter type updates active, already-filtered drum voices on the same slot. The **ON/OFF** switch still applies to newly triggered voices; disabled filters allocate no BiquadFilterNode.
+- **RESET FILTER** now also sets filter type to LOW-PASS, alongside the previous OFF / 12,000 Hz / 0.7 Q defaults.
+- Projects and sample banks retain each slot's filter type without format changes (project v23, sample bank v3). Old files default to LOW-PASS, with filtering OFF; invalid types are safely normalized.
+- Added `tests/drum-filter-modes.test.js` with 27 checks for the three modes, live changes, independent slots, project/bank compatibility and reset.
 
 ## What is new in 0.1.71
 
