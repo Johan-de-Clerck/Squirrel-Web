@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.77**  
+**Current web version: 0.1.78**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,15 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.78
+
+- **Selectable synth engines — VA and FM:** BASS, LEAD and CHORD tracks now have a **SYNTHESIS ENGINE** selector on the **SYNTH** page. VA is the original three-oscillator virtual analog engine, preserving existing songs. FM is a new **2-operator sine FM** engine with an audible carrier (OP1) modulated at audio rate by OP2.
+- **FM controls:** **OP2 RATIO** (0.25–16× carrier frequency), **FM INDEX** (0–12), and separate **FM ATTACK**, **FM DECAY**, and **FM SUSTAIN** for the modulation index. All voices use the synth's existing shared amplitude ADSR and low-pass filter. Ratio and index edits can change active FM voices smoothly. C00 releases both the carrier and its modulation.
+- **Genuine VA Pulse Width Modulation:** VA PULSE waves now use a saw signal combined with a phase-delayed inverted copy. The **PULSE WIDTH** parameter adjusts the phase delay, rather than switching between discrete precomputed waves. This permits continuously changing PWM using Web Audio's sample-rate modulation input.
+- **LFO → PULSE WIDTH:** all four LFOs can select `TRACK 1–8 · PULSEWIDTH` in their ROUTING dropdown. A routed LFO modulates the pulsewidth of active **VA pulse oscillators** on the specified synthesizer track; waveform, BPM-synced/free rate, and depth controls remain available. Non-pulse waves are unaffected. The PWM depth is limited to a safe range around each voice's pulsewidth, and per-voice nodes are cleaned up on note end.
+- Engine type and all FM parameters are persisted in project JSON and per-instrument sound patches. LFO PWM routing persists with the existing LFO settings, with no project format bump. Old projects default to VA, and the original VA patches load unchanged.
+- Added `tests/synth-engines-fm-va-pwm.test.js`, covering two-operator modulation, FM index envelope and release, true PWM audio routing, live width changes, LFO destinations and compatibility.
 
 ## What is new in 0.1.77
 
