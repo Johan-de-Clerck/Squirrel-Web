@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.1.52 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.1.53 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -178,7 +178,7 @@
     .options-slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
     .options-slots .slot-select-field{border:1px solid #614a37;border-radius:9px;background:#30261e;padding:13px}
     .options-slots .slot-select-field select{padding:8px;color:#f2d1ae;background:#211912;border:1px solid #77583b;border-radius:6px;width:100%}
-    /* 0.1.52: eight independently assignable instrument lanes. */
+    /* 0.1.53: eight independently assignable instrument lanes. */
     .options-slots .track-kind-card{border:1px solid #614a37;border-radius:9px;background:#30261e;padding:13px;min-width:0}
     .track-kind-card{display:flex;flex-direction:column;gap:10px;min-width:0}
     .track-kind-card .field-head{font-weight:750;letter-spacing:.5px}
@@ -418,7 +418,7 @@
  #view-sound .preview{padding:7px;margin-top:7px}
 }
 
-/* 0.1.52 — four parallel effects, uniform width even for unsupported distortion */
+/* 0.1.53 — four parallel effects, uniform width even for unsupported distortion */
 #view-send .send-title,#view-send .send-row{
  display:grid;grid-template-columns:minmax(95px,1.12fr) repeat(4,minmax(0,1fr));gap:clamp(8px,1.4vw,24px);align-items:center;
 }
@@ -456,7 +456,7 @@
 @media(max-width:850px){.song-mode-grid{grid-template-columns:1fr}#view-send .send-title,#view-send .send-row{min-width:660px;gap:10px}#view-send .sends-grid{overflow-x:auto}#view-send .send-global{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:1100px) and (max-height:850px){#view-send .send-row{min-height:43px;padding:5px 11px}}
 
-/* 0.1.52: per-track step length and muted beige playback follow. */
+/* 0.1.53: per-track step length and muted beige playback follow. */
 .grid-head,.seq-row{grid-template-columns:188px repeat(32,minmax(0,1fr))}
 .grid-board{min-width:1250px}
 .lane-length{flex:0 0 43px;width:43px;min-width:0;padding:3px 1px;border-radius:5px;border:1px solid #987047;background:#3d2c20;color:#f7dbb0;font:700 11px Consolas,monospace;text-align:center;cursor:pointer}
@@ -484,7 +484,7 @@
 .project-name-field input{width:min(100%,500px);padding:10px 12px;background:#3f3025;border:1px solid #78593d;border-radius:6px;color:#f3d3b4;font:inherit}
 .project-name-field input::placeholder{color:#a28c77}
 
-/* 0.1.52: prevent browser text highlighting across the application.
+/* 0.1.53: prevent browser text highlighting across the application.
    Keep editable fields selectable, without affecting pad selection,
    keyboard shortcuts, or Song Mode tile drag-and-drop. */
 body, body *{
@@ -499,7 +499,7 @@ input[type="password"],textarea,
   user-select:text;
 }
 
-/* 0.1.52: compact five-slot drum sampler (three independent drum tracks). */
+/* 0.1.53: compact five-slot drum sampler (three independent drum tracks). */
 .drum-panel-top{display:flex;gap:14px;align-items:center;margin:0 0 14px}
 .drum-panel-top .field{min-width:180px}
 .drum-panel-top select{background:#342820;color:#f0d0a2;border:1px solid #866245;padding:9px 11px;border-radius:7px}
@@ -520,18 +520,18 @@ input[type="password"],textarea,
 .options-demo-switch{font-size:12px;color:#efcaa1;font-weight:650;display:flex;align-items:center;gap:8px;cursor:pointer}
 .options-demo-switch input{accent-color:#e3b887}
 
-/* 0.1.52 – portable self-contained sample banks. */
+/* 0.1.53 – portable self-contained sample banks. */
 .sample-bank-tools{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
 .sample-bank-tools .pill{white-space:nowrap}
 @media(max-width:750px){.sample-bank-tools .btn{padding:8px}}
 
-/* 0.1.52 – active sample remembers the most recently chosen drum slot */
+/* 0.1.53 – active sample remembers the most recently chosen drum slot */
 .drum-slot-row.active{border-color:#d2ad7c;background:#443325;box-shadow:inset 0 0 0 1px #b18a5e}
 .drum-slot-row.active .drum-slot-number{color:#ffe0aa}
 .drum-slot-use[aria-pressed="true"]{background:#745037;color:#fff0d5;border-color:#e0bd8e}
 @media(max-width:1000px){.drum-slot-controls{flex-wrap:wrap;justify-content:flex-end}}
 
-/* 0.1.52: mouse-drag selection in the note / FX step grid. */
+/* 0.1.53: mouse-drag selection in the note / FX step grid. */
 #gridBoard .pad.range-selected,#gridBoard .fx-pad.range-selected{
  outline:2px solid #efcd98;
  outline-offset:-2px;
@@ -562,7 +562,7 @@ input[type="password"],textarea,
 .lane-midi-badge{font:700 9px Consolas,monospace;color:#f2c995;border:1px solid #88633e;border-radius:3px;padding:2px 3px;margin-left:auto}
 @media(max-width:900px){.midi-track-list{grid-template-columns:1fr}}
 
-/* 0.1.52: The lower Step Editor / Step FX panels must never resize the
+/* 0.1.53: The lower Step Editor / Step FX panels must never resize the
    step sequencer above them when switching between drum, synth, chord,
    MIDI-only or sampler tracks. Each editor scrolls within its own panel. */
 #view-seq > .two-cols{
@@ -607,7 +607,7 @@ input[type="password"],textarea,
     max-height:210px;
   }
 }
-/* 0.1.52: larger tracker note and FX lettering, without resizing steps. */
+/* 0.1.53: larger tracker note and FX lettering, without resizing steps. */
 #gridBoard .pad{
  overflow:hidden;
  padding:0 1px;
@@ -654,7 +654,7 @@ input[type="password"],textarea,
  #gridBoard .fx-pad{font-size:10px}
  #gridBoard .fx-pad.chord-quality{font-size:9.5px}
 }
-/* 0.1.52: compact A-D bank + 1-8 pattern menu; restored green audio-on button. */
+/* 0.1.53: compact A-D bank + 1-8 pattern menu; restored green audio-on button. */
 .pattern-selector{display:flex;align-items:center;gap:5px;min-width:0}
 .pattern-selector #patternGroup{width:49px;min-width:49px;padding-inline:7px;text-align:center;font-weight:800}
 .pattern-selector #patternSelect{width:115px;min-width:90px;max-width:145px}
@@ -666,13 +666,25 @@ input[type="password"],textarea,
  box-shadow:inset 0 1px 0 #daf4c158,0 0 11px #4e9d6480;
 }
 #audioBtn.audio-ready:hover{filter:brightness(1.13)}
-/* 0.1.52: reserve space for decimal BPM such as 120.3 without clipping. */
+/* 0.1.53: reserve space for decimal BPM such as 120.3 without clipping. */
 #bpmInput{width:78px;min-width:78px;font-variant-numeric:tabular-nums}
+/* Green SOLO, red MUTE. Auto-mutes reflect solo state without altering stored mute flags. */
+#view-mixer .mixer-strip .btn.mute-on,.lane-toggle.muted{
+ background:linear-gradient(180deg,#a44a43,#742d2b);border-color:#ed9789;color:#fff0ee;
+ box-shadow:inset 0 1px 0 #ffd2bd28;
+}
+#view-mixer .mixer-strip .btn.solo-on,.lane-toggle.solo{
+ background:linear-gradient(180deg,#4d9f67,#2e7044);border-color:#a7e7b3;color:#f1fff1;
+ box-shadow:inset 0 1px 0 #ecffdf28,0 0 7px #5cad6855;
+}
+#view-mixer .mixer-strip .btn:disabled,.lane-toggle:disabled{opacity:1;cursor:default}
+#view-mixer .mixer-strip .btn.mute-on:hover,.lane-toggle.muted:hover{filter:brightness(1.08)}
+#view-mixer .mixer-strip .btn.solo-on:hover,.lane-toggle.solo:hover{filter:brightness(1.09)}
 </style>
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.52</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.53</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -737,7 +749,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-// Squirrel Studio Web 0.1.52 — Song Mode, eight-channel chorus, drum/sampler distortion.
+// Squirrel Studio Web 0.1.53 — Song Mode, eight-channel chorus, drum/sampler distortion.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 const NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -963,7 +975,7 @@ function nativeVAMessage(action,payload={},when=null){
 }
 function nativeVAPatch(i){
  const tr=state.tracks[i],s=tr.sound||{};
- const solo=state.tracks.some(t=>t.solo),active=!tr.muted&&(!solo||tr.solo);
+ const active=!isTrackEffectivelyMuted(i);
  return {
   wave1:s.wave1||'sawtooth',wave2:s.wave2||'sine',subWave:s.subWave||'sine',
   level1:s.osc1On===false?0:.46*clamp(s.osc1Level??100,0,100)/100,
@@ -1336,7 +1348,7 @@ function validate(data){
  if(data.sendFX&&typeof data.sendFX==='object'){const f=data.sendFX;s.sendFX.delayTime=clamp(Number(f.delayTime??s.sendFX.delayTime),.07,1.2);s.sendFX.feedback=clamp(Number(f.feedback??s.sendFX.feedback),0,85);s.sendFX.reverbDecay=clamp(Number(f.reverbDecay??s.sendFX.reverbDecay),.5,4);s.sendFX.chorusRate=clamp(Number(f.chorusRate??s.sendFX.chorusRate),.1,5);s.sendFX.chorusDepth=clamp(Number(f.chorusDepth??s.sendFX.chorusDepth),0,10)}
  return s;}
 
-/* Undo/redo 0.1.52: only editable project state is recorded.
+/* Undo/redo 0.1.53: only editable project state is recorded.
    Selection, playback position and audio file bytes are deliberately excluded.
    Sample file loading/import is not a reversible edit. */
 const HISTORY_LIMIT=48;
@@ -1428,7 +1440,7 @@ function toggleSelectedNote(){
  persist();renderAll();focusSelectedPad(false);
 }
 
-/* 0.1.52: Copy rectangular selections including off steps and their FX. */
+/* 0.1.53: Copy rectangular selections including off steps and their FX. */
 function copySelectedStep(){
  const cells=rangeCells();
  if(cells.length>1){
@@ -1557,7 +1569,28 @@ function updateLiveCutoff(trackIndex){nativeUpdateVAMix(trackIndex);if(!audio)re
  for(const voice of scheduledVoices){if(voice.trackIndex===trackIndex&&voice.filter&&!voice.released)voice.filter.frequency.setTargetAtTime(filterBaseCutoff(trackIndex),now,.02)}
  applyLFOs();
 }
-function applyTrackMix(){for(let i=0;i<TRACK_COUNT;i++)nativeUpdateVAMix(i);if(!audio)return;const solo=state.tracks.some(t=>t.solo);state.tracks.forEach((t,i)=>{const isOn=!t.muted&&!t.midiOnly&&(!solo||t.solo);audio.trackGains[i].gain.setTargetAtTime(isOn?(t.volume/100)**1.4:0,audio.ctx.currentTime,.018);audio.trackPans[i].pan.setTargetAtTime(t.pan/100,audio.ctx.currentTime,.02);
+// SOLO exclusively isolates one track; stored manual MUTE flags remain unchanged.
+function soloTrackIndex(){return state.tracks.findIndex(t=>t.solo)}
+function isTrackEffectivelyMuted(index){
+ const track=state.tracks[index];
+ return !track||track.muted||(soloTrackIndex()>=0&&!track.solo);
+}
+function setTrackMute(index){
+ const track=state.tracks[index];
+ if(!track||soloTrackIndex()>=0&&!track.solo)return;
+ track.muted=!track.muted;
+ if(isTrackEffectivelyMuted(index))midiOffTrack(index);
+ applyTrackMix();persist();renderAll();
+}
+function setTrackSolo(index){
+ const selected=state.tracks[index];
+ if(!selected)return;
+ const turnOn=!selected.solo;
+ state.tracks.forEach((track,i)=>{track.solo=turnOn&&i===index});
+ for(let i=0;i<TRACK_COUNT;i++)if(isTrackEffectivelyMuted(i))midiOffTrack(i);
+ applyTrackMix();persist();renderAll();
+}
+function applyTrackMix(){for(let i=0;i<TRACK_COUNT;i++)nativeUpdateVAMix(i);if(!audio)return;state.tracks.forEach((t,i)=>{const isOn=!isTrackEffectivelyMuted(i)&&!t.midiOnly;audio.trackGains[i].gain.setTargetAtTime(isOn?(t.volume/100)**1.4:0,audio.ctx.currentTime,.018);audio.trackPans[i].pan.setTargetAtTime(t.pan/100,audio.ctx.currentTime,.02);
  audio.delaySends[i].gain.setTargetAtTime((t.delaySend/100)*.7,audio.ctx.currentTime,.03);
  audio.reverbSends[i].gain.setTargetAtTime((t.reverbSend/100)*.85,audio.ctx.currentTime,.03);audio.chorusSends[i].gain.setTargetAtTime((t.chorusSend/100)*.45,audio.ctx.currentTime,.03)});audio.masterGain.gain.setTargetAtTime((state.master/100)*.84,audio.ctx.currentTime,.018);updateDistortionEngine();applyLFOs()}
 function getNoise(){if(audio.noise)return audio.noise;const length=Math.round(audio.ctx.sampleRate*1.5),arr=new Float32Array(length);for(let i=0;i<length;i++)arr[i]=(Math.random()*2-1);const b=audio.ctx.createBuffer(1,length,audio.ctx.sampleRate);b.getChannelData(0).set(arr);audio.noise=b;return b}
@@ -1790,7 +1823,7 @@ function sampleVoice(t,note,velocity,when,pitch=0,offsetPercent=0){
 function playTrack(t,note,velocity,when,gate=null,pitch=0,quality=null,sampleSlot=0,offsetPercent=0){
  if(!audio||t<0||t>=TRACK_COUNT)return null;
  const track=state.tracks[t],kind=kindOf(track);
- if(track.midiOnly||track.muted||(state.tracks.some(x=>x.solo)&&!track.solo))return null;
+ if(track.midiOnly||isTrackEffectivelyMuted(t))return null;
  if(kind==='sample'){const voice=sampleVoice(t,note,velocity,when,pitch,offsetPercent);return voice?[voice]:null;}
  if(kind==='drum'){
   if(hasDrumSamples(t)){const voice=drumSampleVoice(t,clamp(sampleSlot|0,0,4),velocity,when,offsetPercent);if(voice)return [voice];}
@@ -2116,9 +2149,15 @@ function renderGrid(){
   const controls=document.createElement('div');controls.className='lane-controls';
   for(const action of ['M','S']){
    const b=document.createElement('button');b.type='button';
-   b.className='lane-toggle'+(action==='M'&&t.muted?' muted':'')+(action==='S'&&t.solo?' solo':'');
+   const autoMuted=soloTrackIndex()>=0&&!t.solo;
+   const muted=isTrackEffectivelyMuted(track);
+   b.className='lane-toggle'+(action==='M'&&muted?' muted':'')+(action==='S'&&t.solo?' solo':'');
    b.textContent=action;
-   b.onclick=()=>{if(action==='M')t.muted=!t.muted;else t.solo=!t.solo;applyTrackMix();persist();renderAll()};
+   b.setAttribute('aria-label',(action==='M'?'Mute':'Solo')+' '+t.name);
+   b.setAttribute('aria-pressed',String(action==='M'?muted:t.solo));
+   b.title=action==='M'?(autoMuted?'Automatically muted by another solo track':t.muted?'Muted':'Mute track'):(t.solo?'Disable solo':'Solo this track');
+   if(action==='M')b.disabled=autoMuted;
+   b.onclick=()=>action==='M'?setTrackMute(track):setTrackSolo(track);
    controls.appendChild(b);
   }
   const lenSelect=document.createElement('select');lenSelect.className='lane-length';lenSelect.setAttribute('aria-label',t.name+' step length for pattern '+patternName(state.pattern));
@@ -2427,7 +2466,46 @@ function drawWave(){
   '<polyline points="'+waveform(sound.subWave||'sine',subOctave,sound.subDetune||0)+'" style="stroke:#91b6ec;opacity:'+(.10+.8*(sound.subOn===false?0:clamp(sound.subLevel??35,0,100)/100))+'"/>'+
   '</svg>';
 }
-function renderMixer(){const el=$('mixerStrips');el.replaceChildren();state.tracks.forEach((t,i)=>{const d=document.createElement('div');d.className='mixer-strip';if(!isDrum(i)&&!isSample(i)&&!isSynth(i)){d.classList.add('empty-mixer');d.innerHTML='<h3>'+String(i+1).padStart(2,'0')+' '+t.name+'</h3><div class="small-label">RESERVED SLOT · NO AUDIO</div><div><button class="btn">MUTE</button> <button class="btn">SOLO</button></div>';const buttons=d.querySelectorAll('button');buttons[0].classList.toggle('active',t.muted);buttons[1].classList.toggle('active',t.solo);buttons[0].onclick=()=>{t.muted=!t.muted;applyTrackMix();persist();renderMixer()};buttons[1].onclick=()=>{t.solo=!t.solo;applyTrackMix();persist();renderMixer()};el.appendChild(d);return;}d.innerHTML='<h3>'+String(i+1).padStart(2,'0')+' '+t.name+'</h3><div class="meter"><div class="meter-fill" data-track="'+i+'" role="progressbar" aria-label="Audio level '+t.name+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div><div class="small-label">VOL</div><input class="vertical-fader" type="range" min="0" max="100" value="'+t.volume+'" aria-label="Volume '+t.name+'"><output>'+t.volume+'%</output><div class="small-label" style="margin-top:12px">PAN</div><input class="vertical-fader" type="range" min="-100" max="100" value="'+t.pan+'" aria-label="Pan '+t.name+'"><div><button class="btn '+(t.muted?'active':'')+'">MUTE</button> <button class="btn '+(t.solo?'active':'')+'">SOLO</button></div>';const ranges=d.querySelectorAll('input');ranges[0].oninput=()=>{t.volume=Number(ranges[0].value);d.querySelector('output').textContent=t.volume+'%';applyTrackMix();persist()};ranges[1].oninput=()=>{t.pan=Number(ranges[1].value);applyTrackMix();persist()};const buttons=d.querySelectorAll('button');buttons[0].onclick=()=>{t.muted=!t.muted;applyTrackMix();persist();renderAll()};buttons[1].onclick=()=>{t.solo=!t.solo;applyTrackMix();persist();renderAll()};el.appendChild(d)})}
+function renderMixer(){
+ const el=$('mixerStrips');el.replaceChildren();
+ state.tracks.forEach((t,i)=>{
+  const d=document.createElement('div');d.className='mixer-strip';
+  const noInstrument=!isDrum(i)&&!isSample(i)&&!isSynth(i);
+  if(noInstrument){
+   d.classList.add('empty-mixer');
+   d.innerHTML='<h3>'+String(i+1).padStart(2,'0')+' '+t.name+'</h3>'+
+    '<div class="small-label">RESERVED SLOT · NO AUDIO</div>'+
+    '<div><button class="btn mixer-mute" type="button">MUTE</button> '+
+    '<button class="btn mixer-solo" type="button">SOLO</button></div>';
+  }else{
+   d.innerHTML='<h3>'+String(i+1).padStart(2,'0')+' '+t.name+'</h3>'+
+    '<div class="meter"><div class="meter-fill" data-track="'+i+'" role="progressbar" aria-label="Audio level '+t.name+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div>'+
+    '<div class="small-label">VOL</div>'+
+    '<input class="vertical-fader" type="range" min="0" max="100" value="'+t.volume+'" aria-label="Volume '+t.name+'">'+
+    '<output>'+t.volume+'%</output>'+
+    '<div class="small-label" style="margin-top:12px">PAN</div>'+
+    '<input class="vertical-fader" type="range" min="-100" max="100" value="'+t.pan+'" aria-label="Pan '+t.name+'">'+
+    '<div><button class="btn mixer-mute" type="button">MUTE</button> '+
+    '<button class="btn mixer-solo" type="button">SOLO</button></div>';
+   const ranges=d.querySelectorAll('input');
+   ranges[0].oninput=()=>{t.volume=Number(ranges[0].value);d.querySelector('output').textContent=t.volume+'%';applyTrackMix();persist()};
+   ranges[1].oninput=()=>{t.pan=Number(ranges[1].value);applyTrackMix();persist()};
+  }
+  const [mute,solo]=d.querySelectorAll('button');
+  const effectiveMute=isTrackEffectivelyMuted(i);
+  const autoMute=soloTrackIndex()>=0&&!t.solo;
+  mute.classList.toggle('mute-on',effectiveMute);
+  solo.classList.toggle('solo-on',t.solo);
+  mute.setAttribute('aria-pressed',String(effectiveMute));
+  solo.setAttribute('aria-pressed',String(t.solo));
+  mute.title=autoMute?'Muted by SOLO on another track':t.muted?'Muted manually':'Mute track';
+  solo.title=t.solo?'Turn solo off':'Solo this track';
+  mute.disabled=autoMute;
+  mute.onclick=()=>setTrackMute(i);
+  solo.onclick=()=>setTrackSolo(i);
+  el.appendChild(d);
+ });
+}
 function renderLFO(){
  const grid=$('lfoGrid');grid.replaceChildren();
  state.lfos.forEach((l,i)=>{
@@ -2772,8 +2850,7 @@ function midiOutputIsReady(t){
  const track=state.tracks[t];
  if(!track)return false;
  return midiOutEnabled&&!!selectedOutput&&selectedOutput.state==='connected'&&
-  (track.midiOnly||midiDestinationTrack(t))&&!track.muted&&
-  (!state.tracks.some(x=>x.solo)||track.solo);
+  (track.midiOnly||midiDestinationTrack(t))&&!isTrackEffectivelyMuted(t);
 }
 function midiSend(data,when=null,port=selectedOutput){
  if(!port)return;
@@ -2984,7 +3061,7 @@ function projectFileName(name,now=new Date()){
  if(safe)return safe+'.json';
  const pad=n=>String(n).padStart(2,'0');
  const stamp=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'_'+pad(now.getHours())+'-'+pad(now.getMinutes())+'-'+pad(now.getSeconds());
- return 'SquirrelStudio_0.1.52_'+stamp+'.json';
+ return 'SquirrelStudio_0.1.53_'+stamp+'.json';
 }
 async function saveProject(){
  // Samples restore asynchronously from IndexedDB after the page opens.
