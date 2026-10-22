@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.63**  
+**Current web version: 0.1.64**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,12 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.64
+
+- **Shift+click on a drum step** to cycle its assigned sample S1 → S2 → S3 → S4 → S5 → S1, without turning the step on/off or changing its FX, velocity or gate.
+- Hover a drum step to see its full assigned sample name from the shared 15-sample library. Screen readers also announce the sample assignment.
+- Active drum step labels still show S1–S5. The existing Step Editor quick-select buttons and five selectors per track in OPTIONS remain available.
 
 ## What is new in 0.1.63
 
