@@ -412,7 +412,7 @@
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark" aria-hidden="true">S</div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO UIT</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI NIET VERBONDEN</span></span><span class="version">BUILD 0.1.21</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark" aria-hidden="true">S</div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO UIT</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI NIET VERBONDEN</span></span><span class="version">BUILD 0.1.22</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ AUDIO STARTEN</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Afspelen">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="EDIT aan: noten typen in het sequencergrid">✎ EDIT UIT</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octaaf"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" value="120" aria-label="Tempo in BPM"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Mastervolume"><output id="masterOut">75%</output></label></div></section>
@@ -647,7 +647,7 @@ function nativeVAPatch(i){
   master:Math.pow(state.master/100,1.0)*.84,pan:tr.pan/100
  };
 }
-function nativeUpdateVAMix(i){if(nativeVAEnabled()&&i>=3&&i<=5)nativeVAMessage('mix',{track:i,patch:nativeVAPatch(i)})}
+function nativeUpdateVAMix(i){if(nativeVAEnabled()&&i>=0&&i<=5)nativeVAMessage('mix',{track:i,patch:nativeVAPatch(i)})}
 
 const sampleBuffers=new Map();
 // Visual sample cursor: record the BufferSource playback start, rate and loop points.
@@ -843,7 +843,7 @@ function updateLiveCutoff(trackIndex){nativeUpdateVAMix(trackIndex);if(!audio)re
  for(const voice of scheduledVoices){if(voice.trackIndex===trackIndex&&voice.filter&&!voice.released)voice.filter.frequency.setTargetAtTime(filterBaseCutoff(trackIndex),now,.02)}
  applyLFOs();
 }
-function applyTrackMix(){for(const i of [3,4,5])nativeUpdateVAMix(i);if(!audio)return;const solo=state.tracks.some(t=>t.solo);state.tracks.forEach((t,i)=>{const isOn=!t.muted&&(!solo||t.solo);audio.trackGains[i].gain.setTargetAtTime(isOn?(t.volume/100)**1.4:0,audio.ctx.currentTime,.018);audio.trackPans[i].pan.setTargetAtTime(t.pan/100,audio.ctx.currentTime,.02);
+function applyTrackMix(){for(let i=0;i<6;i++)nativeUpdateVAMix(i);if(!audio)return;const solo=state.tracks.some(t=>t.solo);state.tracks.forEach((t,i)=>{const isOn=!t.muted&&(!solo||t.solo);audio.trackGains[i].gain.setTargetAtTime(isOn?(t.volume/100)**1.4:0,audio.ctx.currentTime,.018);audio.trackPans[i].pan.setTargetAtTime(t.pan/100,audio.ctx.currentTime,.02);
  audio.delaySends[i].gain.setTargetAtTime((t.delaySend/100)*.7,audio.ctx.currentTime,.03);
  audio.reverbSends[i].gain.setTargetAtTime((t.reverbSend/100)*.85,audio.ctx.currentTime,.03)});audio.masterGain.gain.setTargetAtTime((state.master/100)*.84,audio.ctx.currentTime,.018);applyLFOs()}
 function getNoise(){if(audio.noise)return audio.noise;const length=Math.round(audio.ctx.sampleRate*1.5),arr=new Float32Array(length);for(let i=0;i<length;i++)arr[i]=(Math.random()*2-1);const b=audio.ctx.createBuffer(1,length,audio.ctx.sampleRate);b.getChannelData(0).set(arr);audio.noise=b;return b}
@@ -991,7 +991,16 @@ function synthVoice(track,note,velocity,when,gate=null){
 }
 function releaseVoiceScheduled(v,when){if(v.released)return;
  if(v.nativeId){v.released=true;v.releaseScheduled=when;nativeVAMessage('off',{id:v.nativeId},when);return;}v.released=true;v.releaseScheduled=when;const p=v.env.gain;const val=voiceGainAt(v,when);p.cancelScheduledValues(when);p.setValueAtTime(val,when);p.exponentialRampToValueAtTime(.0001,when+v.release);releaseFilterEnvelopes(v,when);v.oscs.forEach(o=>o.stop(when+v.release+.04))}
-function oneShot(type,track,velocity,when,pitch=0){const c=audio.ctx,vol=clamp(velocity/127,0,1),ratio=Math.pow(2,pitch/12),modGain=c.createGain();modGain.gain.value=1;modGain.connect(audio.trackGains[state.tracks.indexOf(track)]);if(type==='kick'){const osc=c.createOscillator(),gain=c.createGain();osc.type='sine';osc.frequency.setValueAtTime(165*ratio,when);osc.frequency.exponentialRampToValueAtTime(49*ratio,when+.09);osc.frequency.exponentialRampToValueAtTime(42*ratio,when+.26);gain.gain.setValueAtTime(.0001,when);gain.gain.exponentialRampToValueAtTime(vol*.95+.0001,when+.003);gain.gain.exponentialRampToValueAtTime(.0001,when+.4);osc.connect(gain).connect(modGain);osc.start(when);osc.stop(when+.42);osc.onended=()=>{osc.disconnect();gain.disconnect();modGain.disconnect()};return [{pitchParams:[osc.detune],modGain,released:false,drum:true}]}
+function oneShot(type,track,velocity,when,pitch=0){
+ // Embedded Windows desktop: Kick/Snare/Hi-Hat now use the same JUCE/ASIO
+ // audio device as Bass/Lead/Chord. Browser mode keeps Web Audio unchanged.
+ const nativeTrack=state.tracks.indexOf(track);
+ if(nativeVAEnabled()&&nativeTrack>=0&&nativeTrack<=2){
+  const nativeId=++nativeVoiceSerial;
+  nativeVAMessage('drum',{id:nativeId,track:nativeTrack,velocity,pitch,patch:nativeVAPatch(nativeTrack)},when);
+  return [{nativeId,drum:true,released:false,trackIndex:nativeTrack}];
+ }
+const c=audio.ctx,vol=clamp(velocity/127,0,1),ratio=Math.pow(2,pitch/12),modGain=c.createGain();modGain.gain.value=1;modGain.connect(audio.trackGains[state.tracks.indexOf(track)]);if(type==='kick'){const osc=c.createOscillator(),gain=c.createGain();osc.type='sine';osc.frequency.setValueAtTime(165*ratio,when);osc.frequency.exponentialRampToValueAtTime(49*ratio,when+.09);osc.frequency.exponentialRampToValueAtTime(42*ratio,when+.26);gain.gain.setValueAtTime(.0001,when);gain.gain.exponentialRampToValueAtTime(vol*.95+.0001,when+.003);gain.gain.exponentialRampToValueAtTime(.0001,when+.4);osc.connect(gain).connect(modGain);osc.start(when);osc.stop(when+.42);osc.onended=()=>{osc.disconnect();gain.disconnect();modGain.disconnect()};return [{pitchParams:[osc.detune],modGain,released:false,drum:true}]}
  const src=c.createBufferSource(),filter=c.createBiquadFilter(),gn=c.createGain();src.buffer=getNoise();src.playbackRate.value=ratio;filter.type='highpass';filter.frequency.value=clamp((type==='hat'?6200:1300)*ratio,200,15000);gn.gain.setValueAtTime(.0001,when);gn.gain.exponentialRampToValueAtTime(Math.max(.0002,(type==='hat'?.37:.6)*vol),when+.004);gn.gain.exponentialRampToValueAtTime(.0001,when+(type==='hat'?.11:.20));src.connect(filter).connect(gn).connect(modGain);src.start(when);src.stop(when+(type==='hat'?.13:.23));src.onended=()=>{src.disconnect();filter.disconnect();gn.disconnect()};let tone=null;if(type==='snare'){tone=c.createOscillator();const tg=c.createGain();tone.type='triangle';tone.frequency.value=175*ratio;tg.gain.setValueAtTime(.18*vol,when);tg.gain.exponentialRampToValueAtTime(.0001,when+.13);tone.connect(tg).connect(modGain);tone.start(when);tone.stop(when+.15);tone.onended=()=>{tone.disconnect();tg.disconnect()}}src.onended=()=>{src.disconnect();filter.disconnect();gn.disconnect();modGain.disconnect()};return [{pitchParams:[src.detune,...(type==='snare'?[tone.detune]:[])],modGain,released:false,drum:true}]}
 function sampleVoice(t,note,velocity,when,pitch=0){
  const track=state.tracks[t],buffer=sampleBuffers.get(t);
