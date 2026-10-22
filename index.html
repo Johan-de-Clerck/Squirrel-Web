@@ -479,6 +479,13 @@
 @media(max-width:850px){.song-mode-grid{grid-template-columns:1fr}#view-send .send-title,#view-send .send-row{min-width:660px;gap:10px}#view-send .sends-grid{overflow-x:auto}#view-send .send-global{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:1100px) and (max-height:850px){#view-send .send-row{min-height:43px;padding:5px 11px}}
 
+/* 0.1.79: four-operator FM algorithms and per-operator controls */
+.fm-mode-field,.fm-algorithm-field{grid-column:1/-1}
+.fm-mode-field select,.fm-algorithm-field select{background:#211a15;color:#caeddb;padding:7px;border:1px solid #8f795b;border-radius:6px;width:100%}
+.fm-operator-card{padding:9px 10px;background:#211c19;border:1px solid #6e5645;border-radius:7px;display:flex;flex-direction:column;gap:8px}
+.fm-operator-card h4{margin:0;color:#9edeb4;font:700 11px Consolas,monospace}
+.fm-operator-card .field{min-width:0}
+@media(max-width:600px){.fm-operator-card{width:100%}}
 /* 0.1.78: VA/FM engine switch and FM operator editor */
 .synth-engine-field{display:flex;flex-direction:column;gap:5px;max-width:360px;padding:9px 12px;background:#28241c;border:1px solid #775e42;border-radius:8px}
 .synth-engine-field select{background:#211a15;color:#caeddb;padding:8px;border:1px solid #8f795b;border-radius:6px}
@@ -3541,7 +3548,7 @@ function soundFieldControl(s,f){
   show();persist();
   if(f.k==='cutoff')updateLiveCutoff(state.selectedTrack);
    if(f.k==='pulseWidth')updateLivePulseWidth(state.selectedTrack);
-   if(f.k==='fmRatio'||f.k==='fmIndex'||f.k==='fmSustain')updateLiveFM(state.selectedTrack);
+   if(f.k==='fmRatio'||f.k==='fmIndex'||f.k==='fmSustain'||f.k.startsWith('fmOp'))updateLiveFM(state.selectedTrack);
   if(['osc1Level','osc2Level','subLevel'].includes(f.k))updateLiveOscillatorMix(state.selectedTrack);
   drawWave();
  };
@@ -3603,12 +3610,42 @@ function renderSound(){
  }
  if(s.engine==='fm'){
   const fmCard=document.createElement('section');fmCard.className='osc-section fm-engine-controls';
-  const title=document.createElement('h3');title.textContent='2-OPERATOR FM · OP2 → OP1 FREQUENCY';
+  const four=s.fmMode==='four';
+  const title=document.createElement('h3');title.textContent=four?'FOUR-OPERATOR FM':'TWO-OPERATOR FM';
+  const mode=document.createElement('label');mode.className='field fm-mode-field';
+  const modeTitle=document.createElement('span');modeTitle.className='field-head';modeTitle.textContent='OPERATORS';
+  const modeSelect=document.createElement('select');
+  modeSelect.setAttribute('aria-label','FM operator count');
+  modeSelect.add(new Option('2 OP · ORIGINAL FM','two'));
+  modeSelect.add(new Option('4 OP · MULTI-ALGORITHM','four'));
+  modeSelect.value=four?'four':'two';
+  modeSelect.onchange=()=>{s.fmMode=modeSelect.value;persist();renderSound()};
+  mode.append(modeTitle,modeSelect);
   const description=document.createElement('p');description.className='fm-engine-hint';
-  description.textContent='OP1 is the sine carrier; OP2 modulates its frequency. RATIO sets harmonic spacing, INDEX sets brightness, and the FM envelope changes INDEX across each note.';
-  fmCard.append(title,description);
+  description.textContent=four
+   ?'Choose how the four sine operators connect. An operator LEVEL controls its audible output when a carrier, or its modulation depth when a modulator. Algorithm changes apply to new notes.'
+   :'OP1 is the audible sine carrier; OP2 modulates frequency. RATIO sets harmonics and INDEX sets timbre.';
+  fmCard.append(title,mode,description);
+  if(four){
+   const algorithmField=document.createElement('label');algorithmField.className='field fm-algorithm-field';
+   const label=document.createElement('span');label.className='field-head';label.textContent='FM ALGORITHM';
+   const select=document.createElement('select');select.setAttribute('aria-label','Four operator FM algorithm');
+   for(const [key,config] of Object.entries(FM_ALGORITHMS))
+    select.add(new Option(config.name,key));
+   select.value=FM_ALGORITHMS[s.fmAlgorithm]?s.fmAlgorithm:'stack';
+   select.onchange=()=>{s.fmAlgorithm=select.value;persist();renderSound()};
+   algorithmField.append(label,select);fmCard.append(algorithmField);
+   for(let i=1;i<=4;i++){
+    const op=document.createElement('div');op.className='fm-operator-card';
+    const config=fmFourConfig(s);
+    const title=document.createElement('h4');title.textContent='OPERATOR '+i+(config.carriers.includes(i-1)?' · CARRIER':' · MODULATOR');
+    op.append(title);
+    op.append(soundFieldControl(s,{k:'fmOp'+i+'Ratio',label:'RATIO',min:.25,max:16,step:.25,unit:'×'}));
+    op.append(soundFieldControl(s,{k:'fmOp'+i+'Level',label:'LEVEL',min:0,max:100,step:1,unit:'%'}));
+    fmCard.append(op);
+   }
+  }else fmCard.append(soundFieldControl(s,{k:'fmRatio',label:'OP2 RATIO',min:.25,max:16,step:.25,unit:'×'}));
   for(const field of [
-   {k:'fmRatio',label:'OP2 RATIO',min:.25,max:16,step:.25,unit:'×'},
    {k:'fmIndex',label:'FM INDEX',min:0,max:12,step:.1,unit:''},
    {k:'fmAttack',label:'FM ATTACK',min:.003,max:2,step:.001,unit:' s'},
    {k:'fmDecay',label:'FM DECAY',min:.01,max:3,step:.01,unit:' s'},
@@ -3777,8 +3814,24 @@ function drawWave(){
  const sound=t.sound;
  if(sound.engine==='fm'){
   const index=clamp(Number(sound.fmIndex??3),0,12),ratio=clamp(Number(sound.fmRatio??2),.25,16),pts=[];
+  const config=fmFourConfig(sound);
+  const sources=Array.from({length:4},()=>[]);
+  if(sound.fmMode==='four')for(const [from,to] of config.edges)sources[to].push(from);
+  const phaseAt=(op,phase)=>{
+   const r=clamp(Number(sound['fmOp'+(op+1)+'Ratio']??(op+1)),.25,16);
+   let angle=phase*r;
+   for(const from of sources[op]){
+    const level=clamp(Number(sound['fmOp'+(from+1)+'Level']??75),0,100)/100;
+    angle+=index*level*Math.sin(phaseAt(from,phase));
+   }
+   return angle;
+  };
   for(let i=0;i<=170;i++){
-   const phase=i/170*6*Math.PI,y=Math.sin(phase+index*Math.sin(phase*ratio));
+   const phase=i/170*6*Math.PI;
+   let y=Math.sin(phase+index*Math.sin(phase*ratio));
+   if(sound.fmMode==='four')
+    y=config.carriers.reduce((sum,op)=>sum+
+     Math.sin(phaseAt(op,phase))*clamp(Number(sound['fmOp'+(op+1)+'Level']??100),0,100)/100,0)/config.carriers.length;
    pts.push((i/170*760).toFixed(1)+','+(60-y*30).toFixed(1));
   }
   $('waveViz').innerHTML='<svg viewBox="0 0 760 120" preserveAspectRatio="none" role="img" aria-label="FM sound preview">'+
