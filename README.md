@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.74**  
+**Current web version: 0.1.75**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,14 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.75
+
+- **Adjustable NOTE OFF release for SAMPLE tracks:** **SAMPLE EDITOR → SAMPLE RELEASE · C00** now provides a slider and precise numeric input from **1–3000 ms**, with the previous **65 ms** as its backward-compatible default.
+- When a SAMPLE voice carried from pattern A1 to B1 via **D00 — SAMPLE CONTINUE** reaches **C00 — NOTE OFF**, the sample enters the user-defined release. The same release applies to keyboard/MIDI key-up and ordinary sampler note replacement; new triggers snapshot the release setting.
+- **Drum slots** retain their independent RELEASE (0–2000 ms) in DRUM SAMPLES. Nothing about drum attack, decay, loop, trim, sample-offset FX or STOP fades changes.
+- Sample release is saved in project v23 and sampler entries of sample banks v3. Older projects and sample banks automatically use 65 ms.
+- New regression coverage in `tests/sampler-release.test.js` checks release timing, C00, manual note-off, project/bank roundtrips, clamping and legacy defaults.
 
 ## What is new in 0.1.74
 
