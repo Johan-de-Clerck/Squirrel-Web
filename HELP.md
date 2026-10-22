@@ -1,12 +1,16 @@
-# Squirrel Studio Web 0.1.74 — User Manual
+# Squirrel Studio Web 0.1.75 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Sample Editor — adjustable NOTE OFF release
+
+Select any **SAMPLE** track under **SAMPLE EDITOR**. The **SAMPLE RELEASE · C00** slider and numeric field set that track's note-off fade from **1 to 3000 milliseconds** (default **65 ms**). This applies after **C00** stops a sample that was carried into the next song pattern with **D00**, and also to manual keyboard/MIDI note releases. The setting affects newly triggered sample voices and does not forcibly shorten a currently playing one-shot. Sample loops can continue across patterns with D00 and fade out at C00 using the selected release. Each SAMPLE track has its own value; DRUM slots use their separate envelope RELEASE setting. Saved projects and sample banks retain this control, while older songs default to the previous 65 ms behavior.
 
 ### Step FX D00 — SAMPLE CONTINUE (long drum and sampler audio)
 
 Choose **D · SAMPLE CONTINUE** in **Step FX** on a DRUM or SAMPLE note. The sample may play through the end of the current pattern into the next one, including a different Song Mode pattern. This is especially useful when a waveform is longer than a 4-, 16- or 32-step pattern. A looping drum sample with D00 on its note is not ended by the usual step gate. A D00 on a later empty FX row also marks a still-playing sample for continuation, although for a drum loop the best place is the original note step to bypass its gate.
 
-On a later step in the same track, select **C · NOTE OFF** (C00), with the note step turned OFF. C00 ends *all* continued sample voices on that track, even if they began in a previous pattern, using their RELEASE rather than a hard cut. Drum slots use their own RELEASE control; regular sampler tracks use the existing sampler release. Other tracks are unaffected. One-shots can still finish naturally before C00, and **STOP** always fades all sample voices. D00 needs no numerical FX parameter and is saved inside the pattern along with the other step effects.
+On a later step in the same track, select **C · NOTE OFF** (C00), with the note step turned OFF. C00 ends *all* continued sample voices on that track, even if they began in a previous pattern, using their RELEASE rather than a hard cut. Drum slots use their own RELEASE control; regular sampler tracks use the new adjustable **SAMPLE RELEASE · C00** value in the Sample Editor (1–3000 ms, default 65 ms). Other tracks are unaffected. One-shots can still finish naturally before C00, and **STOP** always fades all sample voices. D00 needs no numerical FX parameter and is saved inside the pattern along with the other step effects.
 
 ## 1. Getting started
 
