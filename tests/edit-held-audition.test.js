@@ -1,0 +1,56 @@
+// Squirrel Studio 0.1.57 — held note entry in EDIT ON.
+// Run: node tests/edit-held-audition.test.js (no dependencies).
+'use strict';
+const fs=require('node:fs');
+const path=require('node:path');
+const assert=require('node:assert/strict');
+const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+assert.ok(html.includes('startEditNotePreview(e.key.toLowerCase(),track,step)'),'Keyboard entry calls held preview');
+assert.ok(html.includes('stopEditNotePreview(key);'),'Keyup releases EDIT preview');
+assert.ok(html.includes('if(!state.editMode)stopAllEditNotePreviews()'),'EDIT OFF releases previews');
+assert.ok(html.includes('stopEnterPreview();stopAllEditNotePreviews();'),'STOP releases EDIT previews');
+let app=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+assert.ok(app);
+app=app.replace(/installNotes\(\);bindings\(\);bindSampleEditor\(\);bindDrumSamples\(\);bindSampleBank\(\);attachStepRangeSelection\(\);resetUndoHistory\(\);renderAll\(\);refreshOutputs\(\);requestAnimationFrame\(uiTick\);bootstrapDemoJson\(\);/,'');
+const run=new Function('window','document','localStorage','console','structuredClone',app+`
+ const eq=(a,b,desc)=>{if(JSON.stringify(a)!==JSON.stringify(b))throw Error(desc+': '+JSON.stringify(a)+' vs '+JSON.stringify(b))};
+ state=fresh(false);
+ const calls=[],voices=[];
+ audio={ctx:{state:'running',currentTime:7}};
+ playTrack=(...args)=>{calls.push(['on',args[0],args[1],args[2],args[3],args[7],args[8]]);const v={id:voices.length+1};voices.push(v);return [v]};
+ releaseVoice=(v,when)=>{calls.push(['off',v.id,when])};
+ const step={on:true,note:52,velocity:93,fx:9,fxAmount:50,sampleSlot:3,chordMode:null};
+ startEditNotePreview('z',6,step);
+ eq(calls,[['on',6,52,93,7.005,3,.5]],'EDIT keydown previews selected step and FX 950');
+ eq(editNotePreviews.has('z'),true,'Key remains held until keyup');
+ stopEditNotePreview('z');
+ eq(calls.at(-1),['off',1,7],'Keyup releases held sample');
+ eq(editNotePreviews.size,0,'Keyup clears preview session');
+ startEditNotePreview('x',6,{...step,note:55});
+ startEditNotePreview('c',6,{...step,note:59});
+ eq(calls.filter(x=>x[0]==='off').length,2,'Second key stops first preview');
+ eq([...editNotePreviews.keys()],['c'],'Only newest edit preview remains active');
+ stopAllEditNotePreviews();
+ eq(calls.filter(x=>x[0]==='off').length,3,'Stop all previews releases last key');
+ // MIDI-only tracks must send explicit note-off, not play internal audio.
+ state.tracks[6].midiOnly=true;
+ const midiCalls=[];
+ midiPlayStep=(...args)=>midiCalls.push(['on',args[0],args[1],args[4]]);
+ midiOffTrack=t=>midiCalls.push(['off',t]);
+ startEditNotePreview('q',6,step);
+ stopEditNotePreview('q');
+ eq(midiCalls,[['on',6,52,true],['off',6]],'Held EDIT MIDI preview terminates on keyup');
+ // Async initialization that completes after keyup must not play a ghost note.
+ state.tracks[6].midiOnly=false;
+ audio=null;let onReady=null,asyncPlays=0;
+ initAudio=()=>({then(fn){onReady=fn;return {catch(){}}}});
+ playTrack=()=>{asyncPlays++;return []};
+ startEditNotePreview('w',6,step);
+ stopEditNotePreview('w');
+ audio={ctx:{state:'running',currentTime:10}};
+ onReady(true);
+ eq(asyncPlays,0,'Released key cannot trigger delayed audio initialization');
+ eq(editNotePreviews.size,0,'No orphan preview after async initialization');
+ return 'PASS: held EDIT note, release, overlap, FX 950, MIDI off and canceled async startup';
+`);
+console.log(run({}, {}, {getItem:()=>null,setItem:()=>{}},{warn:()=>{},log:()=>{},error:()=>{}},structuredClone));
