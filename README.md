@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.57**  
+**Current web version: 0.1.58**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -21,7 +21,14 @@ For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and op
 
 Read [HELP.md](HELP.md) for the full English user guide.
 
-## What is new in 0.1.57
+## What is new in 0.1.58
+
+- **FX 9 and sample loops:** sample offsets no longer push a LOOP START beyond LOOP END. Normal offsets within the loop retain the original saved loop handles and work correctly with the Sample waveform cursor.
+- **Offset after LOOP END:** when FX 9 starts playback at or after the sample's loop end, that triggered voice plays the remaining trimmed tail once instead of trying to create an invalid loop. For example, `950` still starts at 50% of the trimmed sample even when LOOP END is 40%.
+- **Safer held-note navigation:** holding Enter or a ProTracker note key while changing track, pattern bank, or workspace now releases the audition immediately instead of leaving the previous track sounding.
+- Extended tests for loop start/end boundaries and one-shot tail playback, as well as held note-off during track, pattern and workspace changes.
+
+## Improvements from 0.1.57
 
 - **Hold-to-audition while EDIT ON:** after entering a note with a ProTracker keyboard key, its instrument sounds for as long as you hold that key. Releasing the key sends note-off, rather than letting a fixed 220 ms preview or a long sample finish.
 - Applies to Sample, loaded Drum, synth and MIDI OUT ONLY tracks; the selected step's FX 9 sample offset and drum sample slot are included in the audition.
@@ -115,7 +122,7 @@ Read [HELP.md](HELP.md) for the full English user guide.
 - Each BASS/LEAD/CHORD track has its own oscillator, sub-oscillator, filter and envelope patch. Switching between synth types preserves their respective sound presets.
 - Track-type selection is available both in **SEQUENCER → Step Editor** and **OPTIONS → Track Instrument Types**.
 - The sample and drum editors show the tracks configured for their instrument type.
-- Fixes in 0.1.57: sampler root-note persistence, sample loading during project/track switching, default sampler volume when resetting the mixer, MIDI-independent audio device wording, and clearer empty-sampler behavior.
+- Fixes in 0.1.58: sampler root-note persistence, sample loading during project/track switching, default sampler volume when resetting the mixer, MIDI-independent audio device wording, and clearer empty-sampler behavior.
 - The Step Editor and Step FX retain a consistent height; their vertical scrollbars are hidden.
 - Import/export sample banks supports **all eight tracks** (bank format v2); older v1 sample banks can still be imported.
 
@@ -148,7 +155,7 @@ Read [HELP.md](HELP.md) for the full English user guide.
 
 ## Repository files
 
-- `index.html` — **current Squirrel Studio Web 0.1.57** application
+- `index.html` — **current Squirrel Studio Web 0.1.58** application
 - `demo.json` — included song with sample data
 - `squirrel-icon.webp` — mascot and favicon
 - `README.md` — current version, downloads and overview
@@ -161,4 +168,4 @@ Read [HELP.md](HELP.md) for the full English user guide.
 
 The web edition uses **Web Audio**, not direct ASIO. MIDI device access depends on browser permissions and supported operating systems. The Windows JUCE desktop source is experimental. Audio playback and browser behavior require manual testing on the actual device in addition to code-level regression tests.
 
-To check that the latest build loaded, look for **BUILD 0.1.57** in the app header. If an earlier build appears, replace locally extracted files or force refresh (**Ctrl+F5**).
+To check that the latest build loaded, look for **BUILD 0.1.58** in the app header. If an earlier build appears, replace locally extracted files or force refresh (**Ctrl+F5**).
