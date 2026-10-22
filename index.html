@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.1.68 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.1.69 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -742,7 +742,7 @@ input[type="password"],textarea,
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.68</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.69</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1033,7 +1033,7 @@ function applyFXCommand(rt, step){
  rt.activeAmount=amount||rt.memory[effect]||0;
 }
 const DRUM_LIBRARY_SIZE=15;
-function defaultDrumSlot(name='',data=null,chokeGroup=0){return {name,data,chokeGroup,libraryIndex:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,slotVolume:100,slotPitch:0,slotFine:0,slotPan:0,slotAttack:2,slotDecay:0}}
+function defaultDrumSlot(name='',data=null,chokeGroup=0){return {name,data,chokeGroup,libraryIndex:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,slotVolume:100,slotPitch:0,slotFine:0,slotPan:0,slotAttack:2,slotDecay:0,slotRelease:18}}
 function drumSlotDetuneCents(item){
  return clamp(Number(item?.slotPitch??0)||0,-24,24)*100+clamp(Number(item?.slotFine??0)||0,-100,100);
 }
@@ -1068,7 +1068,7 @@ function scheduleDrumSlotEnvelope(param,plan){
 }
 function resetDrumSlotEnvelope(track,slot){
  const item=state.drumSamples?.[track]?.[slot];if(!item)return;
- item.slotAttack=2;item.slotDecay=0;
+ item.slotAttack=2;item.slotDecay=0;item.slotRelease=18;
  persist();renderDrumSamples();
 }
 function fresh(withDemo=true){const tracks=bases.map((b,i)=>({...b,trackKind:i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample',drumType:['kick','snare','hat'][i%3],name:kindName(i,i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample'),volume:i>=6?78:b.volume,muted:false,solo:false,slotKind:i>=6?'sampler':'empty',sound:defaultSound(b),kindPatches:{},midiOnly:false,midiChannel:clamp(b.channel-1,0,15),sampleName:'',sampleRoot:48,sampleData:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,sampleCutoff:12000,sampleResonance:.7,chorusSend:0,distortion:0}));const patterns=Array.from({length:PATTERN_COUNT},()=>tracks.map((_,t)=>Array.from({length:MAX_STEPS},()=>makeStep(t))));
@@ -1252,7 +1252,8 @@ async function loadDrumSampleFile(t,slot,file){
   state.drumSamples[t][slot]={...defaultDrumSlot(name,data,previous?.chokeGroup||0),
    slotVolume:previous?.slotVolume??100,slotPitch:previous?.slotPitch??0,
    slotFine:previous?.slotFine??0,slotPan:previous?.slotPan??0,
-   slotAttack:previous?.slotAttack??2,slotDecay:previous?.slotDecay??0};
+   slotAttack:previous?.slotAttack??2,slotDecay:previous?.slotDecay??0,
+   slotRelease:previous?.slotRelease??18};
   rememberDrumSlot(t,slot);
   drumSampleBuffers.set(drumSlotKey(t,slot),decoded);
   try{await sampleDB('put',drumSlotKey(t,slot),state.drumSamples[t][slot])}
@@ -1308,7 +1309,9 @@ function drumSampleVoice(t,slot,velocity,when,offsetPercent=0,gate=null){
    prior.clear();
   }
  }
- const voice={pitchParams:[src.detune],baseDetune,modGain,drum:true,released:false,trackIndex:t,src};
+ const drumRelease=clamp(Number(item.slotRelease??18)||0,0,2000)/1000;
+ const voice={pitchParams:[src.detune],baseDetune,modGain,drum:true,
+  drumRelease,released:false,trackIndex:t,src,gateOff:null};
  scheduledVoices.add(voice);
  const groupEntry={src,gain,envelope,level:peak};
  if(group){
@@ -1321,13 +1324,19 @@ function drumSampleVoice(t,slot,velocity,when,offsetPercent=0,gate=null){
   try{src.disconnect();gain.disconnect();slotPanner.disconnect();modGain.disconnect()}catch(e){}
  };
  src.start(when,plan.startAt);
- // Stop silent sources once the decay reaches zero, without altering legacy
- // one-shots or sustained loops when DECAY is OFF.
+ // Stop silent sources once decay reaches zero. Loop gates get an explicit
+ // release ramp; one-shots retain their natural length independent of gate.
  const envelopeStop=envelope.decayEnd===null?Infinity:envelope.decayEnd+.01;
  if(plan.loop){
-  const gateStop=gate===null?Infinity:when+Math.max(.03,gate);
-  const end=Math.min(envelopeStop,gateStop);
-  if(Number.isFinite(end))src.stop(end);
+  const gateOff=gate===null?Infinity:when+Math.max(.03,gate);
+  if(Number.isFinite(gateOff)&&gateOff<envelopeStop){
+   const fade=Math.max(.001,drumRelease);
+   voice.gateOff=gateOff;
+   modGain.gain.setValueAtTime(1,when);
+   modGain.gain.setValueAtTime(1,gateOff);
+   modGain.gain.linearRampToValueAtTime(0,gateOff+fade);
+   src.stop(Math.min(envelopeStop,gateOff+fade+.007));
+  }else if(Number.isFinite(envelopeStop))src.stop(envelopeStop);
  }else{
   const tailStop=when+Math.max(.001,(plan.endAt-plan.startAt)/drumSlotPlaybackRate(item))+.01;
   src.stop(Math.min(tailStop,envelopeStop));
@@ -1467,9 +1476,9 @@ function renderDrumSamples(){
    }
    const envSettings=document.createElement('div');envSettings.className='drum-slot-envelope';
    const envelopeTitle=document.createElement('span');envelopeTitle.className='drum-env-title';
-   envelopeTitle.textContent='AMPLITUDE ENVELOPE · DECAY 0 = OFF';
+   envelopeTitle.textContent='AMPLITUDE ENVELOPE · DECAY 0 = OFF · RELEASE AT NOTE-OFF';
    envSettings.append(envelopeTitle);
-   for(const [field,label,max,fallback] of [['slotAttack','ATTACK',500,2],['slotDecay','DECAY',3000,0]]){
+   for(const [field,label,max,fallback] of [['slotAttack','ATTACK',500,2],['slotDecay','DECAY',3000,0],['slotRelease','RELEASE',2000,18]]){
     const wrap=document.createElement('label');wrap.className='drum-slot-setting';
     const caption=document.createElement('span');caption.textContent=label+' (ms)';
     const slider=document.createElement('input');slider.type='range';
@@ -1490,7 +1499,7 @@ function renderDrumSamples(){
    }
    const resetEnvelope=document.createElement('button');resetEnvelope.type='button';
    resetEnvelope.className='mini-btn drum-slot-reset';resetEnvelope.textContent='RESET ENV';
-   resetEnvelope.title='Restore 2 ms attack and disable decay; keep sample, mix, trim, loop and choke';
+   resetEnvelope.title='Restore 2 ms attack, decay off and 18 ms release; keep sample, mix, trim, loop and choke';
    resetEnvelope.onclick=()=>resetDrumSlotEnvelope(drumEditorTrack,slot);
    envSettings.append(resetEnvelope);
    const resetMix=document.createElement('button');resetMix.type='button';resetMix.className='mini-btn drum-slot-reset';
@@ -1636,6 +1645,7 @@ s.drumSamples=Array.from({length:TRACK_COUNT},(_,t)=>Array.from({length:5},(_,sl
   normalized.slotPan=clamp(Number(item.slotPan??0)||0,-100,100);
   normalized.slotAttack=clamp(Number(item.slotAttack??2)||0,0,500);
   normalized.slotDecay=clamp(Number(item.slotDecay??0)||0,0,3000);
+  normalized.slotRelease=clamp(Number(item.slotRelease??18)||0,0,2000);
   normalized.libraryIndex=Number.isInteger(item.libraryIndex)&&item.libraryIndex>=0&&item.libraryIndex<DRUM_LIBRARY_SIZE?item.libraryIndex:null;
   sanitizeSampleMarkers(normalized);
   return normalized;
@@ -2037,11 +2047,14 @@ function releaseVoice(v,when){if(v.released)return;
   if(audio&&v.modGain){
    const t=Math.max(audio.ctx.currentTime,when);
    try{
-    const gain=v.modGain.gain;
-    gain.cancelScheduledValues(t);
-    gain.setValueAtTime(Math.max(0,gain.value),t);
-    gain.linearRampToValueAtTime(0,t+.018);
-    if(v.src)v.src.stop(t+.025);
+    const gain=v.modGain.gain,fade=Math.max(.001,v.drumRelease??.018);
+    // Use the current level, including an existing scheduled gate release.
+    const level=v.gateOff!==null&&v.gateOff!==undefined&&t>=v.gateOff
+     ?clamp(1-(t-v.gateOff)/fade,0,1):Math.max(0,gain.value);
+    if(typeof gain.cancelAndHoldAtTime==='function')gain.cancelAndHoldAtTime(t);
+    else {gain.cancelScheduledValues(t);gain.setValueAtTime(level,t)}
+    gain.linearRampToValueAtTime(0,t+fade);
+    if(v.src)v.src.stop(t+fade+.007);
    }catch(e){console.warn('Drum note-off:',e)}
   }
   return;
@@ -3537,6 +3550,7 @@ function validateSampleBank(pack){
   output.slotPan=clamp(Number(item.slotPan??0)||0,-100,100);
   output.slotAttack=clamp(Number(item.slotAttack??2)||0,0,500);
   output.slotDecay=clamp(Number(item.slotDecay??0)||0,0,3000);
+  output.slotRelease=clamp(Number(item.slotRelease??18)||0,0,2000);
   output.libraryIndex=Number.isInteger(item.libraryIndex)&&item.libraryIndex>=0&&item.libraryIndex<DRUM_LIBRARY_SIZE?item.libraryIndex:null;
   sanitizeSampleMarkers(output);return output;
  }));
