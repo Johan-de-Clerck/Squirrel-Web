@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.1.35 — User Manual
+# Squirrel Studio Web 0.1.38 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -27,7 +27,7 @@ Use **SEQUENCER**, **SONG MODE**, **SYNTH**, **MIXER**, **LFO / ENVELOPES**, **D
 
 ## 3. Sequencer and entering notes
 
-Clicking any note cell **only selects** that cell: it does not insert or erase a note. An active step displays its note or the relevant drum sample slot. Select a cell and use **Enter** to toggle it on/off, **Delete** to clear its note, or enter a pitch with the computer keyboard while **EDIT ON**.
+Clicking any note cell **only selects** that cell: it does not insert or erase a note. **Hold the left mouse button and drag** from one step to another to select a highlighted, rectangular range; this also works across multiple tracks. Release the button to finish. Drag-selecting does not change the music. Press **Delete** to clear the notes in the range (FX remain). Clicking once elsewhere clears the range and selects a single step. An active step displays its note or the relevant drum sample slot. Select a cell and use **Enter** to toggle it on/off, **Delete** to clear its note, or enter a pitch with the computer keyboard while **EDIT ON**.
 
 The current keyboard layout for entering notes is `A W S E D F T G Y H U J`; use the octave selector to change the range. When editing notes, the cursor advances unless already at the end of the selected track.
 
@@ -39,11 +39,14 @@ The current keyboard layout for entering notes is `A W S E D F T G Y H U J`; use
 | Left / Right | Previous / next step |
 | Up / Down | Previous / next track |
 | Ctrl+C / Ctrl+V (focused grid cell) | Copy / paste the whole step |
+| Ctrl+Z / Ctrl+Y | Undo / redo an edit; Ctrl+Shift+Z also redoes |
+| Drag the mouse from one step to another | Select a rectangular range across steps/tracks |
+| Delete with a range selected | Delete notes in that range, keeping FX |
 | COPY STEP / PASTE STEP | Copy/paste the note, drum slot, velocity, gate, ratchet, chance and FX |
 | Space | Start/stop playback |
 | Mouse click on grid | Move selection only |
 
-A copied step may be pasted onto a different track, step or pattern. **COPY PATTERN** and **PASTE PATTERN** copy the entire pattern and its per-track lengths. In the Step Editor you can also edit velocity, gate, ratchet, chance and the selected drum sample.
+**UNDO / REDO** buttons are available in the Step Editor. They reverse changes to notes, step parameters, pattern lengths, pattern names and other editable project parameters. They do not undo loading a different project or importing/replacing the audio files. A copied step may be pasted onto a different track, step or pattern. **COPY PATTERN** and **PASTE PATTERN** copy the entire pattern and its per-track lengths. In the Step Editor you can also edit velocity, gate, ratchet, chance and the selected drum sample.
 
 ## 4. Patterns, lengths and Song Mode
 
@@ -67,6 +70,10 @@ Each drum track remembers its **most recently selected sample slot** independent
 - Use the play button beside a loaded slot to preview it, or **×** to clear it.
 
 If a drum track has **no samples loaded**, it uses the original synthesized drum sound. Once samples are loaded on that track, each step plays its assigned sample slot; selecting an empty slot produces no sample sound. The current sample selection is saved with each step, and the preferred slot per track is stored in project JSON.
+
+### Choke groups
+
+Every drum sample slot has a **CHOKE** selector: **OFF**, **1**, **2**, **3**, or **4**. When a sample in a choke group plays, it quickly fades out other samples currently playing in the *same* group, even if they are on different drum tracks. For example, assign an open hi-hat and a closed hi-hat to **group 1**: the closed hat will cut off the open hat. **OFF** means the slot does not participate in choking. Choke groups are saved in project JSON and portable Sample Banks. Existing projects default to **OFF**.
 
 ## 6. Sampler tracks 7 and 8
 
@@ -128,7 +135,7 @@ A sample bank is **not** a complete project backup. Use **SAVE PROJECT** as well
 - **OPTIONS → AUTO-LOAD ON START** intentionally makes the demo override the local song at every startup; this is opt-in.
 - To replace the hosted demo, export a **complete project JSON** (including embedded samples), rename it `demo.json`, and upload it alongside `index.html`.
 
-If `demo.json` is missing or cannot be fetched, the app still opens. The included `demo.json` is an example project until you replace it with your own song.
+If `demo.json` is missing or cannot be fetched, the app still opens. The included `demo.json` is the **Johan_01** song with embedded kick, clap, snare, and closed hi-hat audio, plus named patterns **Main**, **Odd Track** and **Odd Snare**. Replace it with a different complete project JSON whenever you choose.
 
 ## 11. MIDI input/output and audio devices
 
@@ -148,6 +155,7 @@ The web version uses **Web Audio** via the browser and Windows audio stack. **It
 | Loaded samples disappeared | Import your project JSON or Sample Bank backup; browser storage can be cleared |
 | External MIDI is silent | Connect/authorize your MIDI device; select the correct port/channel, enable MIDI OUT |
 | Keyboard shortcut has no effect | Focus a sequencer cell rather than a text entry, dropdown, or other UI control |
+| Drag selection does not appear | Drag from one enabled note or FX cell to another while holding the left mouse button |
 | Large project JSON | Embedded WAV/audio is saved inside project and sample bank files |
 
 ### Known limitations
@@ -157,4 +165,4 @@ The web version uses **Web Audio** via the browser and Windows audio stack. **It
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.1.35.**
+**Documentation version: Squirrel Studio Web 0.1.38.**
