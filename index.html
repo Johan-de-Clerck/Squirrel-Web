@@ -2536,6 +2536,16 @@ function voiceGainAt(v,t){
  if(age<e.attack+e.decay)return Math.max(.0002,peak+(sustain-peak)*(age-e.attack)/e.decay);
  return Math.max(.0002,sustain);
 }
+function releaseFMModulation(v,when){
+ if(!v.fmDepth)return;
+ const param=v.fmDepth.gain;
+ // Oscillator FM depth follows the note's release even with a high sustain.
+ try{
+  if(typeof param.cancelAndHoldAtTime==='function')param.cancelAndHoldAtTime(when);
+  else {param.cancelScheduledValues(when);param.setValueAtTime(Math.max(0,param.value),when)}
+  param.linearRampToValueAtTime(0,when+v.release);
+ }catch(e){console.warn('FM release:',e)}
+}
 function releaseVoice(v,when){if(v.released)return;
  if(v.nativeId){v.released=true;nativeVAMessage('off',{id:v.nativeId},when);scheduledVoices.delete(v);return;}
  if(v.drum){
@@ -2556,7 +2566,7 @@ function releaseVoice(v,when){if(v.released)return;
   }
   return;
  }
- v.released=true;const t=Math.max(audio.ctx.currentTime,when);try{const p=v.env.gain;const level=voiceGainAt(v,t);p.cancelScheduledValues(t);p.setValueAtTime(level,t);p.exponentialRampToValueAtTime(.0001,t+v.release);releaseFilterEnvelopes(v,t);v.oscs.forEach(o=>o.stop(t+v.release+.04));setTimeout(()=>scheduledVoices.delete(v),Math.max(50,(t+v.release+.2-audio.ctx.currentTime)*1000))}catch(e){scheduledVoices.delete(v)}}
+ v.released=true;const t=Math.max(audio.ctx.currentTime,when);try{const p=v.env.gain;const level=voiceGainAt(v,t);p.cancelScheduledValues(t);p.setValueAtTime(level,t);p.exponentialRampToValueAtTime(.0001,t+v.release);releaseFMModulation(v,t);releaseFilterEnvelopes(v,t);v.oscs.forEach(o=>o.stop(t+v.release+.04));setTimeout(()=>scheduledVoices.delete(v),Math.max(50,(t+v.release+.2-audio.ctx.currentTime)*1000))}catch(e){scheduledVoices.delete(v)}}
 const pulseCache=new Map();function pulseWave(ctx,duty){const key=Math.round(duty);if(pulseCache.has(key))return pulseCache.get(key);const d=key/100,len=65,re=new Float32Array(len),im=new Float32Array(len);for(let n=1;n<len;n++){re[n]=2*Math.sin(Math.PI*n*d)**2/(Math.PI*n);im[n]=Math.sin(2*Math.PI*n*d)/(Math.PI*n)}const wave=ctx.createPeriodicWave(re,im,{disableNormalization:false});pulseCache.set(key,wave);return wave}
 function oscillatorMixGain(s,osc){
  if(osc===0)return s.osc1On===false?0:.46*clamp(s.osc1Level??100,0,100)/100;
@@ -2577,8 +2587,57 @@ function updateLiveOscillatorMix(trackIndex){
   });
  }
 }
+// Two-operator phase/frequency modulation: operator 2 drives operator 1's
+// frequency at audio rate. The modulation index has its own ADS envelope.
+function fmSynthVoice(track,note,velocity,when,gate=null){
+ const c=audio.ctx,s=track.sound,index=state.tracks.indexOf(track),frequency=hz(note);
+ const carrier=c.createOscillator(),modulator=c.createOscillator();
+ const depth=c.createGain(),out=c.createGain(),volume=c.createGain(),filter=c.createBiquadFilter();
+ const ratio=clamp(Number(s.fmRatio??2),.25,16);
+ const fmIndex=clamp(Number(s.fmIndex??3),0,12);
+ const maxHz=c.sampleRate?c.sampleRate*.45:18000;
+ const peak=Math.min(frequency*fmIndex,maxHz);
+ carrier.type='sine';modulator.type='sine';
+ carrier.frequency.setValueAtTime(Math.min(frequency,maxHz),when);
+ modulator.frequency.setValueAtTime(Math.min(frequency*ratio,maxHz),when);
+ modulator.connect(depth).connect(carrier.frequency);
+ const attack=Math.max(.003,Number(s.fmAttack??.01));
+ const decay=Math.max(.01,Number(s.fmDecay??.3));
+ const sustain=clamp(Number(s.fmSustain??30),0,100)/100;
+ depth.gain.setValueAtTime(0,when);
+ depth.gain.linearRampToValueAtTime(peak,when+attack);
+ depth.gain.linearRampToValueAtTime(peak*sustain,when+attack+decay);
+ filter.type='lowpass';filter.frequency.setValueAtTime(s.cutoff,when);filter.Q.value=s.resonance;
+ const filterEnvelopes=attachFilterEnvelopes(filter,index,when);
+ audio.cutoffBuses[index].connect(filter.frequency);
+ carrier.connect(volume).connect(filter).connect(out).connect(audio.trackGains[index]);
+ const modGain=c.createGain();modGain.gain.value=1;
+ // The separate gain is required for the tracker's note volume/pitch effects.
+ out.disconnect();out.connect(modGain).connect(audio.trackGains[index]);
+ volume.gain.value=.65;
+ gainEnv(out.gain,when,velocity,s.attack,s.decay,s.sustain);
+ const v={engine:'fm',env:out,oscs:[carrier,modulator],pitchParams:[carrier.detune,modulator.detune],
+  modGain,release:Math.max(.02,s.release),released:false,trackIndex:index,
+  filter,filterEnvelopes,fmDepth:depth,
+  ampEnvelope:{start:when,peak:Math.max(.0002,velocity/127*.5),
+   attack:Math.max(.003,s.attack),decay:Math.max(.01,s.decay),sustain:s.sustain}};
+ carrier.start(when);modulator.start(when);
+ scheduledVoices.add(v);
+ carrier.onended=()=>{
+  scheduledVoices.delete(v);
+  try{
+   carrier.disconnect();modulator.disconnect();depth.disconnect();volume.disconnect();
+   audio.cutoffBuses[index].disconnect(filter.frequency);
+   filterEnvelopes.forEach(e=>{try{e.source.stop();e.source.disconnect()}catch(_){}});
+   filter.disconnect();out.disconnect();modGain.disconnect();
+  }catch(_){}
+ };
+ if(gate!==null)releaseVoiceScheduled(v,when+Math.max(.035,gate));
+ return v;
+}
 function synthVoice(track,note,velocity,when,gate=null){
  const c=audio.ctx,s=track.sound,f=hz(note),trackIndex=state.tracks.indexOf(track);
+ if(s.engine==='fm')return fmSynthVoice(track,note,velocity,when,gate);
  // Windows native mode: JUCE renders this VA voice through ASIO/WASAPI.
  // Web mode falls back to the original Web Audio synthesis below unchanged.
  if(nativeVAEnabled() && trackIndex>=3 && trackIndex<=5 && isSynth(trackIndex)){
@@ -2649,7 +2708,7 @@ function releaseVoiceScheduled(v,when){if(v.released)return;
   }
   return;
  }
- if(v.nativeId){v.released=true;v.releaseScheduled=when;nativeVAMessage('off',{id:v.nativeId},when);return;}v.released=true;v.releaseScheduled=when;const p=v.env.gain;const val=voiceGainAt(v,when);p.cancelScheduledValues(when);p.setValueAtTime(val,when);p.exponentialRampToValueAtTime(.0001,when+v.release);releaseFilterEnvelopes(v,when);v.oscs.forEach(o=>o.stop(when+v.release+.04))}
+ if(v.nativeId){v.released=true;v.releaseScheduled=when;nativeVAMessage('off',{id:v.nativeId},when);return;}v.released=true;v.releaseScheduled=when;const p=v.env.gain;const val=voiceGainAt(v,when);p.cancelScheduledValues(when);p.setValueAtTime(val,when);p.exponentialRampToValueAtTime(.0001,when+v.release);releaseFMModulation(v,when);releaseFilterEnvelopes(v,when);v.oscs.forEach(o=>o.stop(when+v.release+.04))}
 function oneShot(type,track,velocity,when,pitch=0){
  // Embedded Windows desktop: Kick/Snare/Hi-Hat now use the same JUCE/ASIO
  // audio device as Bass/Lead/Chord. Browser mode keeps Web Audio unchanged.
