@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.1.42 — User Manual
+# Squirrel Studio Web 0.1.46 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -12,24 +12,30 @@ Avoid opening `index.html` directly as a `file://` URL if you rely on automatic 
 
 ## 2. Tracks and workspaces
 
-| Track | Default sound | What you can edit |
-| --- | --- | --- |
-| 1 | Drums 1 | Synthesized kick or one of five loaded drum samples |
-| 2 | Drums 2 | Synthesized snare or one of five loaded drum samples |
-| 3 | Drums 3 | Synthesized hat or one of five loaded drum samples |
-| 4 | Bass | Synth settings, note steps, FX |
-| 5 | Lead | Synth settings, note steps, FX |
-| 6 | Chord | Synth settings, chord types, note steps, FX |
-| 7 | Configurable | Empty or sampler instrument |
-| 8 | Configurable | Empty or sampler instrument |
+**Every one of the eight tracks independently supports DRUM, BASS, LEAD and SAMPLE.** CHORD is also available for existing songs.
 
-Use **SEQUENCER**, **SONG MODE**, **SYNTH**, **MIXER**, **LFO / ENVELOPES**, **DRUM SAMPLES**, **SAMPLE EDITOR**, **SEND FX**, **OPTIONS**, and **MIDI / AUDIO** to open each editor.
+| Track | Default | Available instrument types |
+| --- | --- | --- |
+| 1 | Drum (Kick) | Drum / Bass / Lead / Sample / Chord |
+| 2 | Drum (Snare) | Drum / Bass / Lead / Sample / Chord |
+| 3 | Drum (Hi-hat) | Drum / Bass / Lead / Sample / Chord |
+| 4 | Bass | Drum / Bass / Lead / Sample / Chord |
+| 5 | Lead | Drum / Bass / Lead / Sample / Chord |
+| 6 | Chord | Drum / Bass / Lead / Sample / Chord |
+| 7 | Sample | Drum / Bass / Lead / Sample / Chord |
+| 8 | Sample | Drum / Bass / Lead / Sample / Chord |
+
+Choose an instrument in **SEQUENCER → Step Editor → Instrument Type** or **OPTIONS → Track Instrument Types**. Examples include four Sample tracks with four Drum tracks, or eight independent Bass synths. Track numbers do not dictate the sound engine. Previous samples and synthesizer patches remain available when you switch a track back.
+
+For a DRUM track, **DRUM SOUND (IF NO SAMPLES)** offers Kick, Snare and Hi-hat as built-in fallbacks. This control is not shown on Bass, Lead or Sample tracks.
+
+Use **SEQUENCER**, **SONG MODE**, **SYNTH**, **MIXER**, **LFO / ENVELOPES**, **DRUM SAMPLES**, **SAMPLE EDITOR**, **SEND FX**, **OPTIONS** and **MIDI / AUDIO** to open the corresponding workspace.
 
 ## 3. Sequencer and entering notes
 
 ### Stable sequencer height
 
-Switching between Drums 1, Drums 2, Drums 3, Bass, Lead, Chord, Sampler or MIDI-only tracks no longer changes the **height of the Step Sequencer**. The **Step Editor** and **Step FX** panels below it keep a fixed, responsive height. If selecting a track reveals more settings than fit inside either editor, **scroll within that editor panel**; the sequencer remains at the same height. This applies to the compact desktop layout and smaller screens as well.
+Switching between Drums 1, Drums 2, Drums 3, Bass, Lead, Chord, Sampler or MIDI-only tracks no longer changes the **height of the Step Sequencer**. The **Step Editor** and **Step FX** panels below it keep a fixed, responsive height. If selecting a track reveals more settings than fit inside either editor, **scroll with the mouse wheel or touchpad inside that panel (the scrollbar is hidden)**; the sequencer remains at the same height. This applies to the compact desktop layout and smaller screens as well.
 
 
 Clicking any note cell **only selects** that cell: it does not insert or erase a note. **Hold the left mouse button and drag** from one step to another to select a highlighted, rectangular range; this also works across multiple tracks. Release the button to finish. Drag-selecting does not change the music. Press **Delete** to clear the notes in the range (FX remain). Clicking once elsewhere clears the range and selects a single step. An active step displays its note or the relevant drum sample slot. Select a cell and use **Enter** to toggle it on/off, **Delete** to clear its note, or enter a pitch with the computer keyboard while **EDIT ON**.
@@ -64,38 +70,33 @@ Each track has an independent **step length from 1 to 32**, initially **32**. Yo
 
 The effective pattern length is the **longest** enabled track length. For example, if the kick runs for 32 steps and the hi-hat for 6, the hi-hat repeats its six steps until the global position reaches 32. **Song Mode advances only then**. The song arrangement can contain a pattern several times and can be reordered by dragging tiles. Song Mode can be enabled or disabled.
 
-## 5. Drum samples — Drums 1, Drums 2 and Drums 3
+## 5. Drum samples — any track configured as DRUM
 
-Open **DRUM SAMPLES**, select **Drums 1**, **Drums 2**, or **Drums 3**, and use **LOAD** to load audio into any of the five slots (up to **15 loaded samples** across these tracks). Supported formats depend on the browser's audio decoder; WAV is a good default. Each file is limited to **16 MB per slot**.
+Open **DRUM SAMPLES** and choose any track whose instrument type is **DRUM**. Each Drum track has five independently loadable sample slots (up to 40 across all eight tracks). Press **LOAD**, **USE**, **PREVIEW** or **CLEAR** for a slot. File decoding depends on the browser; WAV is recommended. Each sample may be at most 16 MB.
 
-Each drum track remembers its **most recently selected sample slot** independently:
+Each track remembers its most recently selected drum slot. A drum note uses the slot specified by that sequencer step. The Step Editor lets you change an existing step's sample slot independently.
 
-- Click **USE** to make a slot **ACTIVE**. Loading a sample also selects that slot.
-- When you go to an *empty* note step, the Sample selector shows that remembered slot.
-- Press Enter or enter a keyboard note while Edit is on: that slot is assigned to the new note.
-- Notes already on the grid **keep their own slot assignments**.
-- Select an existing note to see or change its sample in the Step Editor.
-- Use the play button beside a loaded slot to preview it, or **×** to clear it.
-
-If a drum track has **no samples loaded**, it uses the original synthesized drum sound. Once samples are loaded on that track, each step plays its assigned sample slot; selecting an empty slot produces no sample sound. The current sample selection is saved with each step, and the preferred slot per track is stored in project JSON.
+If no usable sample is present, the track plays its built-in Drum sound (Kick, Snare or Hi-hat), selectable using **DRUM SOUND (IF NO SAMPLES)**.
 
 ### Choke groups
 
-Every drum sample slot has a **CHOKE** selector: **OFF**, **1**, **2**, **3**, or **4**. When a sample in a choke group plays, it quickly fades out other samples currently playing in the *same* group, even if they are on different drum tracks. For example, assign an open hi-hat and a closed hi-hat to **group 1**: the closed hat will cut off the open hat. **OFF** means the slot does not participate in choking. Choke groups are saved in project JSON and portable Sample Banks. Existing projects default to **OFF**.
+Every drum sample slot has a **CHOKE** selector: OFF, 1, 2, 3 or 4. A sample in a choke group cuts previous samples in the **same group on the same drum track**. Each track has independent groups; one Drum track does not choke another. OFF disables choking. Group settings are included in complete projects and sample banks.
 
-## 6. Sampler tracks 7 and 8
+## 6. Sample instruments on any track
 
-Open **OPTIONS** and choose **SAMPLER** for instrument slot 7 or 8, then load your audio. In **SAMPLE EDITOR**, you can select sampler 7 or 8, preview the waveform, set start/end and loop markers, enable or disable looping, set the root note, adjust low-pass cutoff and resonance, and audition the sample.
+Configure any track as **SAMPLE** in the Step Editor or Options. Open **SAMPLE EDITOR** and select it from the track dropdown; all Sample tracks are listed, not just tracks 7 and 8.
 
-These tracks have their own note and step FX rows in the sequencer. When **LOOP ON** is disabled, the LOOP START and LOOP END handles are **hidden in both the waveform and parameter controls**. Only the sample START and END handles remain available. Enable **LOOP ON** to reveal and edit loop markers. Looping is only applied to sample playback when this switch is on; non-looped playback starts at the sample START marker.
+Each Sample track owns its own waveform, audio file, root note, start/end markers, loop points, filter cutoff and resonance. **LOOP ON** determines whether the two loop handles appear. With LOOP OFF, only the START and END markers remain visible. Non-looping playback begins at the sample START marker.
+
+You can audition a Sample instrument from the SYNTH tab at its root note. Switching a track to another instrument does not delete its uploaded audio; when you switch back to SAMPLE the audio is available again. Export a full Project JSON for a portable backup.
 
 ## 7. Synth, Chord, FX and modulation
 
-Tracks **4 Bass**, **5 Lead**, and **6 Chord** use two oscillators and a sub oscillator. Available adjustments include waveform, oscillator level and enable switches, detune, pulse width, filter cutoff/resonance and envelope parameters. The sub has its own waveform, detune, level and octave (-12 / -24 semitones).
+Tracks configured as **BASS, LEAD or CHORD**, at any track number, use two oscillators and a sub oscillator. Available adjustments include waveform, oscillator level and enable switches, detune, pulse width, filter cutoff/resonance and envelope parameters. The sub has its own waveform, detune, level and octave (-12 / -24 semitones).
 
 The **Chord** instrument provides chord modes per step: Major, Minor, sus2, sus4, diminished, augmented, seventh, major/minor seventh, ninth types and power chords.
 
-**SEND FX** provides Delay, Reverb, Chorus and supported-track Distortion controls. Available effects vary by track. **LFO / ENVELOPES** contains four LFOs (free or tempo-synced divisions) and two filter envelopes with target routing.
+**SEND FX** provides Delay, Reverb, Chorus and Distortion for Drum/Sample instruments. Available effects vary by track. **LFO / ENVELOPES** contains four LFOs (free or tempo-synced divisions) and two filter envelopes with target routing.
 
 Tracker FX in **Step FX** include:
 
@@ -125,14 +126,9 @@ Large sample-filled songs produce larger JSON files, because audio is embedded i
 
 ## 9. Portable Sample Bank
 
-You can back up and transfer loaded audio separately from the song by opening **DRUM SAMPLES** or **OPTIONS** and clicking **EXPORT SAMPLE BANK**. The resulting JSON embeds the sound files from:
+You can back up and transfer audio separately from a song using **EXPORT SAMPLE BANK** in Options or Drum Samples. Sample Bank version 2 includes **all eight drum banks** (five slots per track) and **eight sampler slots** (one per track). Included sampler settings cover the root note, start/end markers, loop markers, filter and resonance.
 
-- Drum tracks 1–3: five slots each (15 total).
-- Samplers 7 and 8: one sample each (two more).
-
-The sampler's root, start/end, loop markers and filter settings are included. On another computer, choose **IMPORT SAMPLE BANK** and select that file. Importing **replaces the current sample bank after confirmation** but leaves patterns, step assignments and Song Mode intact. If a step points to a slot not present in the new bank, it will be silent until a suitable sample is loaded.
-
-A sample bank is **not** a complete project backup. Use **SAVE PROJECT** as well when you need to preserve your patterns and song.
+**IMPORT SAMPLE BANK** replaces the current audio bank after confirmation but keeps the song arrangement, notes and patterns. Older version-1 sample banks with three drum banks and two sampler slots can still be imported. A Sample Bank is **not** a complete project backup; use **SAVE PROJECT** to preserve instrument configurations, synth patches and patterns as well.
 
 ## 10. Demo song (`demo.json`)
 
@@ -188,4 +184,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.1.42.**
+**Documentation version: Squirrel Studio Web 0.1.46.**
