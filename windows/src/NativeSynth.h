@@ -25,10 +25,10 @@ public:
     };
     struct Command
     {
-        enum Type { on, off, pitch, mix, panic } type = on;
+        enum Type { on, off, pitch, mix, panic, drum } type = on;
         uint64_t id = 0;
         int track = 3, note = 60;
-        float velocity = 1, cents = 0, level = 1;
+        float velocity = 1, cents = 0, level = 1, drumPitch = 0;
         Patch patch;
         uint64_t at = 0;
     };
@@ -38,6 +38,7 @@ public:
         rate.store (newRate > 0 ? newRate : 48000.0);
         sampleCounter.store (0);
         for (auto& v : voices) v.active = false;
+        for (auto& v : drumVoices) v.active = false;
     }
     void releaseResources() override {}
     void setTestTone (bool on) noexcept { testTone.store (on); }
@@ -68,6 +69,7 @@ public:
                 {
                     eventCount = 0;
                     for (auto& v : voices) v.active = false;
+                    for (auto& v : drumVoices) v.active = false;
                 }
                 else if (eventCount < static_cast<int> (events.size()))
                     events[eventCount++] = cmd;
@@ -99,6 +101,13 @@ public:
                 l += sample * v.panLeft;
                 r += sample * v.panRight;
             }
+            for (auto& v : drumVoices)
+            {
+                if (!v.active) continue;
+                const float sample = renderDrumVoice (v, sr);
+                l += sample * v.panLeft;
+                r += sample * v.panRight;
+            }
             if (testTone.load())
             {
                 testPhase += 440.0 / sr;
@@ -124,6 +133,20 @@ private:
         float envelope = 0, age = 0, releaseStart = 0, releaseAge = 0;
         float low1 = 0, low2 = 0, panLeft = 1, panRight = 1;
     };
+    // Short-lived procedural drums, rendered directly in the JUCE device callback.
+    // Fixed voice pool: no allocations or sample uploads on the audio thread.
+    struct DrumVoice
+    {
+        uint64_t id = 0;
+        int track = 0;
+        bool active = false;
+        float elapsed = 0, velocity = 1, cents = 0, level = 1, semitones = 0;
+        float trackGain = .65f, master = .75f;
+        float panLeft = .707f, panRight = .707f;
+        float noiseLow = 0;
+        double phase = 0;
+        uint32_t noiseState = 0x13b5e79du;
+    };
     static float waveform (int wave, double phase, float width)
     {
         const auto p = static_cast<float> (phase);
@@ -141,6 +164,31 @@ private:
         if (c.type == Command::panic)
         {
             for (auto& v : voices) v.active = false;
+            for (auto& v : drumVoices) v.active = false;
+            return;
+        }
+        if (c.type == Command::drum)
+        {
+            if (c.track < 0 || c.track > 2) return;
+            auto* slot = &drumVoices[0];
+            for (auto& v : drumVoices)
+                if (!v.active) { slot = &v; break; }
+            slot->active = true;
+            slot->id = c.id;
+            slot->track = c.track;
+            slot->elapsed = 0;
+            slot->velocity = juce::jlimit (0.0f, 1.0f, c.velocity);
+            slot->cents = 0;
+            slot->level = 1;
+            slot->semitones = c.drumPitch;
+            slot->trackGain = c.patch.trackGain;
+            slot->master = c.patch.master;
+            const auto pan = juce::jlimit (-1.0f, 1.0f, c.patch.pan);
+            slot->panLeft = std::sqrt ((1.0f - pan) * .5f);
+            slot->panRight = std::sqrt ((1.0f + pan) * .5f);
+            slot->noiseLow = 0;
+            slot->phase = 0;
+            slot->noiseState = static_cast<uint32_t> (c.id * 1664525ull + 1013904223ull) | 1u;
             return;
         }
         if (c.type == Command::on)
@@ -189,12 +237,74 @@ private:
                 updatePan (v);
             }
         }
+        for (auto& v : drumVoices)
+        {
+            if (!v.active || (c.id != 0 && c.id != v.id)) continue;
+            if (c.type == Command::pitch)
+            {
+                v.cents = c.cents;
+                v.level = juce::jlimit (0.0f, 1.0f, c.level);
+            }
+            else if (c.type == Command::mix && c.track == v.track)
+            {
+                v.trackGain = c.patch.trackGain;
+                v.master = c.patch.master;
+                const auto pan = juce::jlimit (-1.0f, 1.0f, c.patch.pan);
+                v.panLeft = std::sqrt ((1.0f - pan) * .5f);
+                v.panRight = std::sqrt ((1.0f + pan) * .5f);
+            }
+        }
     }
     static void updatePan (Voice& v)
     {
         const auto pan = juce::jlimit (-1.0f, 1.0f, v.patch.pan);
         v.panLeft = std::sqrt ((1.0f - pan) * .5f);
         v.panRight = std::sqrt ((1.0f + pan) * .5f);
+    }
+    float renderDrumVoice (DrumVoice& v, double sr)
+    {
+        const auto t = v.elapsed;
+        v.elapsed += static_cast<float> (1.0 / sr);
+        const float duration = v.track == 0 ? .42f : (v.track == 1 ? .23f : .13f);
+        if (t >= duration) { v.active = false; return 0; }
+        const auto rate = std::pow (2.0, (v.semitones * 100.0 + v.cents) / 1200.0);
+        // Deterministic, independent pseudo-random generator per drum voice.
+        v.noiseState ^= v.noiseState << 13;
+        v.noiseState ^= v.noiseState >> 17;
+        v.noiseState ^= v.noiseState << 5;
+        const float white = (static_cast<float> (v.noiseState & 0xffff) / 32767.5f) - 1.0f;
+        float sample = 0;
+        if (v.track == 0)
+        {
+            // Snappy sinusoidal kick, pitch sweeping from 165 Hz to ~42 Hz.
+            const float hz = (t < .09f ? 165.0f * std::pow (49.0f / 165.0f, t / .09f)
+                                        : 49.0f * std::pow (42.0f / 49.0f, juce::jlimit (0.0f, 1.0f, (t - .09f) / .17f))) * static_cast<float> (rate);
+            v.phase += hz / sr;
+            v.phase -= std::floor (v.phase);
+            const float attack = juce::jlimit (0.0f, 1.0f, t / .003f);
+            const float env = attack * std::exp (-t * 18.0f);
+            sample = .95f * env * std::sin (2.0f * juce::MathConstants<float>::pi * static_cast<float> (v.phase));
+        }
+        else
+        {
+            // High-pass noise, with a short tonal transient for the snare.
+            const float cutoff = v.track == 2 ? 6200.0f : 1300.0f;
+            const float g = 1.0f - std::exp (-2.0f * juce::MathConstants<float>::pi *
+                                             juce::jlimit (100.0f, static_cast<float> (sr * .45), cutoff * static_cast<float> (rate)) / static_cast<float> (sr));
+            v.noiseLow += g * (white - v.noiseLow);
+            const float high = white - v.noiseLow;
+            const float env = juce::jlimit (0.0f, 1.0f, t / .004f) *
+                              std::exp (-t * (v.track == 2 ? 65.0f : 36.0f));
+            sample = high * env * (v.track == 2 ? .37f : .60f);
+            if (v.track == 1)
+            {
+                v.phase += 185.0 * rate / sr;
+                v.phase -= std::floor (v.phase);
+                sample += .25f * std::exp (-t * 28.0f) *
+                          (1.0f - 4.0f * std::abs (static_cast<float> (v.phase) - .5f));
+            }
+        }
+        return sample * v.velocity * v.level * v.trackGain * v.master;
     }
     float renderVoice (Voice& v, double sr)
     {
@@ -241,6 +351,7 @@ private:
         return v.low2 * v.envelope * v.velocity * v.fxLevel * p.trackGain * p.master;
     }
     std::array<Voice, 64> voices {};
+    std::array<DrumVoice, 48> drumVoices {};
     std::array<Command, 4096> events {};
     int eventCount = 0;
     std::vector<Command> pending, incoming;
