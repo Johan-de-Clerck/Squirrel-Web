@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.67**  
+**Current web version: 0.1.68**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,16 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.68
+
+- **Per-slot drum amplitude envelope:** every one of the five sample slots of each DRUM track has its own ATTACK (0–500 ms) and DECAY (0–3000 ms) controls in **DRUM SAMPLES**.
+- **DECAY = 0 means OFF** and preserves the original natural sample tail and the existing sustain behavior of looping samples. With a nonzero decay, gain ramps down to zero after the attack. Once silent, the voice is stopped to avoid wasted audio processing.
+- **RESET ENV** restores ATTACK 2 ms and DECAY OFF for the chosen slot without changing audio files, sample assignments, waveform trims, loop markers, choke group, volume, tuning or pan.
+- Envelopes are independent for each slot even when several slots share a buffer from the central 15-sample drum library.
+- Choke groups now fade from the volume envelope's actual current level instead of jumping to the original peak before the choke.
+- Project format 23 and sample bank v3 remain unchanged. The new envelope settings are preserved through save/import, and older projects default to ATTACK 2 ms and DECAY OFF.
+- Added `tests/drum-slot-envelope.test.js`, including attack/decay scheduling, loops, choke fades, legacy migration and reset checks.
 
 ## What is new in 0.1.67
 
