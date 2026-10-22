@@ -1,6 +1,19 @@
-# Squirrel Studio Web 0.1.77 — User Manual
+# Squirrel Studio Web 0.1.78 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### SYNTH — VA and FM engines
+
+Select a **BASS**, **LEAD**, or **CHORD** track, then open **SYNTH**. The **SYNTHESIS ENGINE** dropdown offers:
+
+- **VA · VIRTUAL ANALOG** — two independent main oscillators plus a suboscillator, with saw, square, triangle, sine and adjustable **PULSE** waves, detune, levels, low-pass filter and amplitude ADSR. All existing songs open in VA unless you choose otherwise.
+- **FM · TWO OPERATORS** — OP1 is the audible sine carrier; OP2 is the modulating sine oscillator. **OP2 RATIO** determines the modulator frequency relative to OP1 (0.25–16×); **FM INDEX** sets modulation strength (0–12). The independent **FM ATTACK**, **FM DECAY**, and **FM SUSTAIN** controls change the index over the note duration. Higher ratios / index amounts can create metallic or bell-like tones. Both engines share the track's existing low-pass filter and amplitude ADSR. Live changes to FM RATIO, INDEX and SUSTAIN update notes that are already playing. NOTE OFF follows the normal amplitude RELEASE and reduces FM modulation. The engine selection and sound parameters are saved in the project and preserved with track-kind patches.
+
+### LFO — Pulse Width modulation for VA
+
+Choose a VA track with **WAVE = PULSE** on oscillator 1, oscillator 2, or the suboscillator. Open **LFO / ENVELOPES** and enable one of the four LFOs. Under **ROUTING**, select **TRACK N · PULSEWIDTH**, where N is the chosen synth track. Set **WAVEFORM**, **RATE / SYNC**, and **DEPTH** as usual.
+
+The LFO continuously changes the actual pulse width through Web Audio delay-time modulation. The main oscillator **PULSE WIDTH** control sets the center of modulation, and the LFO depth controls how far the waveform changes from that center. The range is automatically limited to avoid widths beyond 5–95%. More than one LFO may address the same pulsewidth target. LFO PWM is available in browser-based VA synthesis; selecting PWM on an FM or non-pulse oscillator has no audible effect. Existing LFO routing and project data remain compatible.
 
 ### Sample Editor — adjustable NOTE OFF release
 
