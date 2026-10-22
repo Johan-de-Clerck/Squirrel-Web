@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.1.60 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.1.61 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -461,6 +461,10 @@
 .song-entry.active{border-color:#9de3a6;box-shadow:0 0 0 1px #62b879,0 0 13px rgba(107,211,129,.24);background:#285c3b}
 .song-entry.active strong{color:#e3ffe7}
 .song-entry.active .order{color:#b9ecc1}
+.song-entry.cued{border-color:#6bbd83;box-shadow:inset 0 0 0 1px #48875c;background:#2b4934}
+.song-entry.cued strong{color:#cef4d4}
+.song-entry.cued .order{color:#add5b5}
+.song-entry:focus-visible{outline:2px solid #9de3a6;outline-offset:3px}
 .song-entry .order{font-size:10px;color:#bba18b;text-align:center}
 .song-entry strong{font:800 17px Consolas,monospace;color:#f7d4a2;text-align:center}
 .song-entry .song-move{display:flex;gap:3px;justify-content:center}
@@ -703,7 +707,7 @@ input[type="password"],textarea,
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.60</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.61</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -721,7 +725,7 @@ input[type="password"],textarea,
       <div id="view-song" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Song mode</h2></div><span class="pill">A1–D8 · 32 PATTERNS</span></div>
 <div class="song-toolbar"><label class="song-switch"><input type="checkbox" id="songEnable"> ENABLE SONG PLAYBACK</label><button class="btn" id="songAddCurrent">+ ADD CURRENT PATTERN</button><button class="btn" id="songClear">CLEAR SONG</button><span class="song-playing" id="songPositionLabel">PATTERN MODE</span></div>
 <div class="song-mode-grid"><section class="song-browser"><h3 class="song-subtitle">PATTERN LIBRARY</h3><div id="songPalette" class="song-palette"></div></section>
-<section class="song-builder"><h3 class="song-subtitle">SONG ARRANGEMENT</h3><div id="songSequence" class="song-sequence" aria-label="Song pattern sequence"></div></section></div></section></div>
+<section class="song-builder"><h3 class="song-subtitle">SONG ARRANGEMENT</h3><div id="songSequence" class="song-sequence" aria-label="Song pattern sequence"></div></section></div><p class="song-hint">Click a song tile to cue its playback position. Double-click to start there. Drag to reorder; arrow, + and × buttons edit the arrangement.</p></section></div>
 <div id="view-sound" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Synth engine</h2></div><div class="right-buttons"><span class="pill" id="soundTrackLabel">BASS</span><button class="btn" id="soundAuditionBtn">♪ PREVIEW C3</button></div></div><div class="wave-viz" id="waveViz" aria-label="Oscillator visualization"></div><div class="control-grid" id="soundControls"></div><div class="preview"><div><div class="tag">LIVE KEYBOARD</div></div><div class="preview-keys" id="previewKeys"></div></div></section></div>
       <div id="view-mixer" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Eight-track mixer</h2></div><button class="mini-btn" id="resetMixerBtn">RESET MIXER</button></div><div class="mixer" id="mixerStrips"></div></section></div>
       <div id="view-mod" class="hidden"><div class="mod-layout"><section class="panel"><div class="panel-head"><h2 class="section-title">LFO modulation</h2><span class="pill">4 LFO's</span></div><div class="lfo-grid" id="lfoGrid"></div></section><section class="panel"><div class="panel-head"><h2 class="section-title">Filter envelopes</h2><span class="pill">2 ADSR</span></div><div id="envelopeGrid" class="envelope-grid"></div></section></div></div>
@@ -986,7 +990,7 @@ catch(e){console.warn('Local storage unavailable:',e)}
 let state=fresh();
 try{const raw=localStorage.getItem(LOCAL_PROJECT_KEY);if(raw)state=validate(JSON.parse(raw))}
 catch(e){console.warn('Invalid local storage:',e);hasLocalProject=false}
-let audio=null,midiAccess=null,selectedInput=null,selectedOutput=null,midiOutEnabled=false,midiHeld=new Map(),clipboard=null,stepClipboard=null,playing=false,recording=false,songPosition=0,currentStep=0,lastVisualStep=-1,nextNoteTime=0,timer=null,view='seq',audioSink='default',messageTimeout=null;
+let audio=null,midiAccess=null,selectedInput=null,selectedOutput=null,midiOutEnabled=false,midiHeld=new Map(),clipboard=null,stepClipboard=null,playing=false,recording=false,songPosition=0,songCuePosition=0,visibleSongPosition=0,currentStep=0,lastVisualStep=-1,nextNoteTime=0,timer=null,view='seq',audioSink='default',messageTimeout=null;
 let activeLive=new Map(),scheduledVoices=new Set(),playheadQueue=[],lastBeatAt=0;
 // The desktop shell injects this optional bridge before application startup.
 // No native code or privileges are required by the standalone web application.
@@ -2170,7 +2174,7 @@ function scheduleStep(idx,when){
    }
   }
  }
- playheadQueue.push({step:idx,time:when});
+ playheadQueue.push({step:idx,time:when,songPosition});
 }
 function scheduler(){
  if(!audio||!playing)return;
@@ -2216,6 +2220,11 @@ function fadeTransportVoice(voice,now,fade=STOP_FADE_SECONDS){
  scheduledVoices.delete(voice);
 }
 function stopTransport(){
+ // Preserve the actually heard song position as the next PLAY cue.
+ if(playing&&state.songModeEnabled&&state.songSequence.length){
+  songCuePosition=clamp(visibleSongPosition,0,state.songSequence.length-1);
+  songPosition=songCuePosition;
+ }
  nativeVAMessage('panic');midiAllNotesOff();
  playing=false;recording=false;clearInterval(timer);timer=null;
  playheadQueue=[];lastVisualStep=-1;currentStep=0;resetFXRuntime();
@@ -2233,7 +2242,22 @@ function stopTransport(){
  for(const playback of samplePlaybacks)playback.ended=true;
  samplePlaybacks.length=0;
 }
-async function togglePlay(){if(playing){stopTransport();return}if(state.songModeEnabled&&!state.songSequence.length){notify('Add a pattern to the song arrangement first.',true);return}if(!await initAudio())return;currentStep=0;songPosition=0;if(state.songModeEnabled){state.pattern=state.songSequence[0];state.selectedStep=Math.min(state.selectedStep,patternLength()-1);renderAll()}lastVisualStep=-1;playheadQueue=[];resetFXRuntime();nextNoteTime=audio.ctx.currentTime+.06;playing=true;renderSongPosition();$('playBtn').classList.add('playing');$('playBtn').textContent='❚❚ PAUZE';scheduler();timer=setInterval(scheduler,25)}
+async function togglePlay(){
+ if(playing){stopTransport();return}
+ if(state.songModeEnabled&&!state.songSequence.length){notify('Add a pattern to the song arrangement first.',true);return}
+ if(!await initAudio())return;
+ currentStep=0;
+ songPosition=state.songModeEnabled?clamp(songCuePosition,0,state.songSequence.length-1):0;
+ visibleSongPosition=songPosition;
+ if(state.songModeEnabled){
+  state.pattern=state.songSequence[songPosition];
+  state.selectedStep=Math.min(state.selectedStep,patternLength()-1);
+  renderAll();
+ }
+ lastVisualStep=-1;playheadQueue=[];resetFXRuntime();nextNoteTime=audio.ctx.currentTime+.06;
+ playing=true;renderSongPosition();$('playBtn').classList.add('playing');$('playBtn').textContent='❚❚ PAUZE';
+ scheduler();timer=setInterval(scheduler,25);
+}
 function toggleRecord(){recording=!recording;$('recBtn').classList.toggle('recording',recording);if(recording&&!playing)notify('REC armed: press PLAY and play notes via MIDI.');else notify(recording?'MIDI recording enabled.':'MIDI recording disabled.')}
 function renderPlayhead(i){
  document.querySelectorAll('.pad.playhead,.fx-pad.playhead').forEach(x=>x.classList.remove('playhead'));
@@ -2279,6 +2303,9 @@ function uiTick(){
  if(audio&&playing){
   while(playheadQueue.length&&playheadQueue[0].time<=audio.ctx.currentTime+.012){
    const e=playheadQueue.shift();
+   if(state.songModeEnabled&&e.songPosition!==visibleSongPosition){
+    visibleSongPosition=e.songPosition;renderSongPosition();
+   }
    if(e.step!==lastVisualStep){lastVisualStep=e.step;renderPlayhead(e.step);lastBeatAt=performance.now()}
   }
  }
@@ -2902,22 +2929,59 @@ const SONG_SEQUENCE_LIMIT=256;
 let activeSongDrag=null;
 function addSongPattern(pattern,insertAt=state.songSequence.length){
  if(state.songSequence.length>=SONG_SEQUENCE_LIMIT){notify('Maximum 256 song slots.',true);return}
- state.songSequence.splice(clamp(insertAt,0,state.songSequence.length),0,pattern);
+ if(playing)stopTransport();
+ const hadEntries=state.songSequence.length>0;
+ const at=clamp(insertAt,0,state.songSequence.length);
+ state.songSequence.splice(at,0,pattern);
+ if(hadEntries&&at<=songCuePosition)songCuePosition++;
+ songCuePosition=clamp(songCuePosition,0,state.songSequence.length-1);
+ songPosition=songCuePosition;visibleSongPosition=songCuePosition;
  persist();renderSongMode();
 }
 function reorderSongPattern(from,to){
  if(from<0||from>=state.songSequence.length)return;
+ if(playing)stopTransport();
  to=clamp(to,0,state.songSequence.length);
  const [value]=state.songSequence.splice(from,1);
  if(from<to)to--;
  state.songSequence.splice(to,0,value);
+ // Keep the queued playback cursor on the same logical song tile.
+ if(songCuePosition===from)songCuePosition=to;
+ else if(from<songCuePosition&&to>=songCuePosition)songCuePosition--;
+ else if(from>songCuePosition&&to<=songCuePosition)songCuePosition++;
+ songPosition=songCuePosition;visibleSongPosition=songCuePosition;
  persist();renderSongMode();
+}
+function removeSongPattern(index){
+ if(index<0||index>=state.songSequence.length)return;
+ if(playing)stopTransport();
+ state.songSequence.splice(index,1);
+ if(index<songCuePosition)songCuePosition--;
+ songCuePosition=clamp(songCuePosition,0,Math.max(0,state.songSequence.length-1));
+ songPosition=songCuePosition;visibleSongPosition=songCuePosition;
+ if(!state.songSequence.length)state.songModeEnabled=false;
+ persist();renderSongMode();
+}
+function cueSongPosition(index){
+ if(playing||index<0||index>=state.songSequence.length)return;
+ songCuePosition=index;visibleSongPosition=index;songPosition=index;
+ state.pattern=state.songSequence[index];
+ state.selectedStep=Math.min(state.selectedStep,patternLength()-1);
+ persist();renderAll();
 }
 function renderSongPosition(){
  const indicator=$('songPositionLabel');if(!indicator)return;
  if(!state.songModeEnabled||!state.songSequence.length){indicator.textContent='PATTERN MODE';}
- else indicator.textContent='SONG '+String(songPosition+1).padStart(2,'0')+'/'+String(state.songSequence.length).padStart(2,'0')+' · '+patternName(state.songSequence[clamp(songPosition,0,state.songSequence.length-1)]);
- document.querySelectorAll('.song-entry').forEach((entry,i)=>entry.classList.toggle('active',playing&&state.songModeEnabled&&i===songPosition));
+ else {
+  const index=clamp(playing?visibleSongPosition:songCuePosition,0,state.songSequence.length-1);
+  indicator.textContent=(playing?'PLAYING ':'READY ')+String(index+1).padStart(2,'0')+'/'+String(state.songSequence.length).padStart(2,'0')+' · '+patternName(state.songSequence[index]);
+ }
+ document.querySelectorAll('.song-entry').forEach((entry,i)=>{
+  entry.classList.toggle('active',playing&&state.songModeEnabled&&i===visibleSongPosition);
+  entry.classList.toggle('cued',!playing&&state.songModeEnabled&&i===songCuePosition);
+  if(state.songModeEnabled&&i===(playing?visibleSongPosition:songCuePosition))entry.setAttribute('aria-current','step');
+  else entry.removeAttribute('aria-current');
+ });
 }
 function renderSongMode(){
  const enabled=$('songEnable');if(!enabled)return;
@@ -2930,16 +2994,20 @@ function renderSongMode(){
   tile.ondragend=()=>{activeSongDrag=null};library.append(tile);
  }
  const target=$('songSequence');target.replaceChildren();
- 
  state.songSequence.forEach((pattern,index)=>{
-  const tile=document.createElement('div');tile.className='song-entry';tile.draggable=true;tile.setAttribute('role','group');tile.setAttribute('aria-label','Song position '+(index+1)+', pattern '+patternName(pattern));
+  const tile=document.createElement('div');tile.className='song-entry';tile.draggable=true;tile.tabIndex=0;
+  tile.setAttribute('role','group');
+  tile.setAttribute('aria-label','Song position '+(index+1)+', pattern '+patternName(pattern)+'. Press Enter to cue playback.');
   const number=document.createElement('span');number.className='order';number.textContent=String(index+1).padStart(2,'0')+' · '+patternLength(pattern)+' STEPS';
   const name=document.createElement('strong');name.textContent=patternName(pattern);
   const actions=document.createElement('div');actions.className='song-move';
-  const buttons=[['←','Move left',()=>reorderSongPattern(index,index-1)],['→','Move right',()=>reorderSongPattern(index,index+2)],['+','Duplicate',()=>addSongPattern(pattern,index+1)],['×','Remove',()=>{state.songSequence.splice(index,1);songPosition=clamp(songPosition,0,Math.max(0,state.songSequence.length-1));if(!state.songSequence.length)state.songModeEnabled=false;persist();renderSongMode()}]];
+  const buttons=[['←','Move left',()=>reorderSongPattern(index,index-1)],['→','Move right',()=>reorderSongPattern(index,index+2)],['+','Duplicate',()=>addSongPattern(pattern,index+1)],['×','Remove',()=>removeSongPattern(index)]];
   for(const [caption,title,fn] of buttons){const b=document.createElement('button');b.type='button';b.textContent=caption;b.setAttribute('aria-label',title+' '+patternName(pattern)+' at '+(index+1));b.onclick=fn;actions.append(b)}
   actions.children[0].disabled=index===0;actions.children[1].disabled=index===state.songSequence.length-1;
   tile.append(number,name,actions);
+  tile.onclick=e=>{if(!e.target.closest('button'))cueSongPosition(index)};
+  tile.ondblclick=e=>{if(!e.target.closest('button')&&!playing&&state.songModeEnabled){cueSongPosition(index);togglePlay()}};
+  tile.onkeydown=e=>{if(e.target===tile&&(e.key==='Enter'||e.key===' ')){e.preventDefault();if(!e.repeat)cueSongPosition(index)}};
   tile.ondragstart=e=>{activeSongDrag={kind:'sequence',index};e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',patternName(pattern))};
   tile.ondragend=()=>{activeSongDrag=null;tile.classList.remove('drag-target')};
   tile.ondragover=e=>{if(!activeSongDrag)return;e.preventDefault();tile.classList.add('drag-target');e.dataTransfer.dropEffect=activeSongDrag.kind==='library'?'copy':'move'};
@@ -2981,7 +3049,7 @@ function setPatternLength(bank,value){
 async function applyLoadedProject(project){
  stopTransport();
  sampleSession++;sampleBuffers.clear();drumSampleBuffers.clear();drumLibraryBuffers.clear();
- stepClipboard=null;clearStepRange();state=project;songPosition=0;fxEditMode=false;fxDigitBuffer='';
+ stepClipboard=null;clearStepRange();state=project;songPosition=0;songCuePosition=0;visibleSongPosition=0;fxEditMode=false;fxDigitBuffer='';
  // Replace IndexedDB samples as a single project, never mixing the demo with the previous song.
  for(let i=0;i<DRUM_LIBRARY_SIZE;i++){
   const item=state.drumLibrary[i];
@@ -3031,7 +3099,7 @@ function newSong(){
   for(const [key,voices] of activeLive){for(const voice of voices)if(!voice.drum)releaseVoice(voice,audio?.ctx.currentTime||0)}
   activeLive.clear();keyboardDown.clear();keyboardAssignments.clear();
   sampleSession++;sampleBuffers.clear();for(let i=0;i<TRACK_COUNT;i++)removeStoredSample(i);
-  state=fresh(false);drumSampleBuffers.clear();drumLibraryBuffers.clear();clearDrumSamplesStorage();songPosition=0; // eight tracks, sixteen blank patterns
+  state=fresh(false);drumSampleBuffers.clear();drumLibraryBuffers.clear();clearDrumSamplesStorage();songPosition=0;songCuePosition=0;visibleSongPosition=0; // eight tracks, sixteen blank patterns
   clipboard=null;stepClipboard=null;clearStepRange();fxEditMode=false;fxDigitBuffer='';
   if(audio){applyTrackMix();updateSendEngine();applyLFOs()}
   persist();resetUndoHistory();switchView('seq');renderAll();focusSelectedPad(false);
@@ -3411,7 +3479,7 @@ function bindings(){
  const trackSelect=$('midiOutTrack');for(let t=0;t<TRACK_COUNT;t++)trackSelect.add(new Option('TRACK '+(t+1),String(t)));
  channelSelect.value='0';
  channelSelect.onchange=()=>midiAllNotesOff();trackSelect.onchange=()=>midiAllNotesOff();
- document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>switchView(b.dataset.view));$('songEnable').onchange=e=>{if(playing)stopTransport();if(e.target.checked&&!state.songSequence.length){e.target.checked=false;notify('Add at least one pattern to the arrangement.',true);return}state.songModeEnabled=e.target.checked;songPosition=0;persist();renderSongMode()};$('songAddCurrent').onclick=()=>addSongPattern(state.pattern);$('songClear').onclick=()=>{if(!state.songSequence.length)return;if(!confirm('Clear the entire song arrangement?'))return;if(playing)stopTransport();state.songSequence=[];state.songModeEnabled=false;songPosition=0;persist();renderSongMode()};$('audioBtn').onclick=initAudio;$('playBtn').onclick=togglePlay;$('stopBtn').onclick=stopTransport;$('recBtn').onclick=toggleRecord;
+ document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>switchView(b.dataset.view));$('songEnable').onchange=e=>{if(playing)stopTransport();if(e.target.checked&&!state.songSequence.length){e.target.checked=false;notify('Add at least one pattern to the arrangement.',true);return}state.songModeEnabled=e.target.checked;songPosition=songCuePosition;visibleSongPosition=songCuePosition;persist();renderSongMode()};$('songAddCurrent').onclick=()=>addSongPattern(state.pattern);$('songClear').onclick=()=>{if(!state.songSequence.length)return;if(!confirm('Clear the entire song arrangement?'))return;if(playing)stopTransport();state.songSequence=[];state.songModeEnabled=false;songPosition=0;songCuePosition=0;visibleSongPosition=0;persist();renderSongMode()};$('audioBtn').onclick=initAudio;$('playBtn').onclick=togglePlay;$('stopBtn').onclick=stopTransport;$('recBtn').onclick=toggleRecord;
  $('editModeBtn').onclick=()=>{state.editMode=!state.editMode;if(!state.editMode)stopAllEditNotePreviews();keyboardDown.clear();keyboardAssignments.clear();persist();renderAll();if(view==='seq')focusSelectedPad(false)};$('octaveInput').onchange=()=>{state.keyboardOctave=Number($('octaveInput').value);persist();if(view==='seq')focusSelectedPad(false)};
  $('bpmInput').onchange=()=>{state.bpm=normalizeBpm($('bpmInput').value);applyLFOs();persist();renderAll()};$('swingInput').oninput=()=>{state.swing=Number($('swingInput').value);$('swingOut').textContent=state.swing+'%';persist()};$('masterInput').oninput=()=>{state.master=Number($('masterInput').value);$('masterOut').textContent=state.master+'%';applyTrackMix();persist()};$('patternNameInput').onchange=()=>setPatternName(state.pattern,$('patternNameInput').value);$('patternNameInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('patternNameInput').blur()}};
  $('patternGroup').onchange=()=>choosePattern(patternIndex(Number($('patternGroup').value),0));$('patternSelect').onchange=()=>choosePattern(patternIndex(Number($('patternGroup').value),Number($('patternSelect').value)));$('copyPatternBtn').onclick=()=>{clipboard={lanes:structuredClone(state.patterns[state.pattern]),lengths:[...state.trackLengths[state.pattern]]};notify('Pattern '+patternName(state.pattern)+' copied.')};$('pastePatternBtn').onclick=()=>{if(!clipboard){notify('Copy a pattern first.',true);return}if(playing)stopTransport();state.patterns[state.pattern]=structuredClone(clipboard.lanes);state.trackLengths[state.pattern]=clipboard.lengths?[...clipboard.lengths]:Array(TRACK_COUNT).fill(clipboard.length||32);state.patternLengths[state.pattern]=patternLength();state.selectedStep=Math.min(state.selectedStep,trackLength()-1);persist();renderAll();notify('Pattern and track lengths pasted.')};
@@ -3459,7 +3527,7 @@ function bindings(){
   autoDemoOnStart=desired;
   try{localStorage.setItem(DEMO_AUTO_KEY,desired?'1':'0')}catch(e){console.warn(e)}
  };
- $('newSongBtn').onclick=newSong;$('demoBtn').onclick=()=>{if(!confirm('Restore demo? Unsaved changes in this session will be overwritten.'))return;stopTransport();sampleSession++;sampleBuffers.clear();for(let i=0;i<TRACK_COUNT;i++)removeStoredSample(i);state=fresh();drumSampleBuffers.clear();drumLibraryBuffers.clear();clearDrumSamplesStorage();songPosition=0;persist();applyTrackMix();renderAll();notify('Demo restored.')};
+ $('newSongBtn').onclick=newSong;$('demoBtn').onclick=()=>{if(!confirm('Restore demo? Unsaved changes in this session will be overwritten.'))return;stopTransport();sampleSession++;sampleBuffers.clear();for(let i=0;i<TRACK_COUNT;i++)removeStoredSample(i);state=fresh();drumSampleBuffers.clear();drumLibraryBuffers.clear();clearDrumSamplesStorage();songPosition=0;songCuePosition=0;visibleSongPosition=0;persist();applyTrackMix();renderAll();notify('Demo restored.')};
   // Houd de padnavigatie direct bereikbaar na muis-/touchbediening van een slider.
   // Sliderinput blijft tijdens het slepen gefocust; na loslaten gaat de focus
   // terug naar de huidige step. Daardoor wijzigen de pijltjes daarna niet
