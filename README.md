@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.64**  
+**Current web version: 0.1.65**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,12 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.65
+
+- Each of the five DRUM track slots has its own **VOL** (0–200%, default 100%) and **PITCH** (-24 to +24 semitones, default 0) sliders on the DRUM SAMPLES page.
+- Gain and tuning are applied per voice when the audio plays; multiple slots can reference one shared library sample yet sound different. Gain also carries through choke fades.
+- Settings are saved in project JSON and sample bank exports, and older files default to 100% and 0 semitones.
 
 ## What is new in 0.1.64
 
