@@ -1121,13 +1121,14 @@ function drumSampleVoice(t,slot,velocity,when){
    prior.clear();
   }
  }
- const voice={pitchParams:[src.detune],modGain,drum:true,released:false};
+ const voice={pitchParams:[src.detune],modGain,drum:true,released:false,trackIndex:t,src};
  const groupEntry={src,gain,level:clamp(velocity/127,0,1)};
  if(group){
   if(!activeChokeVoices.has(groupKey))activeChokeVoices.set(groupKey,new Set());
   activeChokeVoices.get(groupKey).add(groupEntry);
  }
  src.onended=()=>{
+  voice.released=true;
   if(group)activeChokeVoices.get(groupKey)?.delete(groupEntry);
   try{src.disconnect();gain.disconnect();modGain.disconnect()}catch(e){}
  };
@@ -1640,7 +1641,22 @@ function voiceGainAt(v,t){
  return Math.max(.0002,sustain);
 }
 function releaseVoice(v,when){if(v.released)return;
- if(v.nativeId){v.released=true;nativeVAMessage('off',{id:v.nativeId},when);scheduledVoices.delete(v);return;}v.released=true;const t=Math.max(audio.ctx.currentTime,when);try{const p=v.env.gain;const level=voiceGainAt(v,t);p.cancelScheduledValues(t);p.setValueAtTime(level,t);p.exponentialRampToValueAtTime(.0001,t+v.release);releaseFilterEnvelopes(v,t);v.oscs.forEach(o=>o.stop(t+v.release+.04));setTimeout(()=>scheduledVoices.delete(v),Math.max(50,(t+v.release+.2-audio.ctx.currentTime)*1000))}catch(e){scheduledVoices.delete(v)}}
+ if(v.nativeId){v.released=true;nativeVAMessage('off',{id:v.nativeId},when);scheduledVoices.delete(v);return;}
+ if(v.drum){
+  v.released=true;
+  if(audio&&v.modGain){
+   const t=Math.max(audio.ctx.currentTime,when);
+   try{
+    const gain=v.modGain.gain;
+    gain.cancelScheduledValues(t);
+    gain.setValueAtTime(Math.max(0,gain.value),t);
+    gain.linearRampToValueAtTime(0,t+.018);
+    if(v.src)v.src.stop(t+.025);
+   }catch(e){console.warn('Drum note-off:',e)}
+  }
+  return;
+ }
+ v.released=true;const t=Math.max(audio.ctx.currentTime,when);try{const p=v.env.gain;const level=voiceGainAt(v,t);p.cancelScheduledValues(t);p.setValueAtTime(level,t);p.exponentialRampToValueAtTime(.0001,t+v.release);releaseFilterEnvelopes(v,t);v.oscs.forEach(o=>o.stop(t+v.release+.04));setTimeout(()=>scheduledVoices.delete(v),Math.max(50,(t+v.release+.2-audio.ctx.currentTime)*1000))}catch(e){scheduledVoices.delete(v)}}
 const pulseCache=new Map();function pulseWave(ctx,duty){const key=Math.round(duty);if(pulseCache.has(key))return pulseCache.get(key);const d=key/100,len=65,re=new Float32Array(len),im=new Float32Array(len);for(let n=1;n<len;n++){re[n]=2*Math.sin(Math.PI*n*d)**2/(Math.PI*n);im[n]=Math.sin(2*Math.PI*n*d)/(Math.PI*n)}const wave=ctx.createPeriodicWave(re,im,{disableNormalization:false});pulseCache.set(key,wave);return wave}
 function oscillatorMixGain(s,osc){
  if(osc===0)return s.osc1On===false?0:.46*clamp(s.osc1Level??100,0,100)/100;
@@ -1781,6 +1797,30 @@ function playPreview(t,note,velocity=100){
   return;
  }
  playTrack(t,note,velocity,when,.22,0,quality,isDrum(t)?(t===state.selectedTrack&&selectedStep().on?selectedStep().sampleSlot||0:drumLastSlot(t)):0);
+}
+/* Enter is a held-note preview: releasing Enter is the note-off. */
+let enterPreview=null;
+function stopEnterPreview(){
+ const session=enterPreview;enterPreview=null;
+ if(!session)return;
+ session.cancelled=true;
+ if(session.midiOnly)midiOffTrack(session.track);
+ if(audio&&session.voices)for(const voice of session.voices)releaseVoice(voice,audio.ctx.currentTime);
+}
+function startEnterPreview(){
+ stopEnterPreview();
+ const track=state.selectedTrack,step=structuredClone(selectedStep());
+ if(!step.on)return;
+ const session={track,step,voices:null,midiOnly:!!state.tracks[track].midiOnly,cancelled:false};
+ enterPreview=session;
+ const begin=()=>{
+  if(session.cancelled||enterPreview!==session||!audio||audio.ctx.state!=='running')return;
+  const now=audio.ctx.currentTime+.005,quality=kindOf(state.tracks[track])==='chord'?step.chordMode:null;
+  if(session.midiOnly)midiPlayStep(track,step.note,step.velocity,now,true,null,quality);
+  else session.voices=playTrack(track,step.note,step.velocity,now,null,0,quality,step.sampleSlot||0);
+ };
+ if(audio&&audio.ctx.state==='running')begin();
+ else initAudio().then(ok=>{if(ok)begin()}).catch(e=>console.warn('Enter preview:',e));
 }
 function stepDuration(){return 60/state.bpm/4}
 // Bass en Lead zijn mono-step-hold: nieuwe noten vervangen de huidige,
@@ -2967,7 +3007,9 @@ function bindings(){
    e.preventDefault();
    if(!e.repeat){
     fxDigitBuffer='';
+    stopEnterPreview();
     toggleSelectedNote();
+    if(selectedStep().on)startEnterPreview();
    }
    return;
   }
@@ -3010,6 +3052,7 @@ function bindings(){
   liveNoteOn(state.selectedTrack,note,110,15);
  });
  document.addEventListener('keyup',e=>{
+  if(e.key==='Enter')stopEnterPreview();
   const key=e.key.toLowerCase();
   if(noteKeyboard[key]!==undefined&&keyboardDown.has(key)){
    keyboardDown.delete(key);
@@ -3017,7 +3060,7 @@ function bindings(){
    if(assignment)liveNoteOff(assignment.track,assignment.note,15);
   }
  });
- window.addEventListener('blur',()=>{for(const [key,voices] of activeLive){voices.forEach(v=>releaseVoice(v,audio?.ctx.currentTime||0))}activeLive.clear();keyboardDown.clear();keyboardAssignments.clear()});window.addEventListener('beforeunload',persist);
+ window.addEventListener('blur',()=>{stopEnterPreview();for(const [key,voices] of activeLive){voices.forEach(v=>releaseVoice(v,audio?.ctx.currentTime||0))}activeLive.clear();keyboardDown.clear();keyboardAssignments.clear()});window.addEventListener('beforeunload',persist);
 }
 installNotes();bindings();bindSampleEditor();bindDrumSamples();bindSampleBank();attachStepRangeSelection();resetUndoHistory();renderAll();refreshOutputs();requestAnimationFrame(uiTick);bootstrapDemoJson();
 </script>
