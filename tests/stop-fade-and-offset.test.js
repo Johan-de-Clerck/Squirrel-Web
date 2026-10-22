@@ -68,11 +68,39 @@ const run=new Function('window','document','localStorage','console','structuredC
  if(!(samplerSrc.stops.at(-1)<oldStop&&drumSrc.stops.at(-1)<oldDrumStop))throw Error('Stop must override long tail');
  eq(sample.env.gain.calls.some(x=>x[0]==='ramp'&&x[1]===0),true,'Sample gain faded to zero');
  eq(drum.modGain.gain.calls.some(x=>x[0]==='ramp'&&x[1]===0),true,'Drum gain faded to zero');
+ // STOP must also clear visual sample playback cursors and stale choke groups,
+ // so the next PLAY starts from clean state.
+ state.drumSamples[0][0].chokeGroup=2;
+ const chokingDrum=drumSampleVoice(0,0,110,10,0);
+ const cursorSample=sampleVoice(6,48,105,10,0,.25);
+ eq(activeChokeVoices.has('0:2'),true,'Choke group tracks a playing drum');
+ eq(samplePlaybacks.length>0,true,'Sample cursor record exists before STOP');
+ playing=true;stopTransport();
+ eq(activeChokeVoices.size,0,'STOP clears old drum choke groups');
+ eq(samplePlaybacks.length,0,'STOP clears old sample cursor history');
+ eq(sampleCursorPosition(6),null,'STOP leaves no stale waveform playhead');
+ eq(scheduledVoices.size,0,'STOP stops restarted drum voice');
+ const nextDrum=drumSampleVoice(0,0,105,10.2,0);
+ eq(nextDrum.released,false,'Fresh drum voice after STOP is not released');
+ eq(activeChokeVoices.get('0:2').size,1,'Fresh group contains only the restarted drum');
+ // A step audition is not just a generic note preview: FX 950 changes start.
+ state.selectedTrack=6;state.selectedStep=0;
+ const step=state.patterns[0][6][0];
+ step.on=true;step.note=48;step.velocity=95;step.fx=9;step.fxAmount=50;
+ const oldSources=sources.length;
+ playPreview(6,48,95,step);
+ eq(sources.length,oldSources+1,'Step audition creates a sample voice');
+ close(sources.at(-1).starts[0][1],5,'AUDITION honors FX 950 within trimmed sample');
+ // Generic synth and sampler preview without a specific step remains at START.
+ playPreview(6,48,95);
+ close(sources.at(-1).starts[0][1],2,'Generic sample preview ignores unrequested step FX');
+ playing=true;stopTransport();
+ eq(scheduledVoices.size,0,'Second STOP also fades all preview/restarted voices');
  const oldState=validate(JSON.parse(JSON.stringify(state)));
  oldState.patterns[0][6][0].on=true;oldState.patterns[0][6][0].fx=9;oldState.patterns[0][6][0].fxAmount=50;
  const loaded=validate(JSON.parse(JSON.stringify(oldState)));
  eq([loaded.patterns[0][6][0].fx,loaded.patterns[0][6][0].fxAmount],[9,50],'FX 950 survives save/load');
- return 'PASS: 9xx offset, samples and drum offset playback, STOP fade, prior note-offs and project persistence';
+ return 'PASS: 9xx offset, step audition, repeated STOP/PLAY cleanup, drum choke reset and project persistence';
 `);
 console.log(run({}, {getElementById:()=>({classList:{remove(){}}})},
  {getItem:()=>null,setItem:()=>{}},{warn:()=>{},error:()=>{},log:()=>{}},
