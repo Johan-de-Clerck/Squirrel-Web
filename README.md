@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.76**  
+**Current web version: 0.1.77**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,15 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.77
+
+- **CONTINUE checkbox per drum/SAMPLE step:** every active step position on a DRUM or SAMPLE lane has its own small, directly clickable checkbox in the sequencer grid. The selected step also displays a larger **CONTINUE INTO NEXT PATTERN** checkbox in the Step Editor. A green check means that sample voice continues beyond the end of the current pattern, including Song Mode.
+- **Does not consume Step FX:** the continue flag is separate from the FX command, so **9xx sample-offset**, slides and other commands can be used on the very same step. D00 remains supported for existing projects, and old D00 rows appear checked. Unticking a D00 row explicitly removes that legacy D00 command.
+- The checkbox also works on an empty sample/drum step to mark an already playing sample for continuation, like the previous D00-on-an-empty-row behavior. For drum loops, checking the *trigger* step avoids its normal gate cutoff.
+- **C00 NOTE OFF** still releases carried sampler or drum voices using their saved per-track/per-slot RELEASE; **STOP** fades all voices regardless of the checkbox. MIDI-only and synth lanes do not display these sample-only controls.
+- Each checkbox is part of the step itself, so it is preserved by project save/load, pattern copy/paste, step/range clipboard and undo/redo. Old projects restore with the new checkbox OFF unless that step already uses D00.
+- Added `tests/step-continue-checkbox.test.js` to verify independent checkboxes, direct grid toggling, project compatibility, FX9 coexistence, pattern transitions and C00.
 
 ## What is new in 0.1.76
 
