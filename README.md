@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.52**  
+**Current web version: 0.1.53**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -21,7 +21,16 @@ For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and op
 
 Read [HELP.md](HELP.md) for the full English user guide.
 
-## What is new in 0.1.52
+## What is new in 0.1.53
+
+- **SOLO buttons are green** while active, both in the Mixer and on the sequencer's per-track **S** buttons.
+- **MUTE buttons are red** when a track is silenced, including the tracks automatically muted by SOLO. The sequencer's per-track **M** controls use matching red styling.
+- Soloing a track mutes every other track. SOLO is **exclusive**: pressing another SOLO transfers solo to that track, and pressing the active SOLO again restores the mix.
+- Temporary SOLO muting does not overwrite any track's manual mute setting. Non-solo MUTE buttons are locked during SOLO, so manually muted tracks retain their settings for when SOLO turns off.
+- MIDI note-off is sent to newly excluded tracks, and imported projects with multiple legacy SOLO flags are normalized to one SOLO channel.
+- Added dependency-free `tests/solo-mute.test.js` for mixer appearance, audio-routing and mute-state regression coverage.
+
+## Improvements from 0.1.52
 
 - **Cleaner STOP / PLAY handling:** STOP now clears the waveform's playback cursor and any old Drum choke-group registrations, so a song can restart without stale playback state.
 - **Step FX 9 audition works:** the Step Editor's **AUDITION** button respects the selected step's SAMPLE OFFSET value. `950` starts at 50% when auditioned as well as during playback; ordinary instrument preview is unaffected.
@@ -76,7 +85,7 @@ Read [HELP.md](HELP.md) for the full English user guide.
 - Each BASS/LEAD/CHORD track has its own oscillator, sub-oscillator, filter and envelope patch. Switching between synth types preserves their respective sound presets.
 - Track-type selection is available both in **SEQUENCER → Step Editor** and **OPTIONS → Track Instrument Types**.
 - The sample and drum editors show the tracks configured for their instrument type.
-- Fixes in 0.1.52: sampler root-note persistence, sample loading during project/track switching, default sampler volume when resetting the mixer, MIDI-independent audio device wording, and clearer empty-sampler behavior.
+- Fixes in 0.1.53: sampler root-note persistence, sample loading during project/track switching, default sampler volume when resetting the mixer, MIDI-independent audio device wording, and clearer empty-sampler behavior.
 - The Step Editor and Step FX retain a consistent height; their vertical scrollbars are hidden.
 - Import/export sample banks supports **all eight tracks** (bank format v2); older v1 sample banks can still be imported.
 
@@ -109,17 +118,17 @@ Read [HELP.md](HELP.md) for the full English user guide.
 
 ## Repository files
 
-- `index.html` — **current Squirrel Studio Web 0.1.52** application
+- `index.html` — **current Squirrel Studio Web 0.1.53** application
 - `demo.json` — included song with sample data
 - `squirrel-icon.webp` — mascot and favicon
 - `README.md` — current version, downloads and overview
 - `HELP.md` — English user manual
 - `START_STUDIO.cmd` — local Windows development server
-- `tests/track-routing.test.js`, `tests/pattern-bank-and-enter.test.js` and `tests/mixer-meters.test.js` and `tests/bpm-decimal.test.js` and `tests/stop-fade-and-offset.test.js` — offline regression tests, run with `node tests/track-routing.test.js` (no npm installs or GitHub Actions required)
+- `tests/track-routing.test.js`, `tests/pattern-bank-and-enter.test.js` and `tests/mixer-meters.test.js` and `tests/bpm-decimal.test.js` and `tests/stop-fade-and-offset.test.js` and `tests/solo-mute.test.js` — offline regression tests, run with `node tests/track-routing.test.js` (no npm installs or GitHub Actions required)
 - `windows/` — experimental desktop port, which may lag behind web features
 
 ### Audio and limitations
 
 The web edition uses **Web Audio**, not direct ASIO. MIDI device access depends on browser permissions and supported operating systems. The Windows JUCE desktop source is experimental. Audio playback and browser behavior require manual testing on the actual device in addition to code-level regression tests.
 
-To check that the latest build loaded, look for **BUILD 0.1.52** in the app header. If an earlier build appears, replace locally extracted files or force refresh (**Ctrl+F5**).
+To check that the latest build loaded, look for **BUILD 0.1.53** in the app header. If an earlier build appears, replace locally extracted files or force refresh (**Ctrl+F5**).
