@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.1.67 — User Manual
+# Squirrel Studio Web 0.1.68 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -96,7 +96,9 @@ Open **DRUM SAMPLES** and choose any track whose instrument type is **DRUM**. Th
 
 When creating or switching a track to **DRUM** under **OPTIONS**, that track immediately gains five sample dropdowns. Each dropdown can reference any of the 15 loaded sounds in the shared drum library. The choices are independent for each drum track; reusing a library sample does not create another audio copy. Use **OPEN DRUM LIBRARY / SAMPLE EDITOR** to load sounds into the 15 slots. The per-slot EDIT button in **DRUM SAMPLES** controls individual trim and loop points.
 
-Every DRUM slot also has its own **VOL** (0–200%), **PITCH** (-24 to +24 semitones), **FINE** (-100 to +100 cents), and **PAN** (-100 left to +100 right) controls in the DRUM SAMPLES page. Each control offers a slider and direct numerical entry. Use **RESET MIX** on a slot to restore VOL 100%, PITCH 0, FINE 0 and PAN 0 without changing its audio assignment, choke group, trim markers or loops. These settings belong to the slot, not the shared library sample, and are saved in project and sample bank files.
+Every DRUM slot also has its own **VOL** (0–200%), **PITCH** (-24 to +24 semitones), **FINE** (-100 to +100 cents), and **PAN** (-100 left to +100 right) controls in the DRUM SAMPLES page. Each control offers a slider and direct numerical entry. Use **RESET MIX** on a slot to restore VOL 100%, PITCH 0, FINE 0 and PAN 0 without changing its audio assignment, choke group, trim markers or loops.
+
+Every drum slot also has an **AMPLITUDE ENVELOPE** section with **ATTACK** (0–500 ms) and **DECAY** (0–3000 ms), controlled by sliders or exact millisecond values. ATTACK controls the fade-in; DECAY begins when ATTACK finishes and fades the sound to silence. DECAY **0 means OFF**: your audio plays naturally, including a loop that remains active until released or gated. When a nonzero decay reaches silence, the audio source stops automatically, even for loops. Use **RESET ENV** to restore ATTACK 2 ms and DECAY 0 without affecting mixer settings, samples, trims or choke groups. These two values are saved per slot in projects and sample banks, and older files restore the original default behavior. These settings belong to the slot, not the shared library sample, and are saved in project and sample bank files.
 
 Each track remembers its most recently selected drum slot. A drum note uses the slot specified by that sequencer step. The Step Editor shows green **S1–S5 quick-select buttons** for DRUM tracks. Choose a step, then click its intended sample slot; this is stored on that step even before the step is switched ON. You can also **Shift+click a drum step in the main grid** to cycle S1–S5 without changing whether its note is on. Hover any drum step to see the full sample name. Each of these five slots can be assigned any of the 15 shared library samples. The sample dropdown remains available.
 
