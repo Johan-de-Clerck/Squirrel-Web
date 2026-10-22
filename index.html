@@ -1131,13 +1131,14 @@ function drumSampleVoice(t,slot,velocity,when,offsetPercent=0){
   }
  }
  const voice={pitchParams:[src.detune],modGain,drum:true,released:false,trackIndex:t,src};
+ scheduledVoices.add(voice);
  const groupEntry={src,gain,level:clamp(velocity/127,0,1)};
  if(group){
   if(!activeChokeVoices.has(groupKey))activeChokeVoices.set(groupKey,new Set());
   activeChokeVoices.get(groupKey).add(groupEntry);
  }
  src.onended=()=>{
-  voice.released=true;
+  voice.released=true;scheduledVoices.delete(voice);
   if(group)activeChokeVoices.get(groupKey)?.delete(groupEntry);
   try{src.disconnect();gain.disconnect();modGain.disconnect()}catch(e){}
  };
@@ -1755,8 +1756,8 @@ function oneShot(type,track,velocity,when,pitch=0){
   nativeVAMessage('drum',{id:nativeId,track:nativeTrack,velocity,pitch,patch:nativeVAPatch(nativeTrack)},when);
   return [{nativeId,drum:true,released:false,trackIndex:nativeTrack}];
  }
-const c=audio.ctx,vol=clamp(velocity/127,0,1),ratio=Math.pow(2,pitch/12),modGain=c.createGain();modGain.gain.value=1;modGain.connect(audio.trackGains[state.tracks.indexOf(track)]);if(type==='kick'){const osc=c.createOscillator(),gain=c.createGain();osc.type='sine';osc.frequency.setValueAtTime(165*ratio,when);osc.frequency.exponentialRampToValueAtTime(49*ratio,when+.09);osc.frequency.exponentialRampToValueAtTime(42*ratio,when+.26);gain.gain.setValueAtTime(.0001,when);gain.gain.exponentialRampToValueAtTime(vol*.95+.0001,when+.003);gain.gain.exponentialRampToValueAtTime(.0001,when+.4);osc.connect(gain).connect(modGain);osc.start(when);osc.stop(when+.42);osc.onended=()=>{osc.disconnect();gain.disconnect();modGain.disconnect()};return [{pitchParams:[osc.detune],modGain,released:false,drum:true}]}
- const src=c.createBufferSource(),filter=c.createBiquadFilter(),gn=c.createGain();src.buffer=getNoise();src.playbackRate.value=ratio;filter.type='highpass';filter.frequency.value=clamp((type==='hat'?6200:1300)*ratio,200,15000);gn.gain.setValueAtTime(.0001,when);gn.gain.exponentialRampToValueAtTime(Math.max(.0002,(type==='hat'?.37:.6)*vol),when+.004);gn.gain.exponentialRampToValueAtTime(.0001,when+(type==='hat'?.11:.20));src.connect(filter).connect(gn).connect(modGain);src.start(when);src.stop(when+(type==='hat'?.13:.23));src.onended=()=>{src.disconnect();filter.disconnect();gn.disconnect()};let tone=null;if(type==='snare'){tone=c.createOscillator();const tg=c.createGain();tone.type='triangle';tone.frequency.value=175*ratio;tg.gain.setValueAtTime(.18*vol,when);tg.gain.exponentialRampToValueAtTime(.0001,when+.13);tone.connect(tg).connect(modGain);tone.start(when);tone.stop(when+.15);tone.onended=()=>{tone.disconnect();tg.disconnect()}}src.onended=()=>{src.disconnect();filter.disconnect();gn.disconnect();modGain.disconnect()};return [{pitchParams:[src.detune,...(type==='snare'?[tone.detune]:[])],modGain,released:false,drum:true}]}
+const c=audio.ctx,vol=clamp(velocity/127,0,1),ratio=Math.pow(2,pitch/12),modGain=c.createGain();modGain.gain.value=1;modGain.connect(audio.trackGains[state.tracks.indexOf(track)]);if(type==='kick'){const osc=c.createOscillator(),gain=c.createGain();osc.type='sine';osc.frequency.setValueAtTime(165*ratio,when);osc.frequency.exponentialRampToValueAtTime(49*ratio,when+.09);osc.frequency.exponentialRampToValueAtTime(42*ratio,when+.26);gain.gain.setValueAtTime(.0001,when);gain.gain.exponentialRampToValueAtTime(vol*.95+.0001,when+.003);gain.gain.exponentialRampToValueAtTime(.0001,when+.4);osc.connect(gain).connect(modGain);osc.start(when);osc.stop(when+.42);osc.onended=()=>{osc.disconnect();gain.disconnect();modGain.disconnect()};const voice={pitchParams:[osc.detune],modGain,released:false,drum:true,trackIndex:nativeTrack,oscs:[osc]};scheduledVoices.add(voice);osc.addEventListener('ended',()=>{voice.released=true;scheduledVoices.delete(voice)},{once:true});return [voice]}
+ const src=c.createBufferSource(),filter=c.createBiquadFilter(),gn=c.createGain();src.buffer=getNoise();src.playbackRate.value=ratio;filter.type='highpass';filter.frequency.value=clamp((type==='hat'?6200:1300)*ratio,200,15000);gn.gain.setValueAtTime(.0001,when);gn.gain.exponentialRampToValueAtTime(Math.max(.0002,(type==='hat'?.37:.6)*vol),when+.004);gn.gain.exponentialRampToValueAtTime(.0001,when+(type==='hat'?.11:.20));src.connect(filter).connect(gn).connect(modGain);src.start(when);src.stop(when+(type==='hat'?.13:.23));src.onended=()=>{src.disconnect();filter.disconnect();gn.disconnect()};let tone=null;if(type==='snare'){tone=c.createOscillator();const tg=c.createGain();tone.type='triangle';tone.frequency.value=175*ratio;tg.gain.setValueAtTime(.18*vol,when);tg.gain.exponentialRampToValueAtTime(.0001,when+.13);tone.connect(tg).connect(modGain);tone.start(when);tone.stop(when+.15);tone.onended=()=>{tone.disconnect();tg.disconnect()}}src.onended=()=>{src.disconnect();filter.disconnect();gn.disconnect();modGain.disconnect()};const voice={pitchParams:[src.detune,...(type==='snare'?[tone.detune]:[])],modGain,released:false,drum:true,trackIndex:nativeTrack,oscs:[src,...(tone?[tone]:[])]};scheduledVoices.add(voice);src.addEventListener('ended',()=>{voice.released=true;scheduledVoices.delete(voice)},{once:true});return [voice]}
 function sampleVoice(t,note,velocity,when,pitch=0,offsetPercent=0){
  const track=state.tracks[t],buffer=sampleBuffers.get(t);
  if(!buffer)return null;
@@ -1921,7 +1922,30 @@ function scheduler(){
   }
  }
 }
-function stopTransport(){nativeVAMessage('panic');midiAllNotesOff();playing=false;recording=false;clearInterval(timer);timer=null;playheadQueue=[];lastVisualStep=-1;currentStep=0;resetFXRuntime();renderSongPosition();$('playBtn').classList.remove('playing');$('playBtn').textContent='▶ PLAY';$('recBtn').classList.remove('recording');renderPlayhead(-1);for(const v of [...scheduledVoices])releaseVoice(v,audio?.ctx.currentTime||0)}
+// Unlike the ordinary note-off envelope, STOP overrides any previously
+// scheduled release and ramps *all* voices down, including long one-shots.
+const STOP_FADE_SECONDS=.085;
+function fadeTransportVoice(voice,now,fade=STOP_FADE_SECONDS){
+ if(!voice)return;
+ if(voice.nativeId){
+  voice.released=true;nativeVAMessage('off',{id:voice.nativeId},now);scheduledVoices.delete(voice);return;
+ }
+ const end=now+fade;
+ // Sample/synth voices use their envelope. Drum voices use their output modulation gain.
+ const amp=voice.env?.gain||voice.modGain?.gain;
+ if(amp){
+  try{
+   if(typeof amp.cancelAndHoldAtTime==='function')amp.cancelAndHoldAtTime(now);
+   else {amp.cancelScheduledValues(now);amp.setValueAtTime(Math.max(0,amp.value),now)}
+   amp.linearRampToValueAtTime(0,end);
+  }catch(e){console.warn('Stop fade envelope:',e)}
+ }
+ voice.released=true;
+ for(const src of new Set([...(voice.oscs||[]),...(voice.src?[voice.src]:[])]))
+  try{src.stop(end+.012)}catch(e){}
+ scheduledVoices.delete(voice);
+}
+function stopTransport(){nativeVAMessage('panic');midiAllNotesOff();playing=false;recording=false;clearInterval(timer);timer=null;playheadQueue=[];lastVisualStep=-1;currentStep=0;resetFXRuntime();renderSongPosition();$('playBtn').classList.remove('playing');$('playBtn').textContent='▶ PLAY';$('recBtn').classList.remove('recording');renderPlayhead(-1);stopEnterPreview();if(audio){const now=audio.ctx.currentTime;for(const v of [...scheduledVoices])fadeTransportVoice(v,now)}}
 async function togglePlay(){if(playing){stopTransport();return}if(state.songModeEnabled&&!state.songSequence.length){notify('Add a pattern to the song arrangement first.',true);return}if(!await initAudio())return;currentStep=0;songPosition=0;if(state.songModeEnabled){state.pattern=state.songSequence[0];state.selectedStep=Math.min(state.selectedStep,patternLength()-1);renderAll()}lastVisualStep=-1;playheadQueue=[];resetFXRuntime();nextNoteTime=audio.ctx.currentTime+.06;playing=true;renderSongPosition();$('playBtn').classList.add('playing');$('playBtn').textContent='❚❚ PAUZE';scheduler();timer=setInterval(scheduler,25)}
 function toggleRecord(){recording=!recording;$('recBtn').classList.toggle('recording',recording);if(recording&&!playing)notify('REC armed: press PLAY and play notes via MIDI.');else notify(recording?'MIDI recording enabled.':'MIDI recording disabled.')}
 function renderPlayhead(i){
