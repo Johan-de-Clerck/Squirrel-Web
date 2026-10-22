@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.70**  
+**Current web version: 0.1.71**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,16 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.71
+
+- **Independent drum-slot low-pass filters:** each drum track's five slots can separately enable a low-pass filter with CUTOFF (80–20,000 Hz) and RESONANCE (Q 0.1–18).
+- **Zero-overhead bypass:** filters default to **OFF**, and the audio engine only allocates a BiquadFilterNode when the triggered slot actually has filtering enabled. The original sample remains unmodified and can be reused in other slots.
+- **Live adjustment:** cutoff and resonance controls use sliders plus exact numeric input; both values update active filtered drum voices smoothly. Enabling or disabling the filter takes effect on new triggers.
+- **Logarithmic cutoff slider:** makes lower frequencies easier to choose while covering the full range. Frequency is limited to the audio device's Nyquist frequency as needed.
+- **RESET FILTER** disables filtering and restores 12,000 Hz cutoff / 0.7 Q for the selected slot without touching its sample, slot mix, envelope, trim or loop.
+- Filters are stored independently with the slot in project JSON and sample bank exports (project v23 and bank v3 retained); older projects remain unfiltered.
+- Added `tests/drum-slot-filter.test.js` covering bypass, routing, live filter updates, sample-rate limits, project/bank save/load and reset.
 
 ## What is new in 0.1.70
 
