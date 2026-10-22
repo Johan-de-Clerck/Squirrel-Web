@@ -3556,7 +3556,7 @@ function soundFieldControl(s,f){
 }
 function renderSound(){
  const t=state.tracks[state.selectedTrack],s=t.sound;
- $('soundTrackLabel').textContent=isSynth(state.selectedTrack)?t.name+(s.engine==='fm'?' · FM 2-OP':' · VA 3-OSC'):t.name;
+ $('soundTrackLabel').textContent=isSynth(state.selectedTrack)?t.name+(s.engine==='fm'?(s.fmMode==='four'?' · FM 4-OP':' · FM 2-OP'):' · VA 3-OSC'):t.name;
  $('soundAuditionBtn').textContent='♪ PREVIEW '+noteName(isSample(state.selectedTrack)?t.sampleRoot:t.note);
  $('soundAuditionBtn').disabled=isSample(state.selectedTrack)&&!sampleBuffers.has(state.selectedTrack);
  const area=$('soundControls');area.replaceChildren();area.classList.remove('synth-controls');
@@ -3579,7 +3579,7 @@ function renderSound(){
  const engineHead=document.createElement('span');engineHead.className='field-head';engineHead.textContent='SYNTHESIS ENGINE';
  const engineSelect=document.createElement('select');engineSelect.setAttribute('aria-label','Synthesis engine');
  engineSelect.add(new Option('VA · VIRTUAL ANALOG','va'));
- engineSelect.add(new Option('FM · TWO OPERATORS','fm'));
+ engineSelect.add(new Option('FM · FREQUENCY MODULATION','fm'));
  engineSelect.value=s.engine==='fm'?'fm':'va';
  engineSelect.onchange=()=>{s.engine=engineSelect.value;persist();renderSound()};
  engineRow.append(engineHead,engineSelect);area.append(engineRow);
