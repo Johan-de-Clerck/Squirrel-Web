@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.68**  
+**Current web version: 0.1.69**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,16 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.69
+
+- Each DRUM slot has an independent **RELEASE** time (0–2000 ms, default 18 ms). The AMPLITUDE ENVELOPE section now offers Attack, Decay and Release with slider and precise numeric entry.
+- **Keyboard/MIDI note-off** now fades the selected drum voice using its slot-specific RELEASE setting instead of always fading over a fixed 18 ms.
+- **Gated, looping drum samples** fade smoothly at the end of their step gate rather than cutting hard. One-shot drums keep their natural sample duration regardless of step gate, maintaining the previous drum-machine workflow.
+- The DECAY control still takes priority when it reaches silence before the note-off; ungated loops with DECAY OFF can sustain until release.
+- **RESET ENV** restores Attack 2 ms, Decay 0 (OFF) and Release 18 ms; sound, trim, choke, per-slot mixer and library assignments are unchanged.
+- Existing project version 23 and sample bank v3 carry the new RELEASE field. Old files default to 18 ms without changing their other settings.
+- Added `tests/drum-slot-release.test.js` with 15 checks, covering note-off, gated loops, one-shot playback, decay interaction, save/load and legacy defaults.
 
 ## What is new in 0.1.68
 
