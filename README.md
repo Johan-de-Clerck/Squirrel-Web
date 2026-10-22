@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.58**  
+**Current web version: 0.1.59**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -21,7 +21,17 @@ For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and op
 
 Read [HELP.md](HELP.md) for the full English user guide.
 
-## What is new in 0.1.58
+## What is new in 0.1.59
+
+- **15-sample DRUM LIBRARY:** load up to 15 distinct audio files in a shared library at the top of the **DRUM SAMPLES** page. Each slot on every track configured as DRUM can be assigned one of these samples from its dropdown. Multiple slots may reference the same library sample without duplicating the stored sound.
+- Each Drum track retains its **five editable sample slots**, selected step sample slot, choke groups and fallback synthesized drum sound. A direct LOAD option remains available for backwards compatibility with existing projects.
+- **EDIT in the Sample Editor:** the EDIT button beside an assigned or directly loaded drum slot opens the waveform editor. Drum slots have their own START, END, LOOP START and LOOP END settings, independent of other slots pointing to the same shared library sound.
+- **PING-PONG LOOP:** turn on LOOP, then PING-PONG LOOP, in the Sample Editor for an ordinary Sample instrument or an assigned Drum slot. The audio actually alternates forward and backward through the selected loop region; original stereo channels are preserved.
+- Waveform playback accounts for Ping-Pong direction, sample trims and FX 9 offsets. Offsets at or beyond LOOP END still play the remaining tail once rather than creating an invalid loop.
+- **Project format 23 and Sample Bank v3** preserve the 15 sample assets, drum-slot assignments and per-slot sample editor settings. Older songs and version-1/2 sample banks continue to import.
+- Added `tests/drum-library-pingpong.test.js` covering shared buffers, independent slot markers, reverse stereo audio and legacy project migration.
+
+## Improvements from 0.1.58
 
 - **FX 9 and sample loops:** sample offsets no longer push a LOOP START beyond LOOP END. Normal offsets within the loop retain the original saved loop handles and work correctly with the Sample waveform cursor.
 - **Offset after LOOP END:** when FX 9 starts playback at or after the sample's loop end, that triggered voice plays the remaining trimmed tail once instead of trying to create an invalid loop. For example, `950` still starts at 50% of the trimmed sample even when LOOP END is 40%.
@@ -122,7 +132,7 @@ Read [HELP.md](HELP.md) for the full English user guide.
 - Each BASS/LEAD/CHORD track has its own oscillator, sub-oscillator, filter and envelope patch. Switching between synth types preserves their respective sound presets.
 - Track-type selection is available both in **SEQUENCER → Step Editor** and **OPTIONS → Track Instrument Types**.
 - The sample and drum editors show the tracks configured for their instrument type.
-- Fixes in 0.1.58: sampler root-note persistence, sample loading during project/track switching, default sampler volume when resetting the mixer, MIDI-independent audio device wording, and clearer empty-sampler behavior.
+- Fixes in 0.1.59: sampler root-note persistence, sample loading during project/track switching, default sampler volume when resetting the mixer, MIDI-independent audio device wording, and clearer empty-sampler behavior.
 - The Step Editor and Step FX retain a consistent height; their vertical scrollbars are hidden.
 - Import/export sample banks supports **all eight tracks** (bank format v2); older v1 sample banks can still be imported.
 
@@ -155,7 +165,7 @@ Read [HELP.md](HELP.md) for the full English user guide.
 
 ## Repository files
 
-- `index.html` — **current Squirrel Studio Web 0.1.58** application
+- `index.html` — **current Squirrel Studio Web 0.1.59** application
 - `demo.json` — included song with sample data
 - `squirrel-icon.webp` — mascot and favicon
 - `README.md` — current version, downloads and overview
@@ -168,4 +178,4 @@ Read [HELP.md](HELP.md) for the full English user guide.
 
 The web edition uses **Web Audio**, not direct ASIO. MIDI device access depends on browser permissions and supported operating systems. The Windows JUCE desktop source is experimental. Audio playback and browser behavior require manual testing on the actual device in addition to code-level regression tests.
 
-To check that the latest build loaded, look for **BUILD 0.1.58** in the app header. If an earlier build appears, replace locally extracted files or force refresh (**Ctrl+F5**).
+To check that the latest build loaded, look for **BUILD 0.1.59** in the app header. If an earlier build appears, replace locally extracted files or force refresh (**Ctrl+F5**).
