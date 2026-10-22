@@ -234,6 +234,7 @@ private:
         if (action == "on") cmd.type = SquirrelNativeAudio::Command::on;
         else if (action == "off") cmd.type = SquirrelNativeAudio::Command::off;
         else if (action == "pitch") cmd.type = SquirrelNativeAudio::Command::pitch;
+        else if (action == "drum") cmd.type = SquirrelNativeAudio::Command::drum;
         else if (action == "mix") cmd.type = SquirrelNativeAudio::Command::mix;
         else if (action == "panic") cmd.type = SquirrelNativeAudio::Command::panic;
         else return;
@@ -241,9 +242,12 @@ private:
         cmd.track = static_cast<int> (number (data, "track", 3));
         if (cmd.type == SquirrelNativeAudio::Command::on && (cmd.track < 3 || cmd.track > 5))
             return;
+        if (cmd.type == SquirrelNativeAudio::Command::drum && (cmd.track < 0 || cmd.track > 2))
+            return;
         cmd.note = static_cast<int> (number (data, "note", 60));
         cmd.velocity = static_cast<float> (number (data, "velocity", 100) / 127.0);
         cmd.cents = static_cast<float> (number (data, "cents", 0));
+        cmd.drumPitch = static_cast<float> (number (data, "pitch", 0));
         cmd.level = static_cast<float> (number (data, "level", 1));
         auto& p = cmd.patch;
         p.wave1 = wave (sound.getProperty ("wave1", {}).toString());
@@ -412,7 +416,7 @@ class SquirrelStudioApplication final : public juce::JUCEApplication
 {
 public:
     const juce::String getApplicationName() override    { return "Squirrel Studio Desktop"; }
-    const juce::String getApplicationVersion() override { return "0.1.6"; }
+    const juce::String getApplicationVersion() override { return "0.1.7"; }
     bool moreThanOneInstanceAllowed() override { return false; }
 
     void initialise (const juce::String&) override
@@ -428,7 +432,7 @@ private:
     class Window final : public juce::DocumentWindow
     {
     public:
-        Window() : juce::DocumentWindow ("Squirrel Studio Desktop 0.1.6",
+        Window() : juce::DocumentWindow ("Squirrel Studio Desktop 0.1.7",
                                         juce::Colour (0xff171310),
                                         juce::DocumentWindow::allButtons)
         {
