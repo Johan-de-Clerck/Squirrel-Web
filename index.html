@@ -1140,11 +1140,20 @@ async function clearDrumSample(t,slot){
  persist();renderAll();renderDrumSamples();
 }
 const activeChokeVoices=new Map();
-function drumSampleVoice(t,slot,velocity,when,offsetPercent=0){
+function drumSampleVoice(t,slot,velocity,when,offsetPercent=0,gate=null){
  const buffer=drumSampleBuffers.get(drumSlotKey(t,slot));
  if(!buffer||!audio)return null;
  const c=audio.ctx,src=c.createBufferSource(),gain=c.createGain(),modGain=c.createGain();
- src.buffer=buffer;modGain.gain.value=1;
+ const item=state.drumSamples[t][slot],plan=samplePlaybackPlan(item,buffer.duration,offsetPercent);
+ src.buffer=buffer;
+ if(plan.loop){
+  src.loop=true;
+  if(plan.pingPong){
+   const mirror=pingPongAudioBuffer(buffer,plan.loopStart,plan.loopEnd);
+   src.buffer=mirror.buffer;src.loopStart=mirror.loopStart;src.loopEnd=mirror.loopEnd;
+  }else{src.loopStart=plan.loopStart;src.loopEnd=plan.loopEnd}
+ }
+ modGain.gain.value=1;
  gain.gain.setValueAtTime(0,when);
  gain.gain.linearRampToValueAtTime(clamp(velocity/127,0,1),when+.002);
  src.connect(gain).connect(modGain).connect(audio.trackGains[t]);
@@ -1176,8 +1185,11 @@ function drumSampleVoice(t,slot,velocity,when,offsetPercent=0){
   if(group)activeChokeVoices.get(groupKey)?.delete(groupEntry);
   try{src.disconnect();gain.disconnect();modGain.disconnect()}catch(e){}
  };
- const offset=buffer.duration*clamp(Number(offsetPercent)||0,0,.99);
- src.start(when,offset);src.stop(when+Math.max(.001,buffer.duration-offset)+.01);
+ src.start(when,plan.startAt);
+ if(plan.loop){
+  // A drum loop held from the keyboard ends on keyup; patterns obey GATE.
+  if(gate!==null)src.stop(when+Math.max(.03,gate));
+ }else src.stop(when+Math.max(.001,plan.endAt-plan.startAt)+.01);
  return voice;
 }
 function renderDrumSamples(){
@@ -1217,7 +1229,7 @@ function renderDrumSamples(){
   const load=document.createElement('button');load.className='mini-btn';load.textContent='LOAD';load.onclick=()=>{drumFileTarget={track:drumEditorTrack,slot};$('drumSampleFileInput').click()};
   const preview=document.createElement('button');preview.className='mini-btn';preview.textContent='▶';preview.setAttribute('aria-label','Preview '+drumName(drumEditorTrack,slot));preview.disabled=!item.data;preview.onclick=async()=>{
    if(!await initAudio())return;
-   drumSampleVoice(drumEditorTrack,slot,115,audio.ctx.currentTime+.008);
+   drumSampleVoice(drumEditorTrack,slot,115,audio.ctx.currentTime+.008,0,1.25);
   };
   const clear=document.createElement('button');clear.className='mini-btn';clear.textContent='×';clear.setAttribute('aria-label','Clear '+drumName(drumEditorTrack,slot));clear.disabled=!item.data;clear.onclick=()=>clearDrumSample(drumEditorTrack,slot);
   actions.append(use,load,preview,clear);row.append(id,name,chokeLabel,actions);list.append(row);
@@ -1897,7 +1909,7 @@ function playTrack(t,note,velocity,when,gate=null,pitch=0,quality=null,sampleSlo
  if(track.midiOnly||isTrackEffectivelyMuted(t))return null;
  if(kind==='sample'){const voice=sampleVoice(t,note,velocity,when,pitch,offsetPercent);return voice?[voice]:null;}
  if(kind==='drum'){
-  if(hasDrumSamples(t)){const voice=drumSampleVoice(t,clamp(sampleSlot|0,0,4),velocity,when,offsetPercent);if(voice)return [voice];}
+  if(hasDrumSamples(t)){const voice=drumSampleVoice(t,clamp(sampleSlot|0,0,4),velocity,when,offsetPercent,gate);if(voice)return [voice];}
   return oneShot(track.drumType||'kick',track,velocity,when,pitch);
  }
  if(kind==='chord'){
