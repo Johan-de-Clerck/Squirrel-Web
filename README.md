@@ -170,3 +170,8 @@ Windows desktop gebruikt de actuele `index.html` uit GitHub bij het bouwen. Focu
 ## Web 0.1.21 / Windows 0.1.6 — native VA-mijlpaal
 
 De webversie behoudt Web Audio voor alle tracks. Wanneer dezelfde interface in de Windows-desktopapp draait, worden Bass, Lead en Chord via een optionele bridge naar JUCE native audio gestuurd. OSC 1/2/SUB, amplitude-ADSR, filter, pitch/volume FX en akkoordnoten werken daar native. Drums, WAV-samplers en send effects draaien nog Web Audio. De Windows-source staat onder [`windows/`](windows/README.md).
+
+
+## Squirrel Studio Web 0.1.22 / Windows 0.1.7
+
+De browser blijft Web Audio gebruiken voor alle tracks. In de Windows JUCE-app spelen nu Kick, Snare, Hi-Hat, Bass, Lead en Chord native via dezelfde audio-uitgang; WAV-samplers 7/8 en Delay/Reverb blijven voorlopig Web Audio. De Windows-broncode staat in [`windows/`](windows/README.md).
