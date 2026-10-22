@@ -88,7 +88,7 @@ There are **32 patterns** (A1–D8), grouped as A1–A8, B1–B8, C1–C8 and D1
 
 Each track has an independent **step length from 1 to 32**, initially **32**. You can change it next to the track or in **OPTIONS**.
 
-The effective pattern length is the **longest** enabled track length. For example, if the kick runs for 32 steps and the hi-hat for 6, the hi-hat repeats its six steps until the global position reaches 32. **Song Mode advances only then**. The song arrangement can contain a pattern several times and can be reordered by dragging tiles. Song Mode can be enabled or disabled.
+The effective pattern length is the **longest** enabled track length. For example, if the kick runs for 32 steps and the hi-hat for 6, the hi-hat repeats its six steps until the global position reaches 32. **Song Mode advances only then**. The song arrangement can contain a pattern several times and can be reordered by dragging tiles. Song Mode can be enabled or disabled. **Click** a tile in the song arrangement to cue that tile; a **dim green** highlight shows the starting position while stopped. Press the main **PLAY** button to start at that position, or **double-click** the tile to play there immediately (Song Mode must be enabled). The **bright green** highlight follows the sound currently playing, not the next scheduled pattern. Press **STOP** to keep the currently heard tile as the next start position. Song tiles can also be selected from the keyboard (Tab then Enter/Space). Inserting, moving or removing song tiles during playback safely stops playback first.
 
 ## 5. Drum samples — any track configured as DRUM
 
