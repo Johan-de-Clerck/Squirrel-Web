@@ -1,4 +1,4 @@
-// Squirrel Studio 0.1.57 — held note entry in EDIT ON.
+// Squirrel Studio 0.1.58 — held note entry in EDIT ON.
 // Run: node tests/edit-held-audition.test.js (no dependencies).
 'use strict';
 const fs=require('node:fs');
@@ -51,6 +51,27 @@ const run=new Function('window','document','localStorage','console','structuredC
  onReady(true);
  eq(asyncPlays,0,'Released key cannot trigger delayed audio initialization');
  eq(editNotePreviews.size,0,'No orphan preview after async initialization');
- return 'PASS: held EDIT note, release, overlap, FX 950, MIDI off and canceled async startup';
+ // Navigation must release held previews even if the physical key is still down.
+ persist=()=>{};renderAll=()=>{};
+ state.selectedTrack=6;state.selectedStep=0;
+ startEditNotePreview('z',6,step);
+ eq(editNotePreviews.size,1,'Held preview before track change');
+ selectTrack(7);
+ eq(editNotePreviews.size,0,'Changing tracks cancels held EDIT preview');
+ const newStep=state.patterns[0][7][0];newStep.on=true;newStep.note=50;
+ startEnterPreview();
+ eq(enterPreview!==null,true,'ENTER preview before pattern change');
+ choosePattern(8);
+ eq(enterPreview,null,'Changing patterns releases held ENTER preview');
+ startEditNotePreview('x',7,step);
+ view='seq';
+ const dummy={classList:{toggle(){}}};
+ document.getElementById=()=>dummy;
+ document.querySelectorAll=()=>[];
+ renderMixerIfChanged=()=>{};
+ switchView('mixer');
+ eq(editNotePreviews.size,0,'Switching workspace cancels held EDIT preview');
+ eq(view,'mixer','Workspace still changes normally');
+ return 'PASS: EDIT note hold/release, FX 950, MIDI, async start and navigation safety';
 `);
 console.log(run({}, {}, {getItem:()=>null,setItem:()=>{}},{warn:()=>{},log:()=>{},error:()=>{}},structuredClone));
