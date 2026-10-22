@@ -1,4 +1,4 @@
-# Squirrel Studio — Web Synth & Step Sequencer
+<img src="squirrel-icon.webp" alt="Squirrel Studio mascot" width="128" height="128">\n\n# Squirrel Studio — Web Synth & Step Sequencer
 
 **Current web version: 0.1.38**
 
@@ -47,7 +47,7 @@ Read **[HELP.md](HELP.md)** for the complete English user guide.
 
 ## Current files on `main`
 
-- `index.html` — current web application
+- `index.html` — current web application\n- `squirrel-icon.webp` — squirrel mascot used as the web favicon and application logo
 - `demo.json` — the **Johan_01** demo (120 BPM, Main / Odd Track / Odd Snare), including embedded kick, clap, hi-hat and snare samples
 - `SquirrelStudio_Web_0.1.38.zip` — current web package
 - `README.md` — overview
