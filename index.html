@@ -1131,6 +1131,7 @@ async function decodeAllDrumSamples(){
  }
 }
 async function clearDrumSamplesStorage(){
+ for(let i=0;i<DRUM_LIBRARY_SIZE;i++)await sampleDB('delete',drumLibraryKey(i)).catch(e=>console.warn(e));
  for(let t=0;t<TRACK_COUNT;t++)for(let i=0;i<5;i++){
   try{await sampleDB('delete',drumSlotKey(t,i))}catch(e){console.warn(e)}
  }
@@ -1445,7 +1446,7 @@ s.drumSamples=Array.from({length:TRACK_COUNT},(_,t)=>Array.from({length:5},(_,sl
   for(const field of ['sampleStart','sampleEnd','loopStart','loopEnd'])
    if(Number.isFinite(Number(item[field])))normalized[field]=clamp(Number(item[field]),0,1);
   normalized.sampleLoop=!!item.sampleLoop;normalized.loopPingPong=!!item.loopPingPong;
-  normalized.libraryIndex=Number.isInteger(item.libraryIndex)&&item.libraryIndex>=0&&item.libraryIndex<DRUM_LIBRARY_SIZE&&s.drumLibrary[item.libraryIndex].data?item.libraryIndex:null;
+  normalized.libraryIndex=Number.isInteger(item.libraryIndex)&&item.libraryIndex>=0&&item.libraryIndex<DRUM_LIBRARY_SIZE?item.libraryIndex:null;
   sanitizeSampleMarkers(normalized);
   return normalized;
  }));
@@ -1569,7 +1570,7 @@ function redoEdit(){
 
 function persist(){try{
  // Samplebytes worden apart in IndexedDB bewaard, zodat lokale opslag niet volloopt.
- const snapshot={...state,tracks:state.tracks.map(t=>({...t,sampleData:null})),drumSamples:state.drumSamples.map(row=>row.map(item=>({...item,data:null})))};
+ const snapshot={...state,tracks:state.tracks.map(t=>({...t,sampleData:null})),drumSamples:state.drumSamples.map(row=>row.map(item=>({...item,data:null}))),drumLibrary:state.drumLibrary.map(item=>({...item,data:null}))};
  localStorage.setItem('squirrel-studio-0.1',JSON.stringify(snapshot));
  }catch(e){console.warn('Storage failed:',e)}addUndoHistory()}
 function notify(msg,bad=false){const el=$('notice');el.textContent=msg;el.classList.toggle('bad',bad);clearTimeout(messageTimeout);messageTimeout=setTimeout(()=>{el.textContent=''},5700)}
@@ -2967,9 +2968,14 @@ function setPatternLength(bank,value){
 
 async function applyLoadedProject(project){
  stopTransport();
- sampleSession++;sampleBuffers.clear();drumSampleBuffers.clear();
+ sampleSession++;sampleBuffers.clear();drumSampleBuffers.clear();drumLibraryBuffers.clear();
  stepClipboard=null;clearStepRange();state=project;songPosition=0;fxEditMode=false;fxDigitBuffer='';
  // Replace IndexedDB samples as a single project, never mixing the demo with the previous song.
+ for(let i=0;i<DRUM_LIBRARY_SIZE;i++){
+  const item=state.drumLibrary[i];
+  try{if(item?.data)await sampleDB('put',drumLibraryKey(i),item);else await sampleDB('delete',drumLibraryKey(i))}
+  catch(e){console.warn('Drum library project storage:',e)}
+ }
  for(let t=0;t<TRACK_COUNT;t++)for(let slot=0;slot<5;slot++){
   const item=state.drumSamples[t][slot],key=drumSlotKey(t,slot);
   try{if(item.data)await sampleDB('put',key,item);else await sampleDB('delete',key)}
@@ -2984,7 +2990,7 @@ async function applyLoadedProject(project){
  }
  persist();hasLocalProject=true;
  resetUndoHistory();
- if(audio){await decodeAllSamplers();await decodeAllDrumSamples();applyTrackMix();applyLFOs()}
+ if(audio){await decodeAllSamplers();await decodeAllDrumSamples();await decodeDrumLibrary();applyTrackMix();applyLFOs()}
  renderAll();
 }
 async function loadDemoJson(confirmReplace=true){
@@ -3013,7 +3019,7 @@ function newSong(){
   for(const [key,voices] of activeLive){for(const voice of voices)if(!voice.drum)releaseVoice(voice,audio?.ctx.currentTime||0)}
   activeLive.clear();keyboardDown.clear();keyboardAssignments.clear();
   sampleSession++;sampleBuffers.clear();for(let i=0;i<TRACK_COUNT;i++)removeStoredSample(i);
-  state=fresh(false);drumSampleBuffers.clear();clearDrumSamplesStorage();songPosition=0; // eight tracks, sixteen blank patterns
+  state=fresh(false);drumSampleBuffers.clear();drumLibraryBuffers.clear();clearDrumSamplesStorage();songPosition=0; // eight tracks, sixteen blank patterns
   clipboard=null;stepClipboard=null;clearStepRange();fxEditMode=false;fxDigitBuffer='';
   if(audio){applyTrackMix();updateSendEngine();applyLFOs()}
   persist();resetUndoHistory();switchView('seq');renderAll();focusSelectedPad(false);
@@ -3344,7 +3350,7 @@ function projectFileName(name,now=new Date()){
 async function saveProject(){
  // Samples restore asynchronously from IndexedDB after the page opens.
  // Finish that restore before generating a portable project file.
- try{await Promise.all([restoredSamples,restoredDrumSamples])}
+ try{await Promise.all([restoredSamples,restoredDrumSamples,restoredDrumLibrary])}
  catch(e){notify('Could not restore samples before saving: '+e.message,true);return}
  state.projectName=$('projectNameInput').value.trim().slice(0,80);
  $('projectNameInput').value=state.projectName;
@@ -3424,7 +3430,7 @@ function bindings(){
   autoDemoOnStart=desired;
   try{localStorage.setItem(DEMO_AUTO_KEY,desired?'1':'0')}catch(e){console.warn(e)}
  };
- $('newSongBtn').onclick=newSong;$('demoBtn').onclick=()=>{if(!confirm('Restore demo? Unsaved changes in this session will be overwritten.'))return;stopTransport();sampleSession++;sampleBuffers.clear();for(let i=0;i<TRACK_COUNT;i++)removeStoredSample(i);state=fresh();drumSampleBuffers.clear();clearDrumSamplesStorage();songPosition=0;persist();applyTrackMix();renderAll();notify('Demo restored.')};
+ $('newSongBtn').onclick=newSong;$('demoBtn').onclick=()=>{if(!confirm('Restore demo? Unsaved changes in this session will be overwritten.'))return;stopTransport();sampleSession++;sampleBuffers.clear();for(let i=0;i<TRACK_COUNT;i++)removeStoredSample(i);state=fresh();drumSampleBuffers.clear();drumLibraryBuffers.clear();clearDrumSamplesStorage();songPosition=0;persist();applyTrackMix();renderAll();notify('Demo restored.')};
   // Houd de padnavigatie direct bereikbaar na muis-/touchbediening van een slider.
   // Sliderinput blijft tijdens het slepen gefocust; na loslaten gaat de focus
   // terug naar de huidige step. Daardoor wijzigen de pijltjes daarna niet
