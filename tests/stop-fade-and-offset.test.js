@@ -28,13 +28,13 @@ const run=new Function('window','document','localStorage','console','structuredC
   cancelAndHoldAtTime(t){this.calls.push(['hold',t])},
   cancelScheduledValues(t){this.calls.push(['cancel',t])}
  });
- const node=()=>({gain:param(),frequency:param(),Q:param(),connect(dest){return dest},disconnect(){}});
+ const node=()=>({gain:param(),pan:param(),frequency:param(),Q:param(),connect(dest){return dest},disconnect(){}});
  const makeSource=()=>{
   const src={playbackRate:param(),detune:param(),starts:[],stops:[],connect(dest){return dest},disconnect(){},
    start(...args){this.starts.push(args)},stop(t){this.stops.push(t)}};
   sources.push(src);return src;
  };
- const context={currentTime:10,createBufferSource:makeSource,createGain:node,createBiquadFilter:node};
+ const context={currentTime:10,createBufferSource:makeSource,createGain:node,createStereoPanner:node,createBiquadFilter:node};
  state=fresh(false);
  audio={ctx:context,trackGains:Array.from({length:TRACK_COUNT},node),cutoffBuses:Array.from({length:TRACK_COUNT},node)};
  attachFilterEnvelopes=()=>[];
