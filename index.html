@@ -2473,7 +2473,10 @@ function renderSound(){
  area.append(row,filterSection);
  drawWave();
 }
-let selectedSampleEditorTrack=6;
+let selectedSampleEditorTrack=6,selectedSampleEditorDrumSlot=null;
+function sampleEditorIsDrum(){return selectedSampleEditorDrumSlot!==null&&isDrum(selectedSampleEditorTrack)}
+function sampleEditorItem(){return sampleEditorIsDrum()?state.drumSamples[selectedSampleEditorTrack][selectedSampleEditorDrumSlot]:state.tracks[selectedSampleEditorTrack]}
+function sampleEditorBuffer(){return sampleEditorIsDrum()?drumSampleBuffers.get(drumSlotKey(selectedSampleEditorTrack,selectedSampleEditorDrumSlot)):sampleBuffers.get(selectedSampleEditorTrack)}
 const SAMPLE_MARKERS=[['sampleStart','START'],['loopStart','LOOP START'],['loopEnd','LOOP END'],['sampleEnd','END']];
 function sampleMarkerChanges(track,key,value){
  const q=.002, v=clamp(value,0,1);
@@ -2485,10 +2488,10 @@ function sampleMarkerChanges(track,key,value){
 }
 function drawSampleWaveform(){
  const canvas=$('sampleWaveCanvas');if(!canvas)return;
- const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height,track=state.tracks[selectedSampleEditorTrack],buffer=isSample(selectedSampleEditorTrack)?sampleBuffers.get(selectedSampleEditorTrack):null;
+ const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height,track=sampleEditorItem(),buffer=sampleEditorBuffer();
  ctx.clearRect(0,0,W,H);ctx.fillStyle='#16110e';ctx.fillRect(0,0,W,H);
- if(!isSample(selectedSampleEditorTrack)){
-  ctx.fillStyle='#947257';ctx.font='21px sans-serif';ctx.fillText('Select a SAMPLE instrument in Options',30,H/2);
+ if(!isSample(selectedSampleEditorTrack)&&!sampleEditorIsDrum()){
+  ctx.fillStyle='#947257';ctx.font='21px sans-serif';ctx.fillText('Select a sample track or loaded drum slot',30,H/2);
   const status=$('samplePlayStatus');if(status)status.textContent='POS —';
   return;
  }
@@ -2499,7 +2502,7 @@ function drawSampleWaveform(){
   for(let i=0;i<buckets;i++){const a=Math.floor(i/buckets*n),z=Math.max(a+1,Math.floor((i+1)/buckets*n)),stride=Math.max(1,Math.floor((z-a)/18));let lo=1,hi=-1;for(let j=a;j<z;j+=stride){const v=data[j];lo=Math.min(lo,v);hi=Math.max(hi,v)}const x=i/buckets*W;ctx.moveTo(x,H/2-hi*H*.39);ctx.lineTo(x,H/2-lo*H*.39)}ctx.stroke();
  }else{ctx.fillStyle='#947257';ctx.font='21px sans-serif';ctx.fillText('Load a sample on the selected track',30,H/2)}
  for(const [key,label] of SAMPLE_MARKERS){if(!track.sampleLoop&&key.startsWith('loop'))continue;const x=track[key]*W;ctx.strokeStyle=key.startsWith('loop')?'#8fe0b3':'#ffdb9b';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();ctx.fillStyle=ctx.strokeStyle;ctx.fillRect(x-4,0,8,10)}
- const play=buffer?sampleCursorPosition(selectedSampleEditorTrack):null,status=$('samplePlayStatus');
+ const play=buffer&&!sampleEditorIsDrum()?sampleCursorPosition(selectedSampleEditorTrack):null,status=$('samplePlayStatus');
  if(status)status.textContent=play?'POS '+play.seconds.toFixed(2)+'s':'POS —';
  if(play){
   const x=play.fraction*W;
@@ -2508,40 +2511,74 @@ function drawSampleWaveform(){
   ctx.shadowBlur=0;ctx.fillStyle='#b4f6ce';ctx.beginPath();ctx.moveTo(x-7,0);ctx.lineTo(x+7,0);ctx.lineTo(x,12);ctx.closePath();ctx.fill();ctx.restore();
  }
 }
+function saveSampleEditorChanges(){
+ const item=sampleEditorItem();
+ persist();
+ if(sampleEditorIsDrum()&&item?.data)sampleDB('put',drumSlotKey(selectedSampleEditorTrack,selectedSampleEditorDrumSlot),item)
+  .catch(e=>console.warn('Could not store drum editor settings:',e));
+}
 function renderSampleEditor(){
- const select=$('sampleEditTrack');
- const available=state.tracks.flatMap((t,i)=>isSample(i)?[i]:[]);
- if(!available.includes(selectedSampleEditorTrack))selectedSampleEditorTrack=available[0]??0;
- select.replaceChildren();
- for(const i of available)select.add(new Option(String(i+1).padStart(2,'0')+' · '+state.tracks[i].name,String(i)));
- select.disabled=!available.length;
- if(!available.length)select.add(new Option('NO SAMPLE TRACKS — CHOOSE SAMPLE IN OPTIONS','0'));
- else select.value=String(selectedSampleEditorTrack);
- $('sampleEditorLoad').disabled=!available.length;
- $('sampleEditorPreview').disabled=!available.length||!sampleBuffers.has(selectedSampleEditorTrack);
- const track=state.tracks[selectedSampleEditorTrack],grid=$('sampleEditControls');grid.replaceChildren();
- if(!available.length){$('sampleEditorFile').textContent='SELECT SAMPLE AS A TRACK TYPE FIRST';drawSampleWaveform();return;}
- $('sampleEditorFile').textContent=available.length?(track.sampleName||'NO SAMPLE LOADED'):'SELECT SAMPLE AS A TRACK TYPE FIRST';
- const root=document.createElement('label');root.className='field';root.innerHTML='<span class="field-head">ROOT NOTE</span>';
- const rootSelect=document.createElement('select');for(let n=24;n<=95;n++)rootSelect.add(new Option(noteName(n),String(n)));rootSelect.value=String(track.sampleRoot);rootSelect.onchange=()=>{
-  track.sampleRoot=Number(rootSelect.value);
-  persist();
-  if(track.sampleData)sampleDB('put',selectedSampleEditorTrack,{data:track.sampleData,name:track.sampleName,root:track.sampleRoot})
-    .catch(e=>console.warn('Could not save sample root note:',e));
- };root.append(rootSelect);grid.append(root);
- const loop=document.createElement('label');loop.className='sample-loop-toggle';const cb=document.createElement('input');cb.type='checkbox';cb.checked=track.sampleLoop;cb.onchange=()=>{track.sampleLoop=cb.checked;persist();renderSampleEditor()};loop.append(cb,document.createTextNode('LOOP ON'));grid.append(loop);
- // Every sample track has its own cutoff and resonance, modulated by LFO/ADSR.
- for(const [key,label,min,max,step,unit] of [['sampleCutoff','FILTER CUTOFF',80,12000,10,' Hz'],['sampleResonance','RESONANCE',.1,18,.1,' Q']]){
-  const field=document.createElement('label');field.className='field';const top=document.createElement('span');top.className='field-head';const out=document.createElement('output');
-  const fmt=()=>key==='sampleCutoff'?Math.round(track[key])+unit:track[key].toFixed(1)+unit;
-  out.textContent=fmt();top.append(document.createTextNode(label),out);
-  const slider=document.createElement('input');slider.type='range';slider.min=String(min);slider.max=String(max);slider.step=String(step);slider.value=String(track[key]);
-  slider.oninput=()=>{track[key]=Number(slider.value);out.textContent=fmt();persist();if(audio){const now=audio.ctx.currentTime;for(const voice of scheduledVoices){if(voice.trackIndex!==selectedSampleEditorTrack||!voice.filter||voice.released)continue;const param=key==='sampleCutoff'?voice.filter.frequency:voice.filter.Q;param.setTargetAtTime(track[key],now,.015)}applyLFOs()}};
-  field.append(top,slider);grid.append(field);
+ const select=$('sampleEditTrack'),grid=$('sampleEditControls'),available=[];
+ for(let i=0;i<TRACK_COUNT;i++){
+  if(isSample(i))available.push({track:i,slot:null,value:'s:'+i,
+   label:String(i+1).padStart(2,'0')+' · '+state.tracks[i].name+' (SAMPLE)'});
+  if(isDrum(i))for(let slot=0;slot<5;slot++){
+   const drum=state.drumSamples[i][slot];
+   if(drum?.data)available.push({track:i,slot,value:'d:'+i+':'+slot,
+    label:String(i+1).padStart(2,'0')+' · '+state.tracks[i].name+' / SLOT '+(slot+1)+' · '+(drum.name||'SAMPLE')});
+  }
  }
- for(const [key,label] of SAMPLE_MARKERS){if(!track.sampleLoop&&key.startsWith('loop'))continue;const field=document.createElement('label');field.className='field';const head=document.createElement('span');head.className='field-head';const output=document.createElement('output');output.textContent=(track[key]*100).toFixed(1)+'%';head.append(document.createTextNode(label),output);
- const slider=document.createElement('input');slider.type='range';slider.min='0';slider.max='1000';slider.step='1';slider.value=String(Math.round(track[key]*1000));slider.dataset.marker=key;
- slider.oninput=()=>{sampleMarkerChanges(track,key,Number(slider.value)/1000);slider.value=Math.round(track[key]*1000);output.textContent=(track[key]*100).toFixed(1)+'%';drawSampleWaveform()};field.append(head,slider);grid.append(field)}
+ let choice=available.find(x=>x.track===selectedSampleEditorTrack&&x.slot===selectedSampleEditorDrumSlot);
+ if(!choice&&available.length){choice=available[0];selectedSampleEditorTrack=choice.track;selectedSampleEditorDrumSlot=choice.slot}
+ select.replaceChildren();
+ for(const item of available)select.add(new Option(item.label,item.value));
+ if(choice)select.value=choice.value;
+ else select.add(new Option('NO SAMPLE TRACKS OR LOADED DRUM SLOTS',''));
+ select.disabled=!available.length;
+ $('sampleEditorLoad').disabled=!available.length;
+ $('sampleEditorPreview').disabled=!choice||!sampleEditorBuffer();
+ grid.replaceChildren();
+ if(!choice){$('sampleEditorFile').textContent='LOAD A SAMPLE OR CHOOSE SAMPLE IN OPTIONS';drawSampleWaveform();return}
+ const drum=sampleEditorIsDrum(),track=sampleEditorItem();
+ sanitizeSampleMarkers(track);
+ $('sampleEditorFile').textContent=drum?'DRUM SLOT '+(selectedSampleEditorDrumSlot+1)+' · '+(track.name||'SAMPLE'):track.sampleName||'NO SAMPLE LOADED';
+ if(!drum){
+  const root=document.createElement('label');root.className='field';root.innerHTML='<span class="field-head">ROOT NOTE</span>';
+  const rootSelect=document.createElement('select');for(let n=24;n<=95;n++)rootSelect.add(new Option(noteName(n),String(n)));
+  rootSelect.value=String(track.sampleRoot);
+  rootSelect.onchange=()=>{track.sampleRoot=Number(rootSelect.value);persist();if(track.sampleData)sampleDB('put',selectedSampleEditorTrack,{data:track.sampleData,name:track.sampleName,root:track.sampleRoot}).catch(e=>console.warn(e))};
+  root.append(rootSelect);grid.append(root);
+ }
+ const loop=document.createElement('label');loop.className='sample-loop-toggle';
+ const cb=document.createElement('input');cb.type='checkbox';cb.checked=track.sampleLoop;
+ cb.onchange=()=>{track.sampleLoop=cb.checked;saveSampleEditorChanges();renderSampleEditor()};
+ loop.append(cb,document.createTextNode('LOOP ON'));grid.append(loop);
+ if(track.sampleLoop){
+  const reverse=document.createElement('label');reverse.className='sample-loop-toggle';
+  const ping=document.createElement('input');ping.type='checkbox';ping.checked=!!track.loopPingPong;
+  ping.onchange=()=>{track.loopPingPong=ping.checked;saveSampleEditorChanges();drawSampleWaveform()};
+  reverse.append(ping,document.createTextNode('PING-PONG LOOP'));grid.append(reverse);
+ }
+ if(!drum){
+  for(const [key,label,min,max,step,unit] of [['sampleCutoff','FILTER CUTOFF',80,12000,10,' Hz'],['sampleResonance','RESONANCE',.1,18,.1,' Q']]){
+   const field=document.createElement('label');field.className='field';const top=document.createElement('span');top.className='field-head';const out=document.createElement('output');
+   const fmt=()=>key==='sampleCutoff'?Math.round(track[key])+unit:track[key].toFixed(1)+unit;
+   out.textContent=fmt();top.append(document.createTextNode(label),out);
+   const slider=document.createElement('input');slider.type='range';slider.min=String(min);slider.max=String(max);slider.step=String(step);slider.value=String(track[key]);
+   slider.oninput=()=>{track[key]=Number(slider.value);out.textContent=fmt();persist();if(audio){const now=audio.ctx.currentTime;for(const voice of scheduledVoices){if(voice.trackIndex!==selectedSampleEditorTrack||!voice.filter||voice.released)continue;const param=key==='sampleCutoff'?voice.filter.frequency:voice.filter.Q;param.setTargetAtTime(track[key],now,.015)}applyLFOs()}};
+   field.append(top,slider);grid.append(field);
+  }
+ }
+ for(const [key,label] of SAMPLE_MARKERS){
+  if(!track.sampleLoop&&key.startsWith('loop'))continue;
+  const field=document.createElement('label');field.className='field';const head=document.createElement('span');head.className='field-head';
+  const output=document.createElement('output');output.textContent=(track[key]*100).toFixed(1)+'%';
+  head.append(document.createTextNode(label),output);
+  const slider=document.createElement('input');slider.type='range';slider.min='0';slider.max='1000';slider.step='1';slider.value=String(Math.round(track[key]*1000));slider.dataset.marker=key;
+  slider.oninput=()=>{sampleMarkerChanges(track,key,Number(slider.value)/1000);slider.value=Math.round(track[key]*1000);output.textContent=(track[key]*100).toFixed(1)+'%';drawSampleWaveform()};
+  slider.onchange=()=>saveSampleEditorChanges();
+  field.append(head,slider);grid.append(field);
+ }
  drawSampleWaveform();
 }
 function bindSampleEditor(){
