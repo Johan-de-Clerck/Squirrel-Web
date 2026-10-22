@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.47**  
+**Current web version: 0.1.48**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -21,7 +21,17 @@ For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and op
 
 Read [HELP.md](HELP.md) for the full English user guide.
 
-## What is new in 0.1.47
+## What is new in 0.1.48
+
+- **32 independent patterns:** A1–A8, B1–B8, C1–C8 and D1–D8.
+- **Compact pattern picker:** select bank A/B/C/D and then choose one of its eight patterns. The Options pattern picker uses the same grouped design.
+- Existing 4-pattern and 16-pattern project files are automatically migrated, including patterns, notes, names, per-track lengths, active pattern and Song Mode arrangement.
+- The redundant track/step subtitle has been removed below the Step Editor and Step FX headings.
+- **Audio ON** is green again while the browser audio engine is running, returning to its ordinary style when it stops.
+- **Bass and Lead now support per-track distortion**, alongside Drum and Sample tracks.
+- **Enter auditions a step while it is held:** release Enter to stop the preview, including long samples and drum samples, with MIDI note-off for MIDI-only tracks.
+
+## Changes in 0.1.47
 
 - Larger centered sequencer note glyphs (12 px) and FX labels (11 px) without changing step dimensions; text is clipped safely within each cell.
 - **Ctrl+C / Ctrl+V** now copies an entire highlighted rectangular range of notes, FX and empty steps, even across multiple tracks. Paste from the selected destination track/step; incomplete edges are safely clipped to destination track lengths.
@@ -36,17 +46,17 @@ Read [HELP.md](HELP.md) for the full English user guide.
 - Each BASS/LEAD/CHORD track has its own oscillator, sub-oscillator, filter and envelope patch. Switching between synth types preserves their respective sound presets.
 - Track-type selection is available both in **SEQUENCER → Step Editor** and **OPTIONS → Track Instrument Types**.
 - The sample and drum editors show the tracks configured for their instrument type.
-- Fixes in 0.1.47: sampler root-note persistence, sample loading during project/track switching, default sampler volume when resetting the mixer, MIDI-independent audio device wording, and clearer empty-sampler behavior.
+- Fixes in 0.1.48: sampler root-note persistence, sample loading during project/track switching, default sampler volume when resetting the mixer, MIDI-independent audio device wording, and clearer empty-sampler behavior.
 - The Step Editor and Step FX retain a consistent height; their vertical scrollbars are hidden.
 - Import/export sample banks supports **all eight tracks** (bank format v2); older v1 sample banks can still be imported.
 
 ## Core features
 
-- Eight-track sequencer, 16 patterns (A1–D4), custom names, independent **1–32 steps** per track and draggable Song Mode.
+- Eight-track sequencer, 32 patterns (A1–D8), custom names, independent **1–32 steps** per track and draggable Song Mode.
 - Click to select a step; drag to select a range; **Ctrl+C** copies every selected step and its FX, **Ctrl+V** pastes it at the newly selected position; Delete removes notes without deleting step FX.
 - ProTracker note keyboard: **Z** starts lower C, **Q** starts the next octave C.
 - Dual oscillators plus sub oscillator, selectable waveforms, detune, PWM, filters and envelopes.
-- Delay, reverb, chorus and instrument-appropriate distortion; four LFOs and two filter envelopes with per-track routing.
+- Delay, reverb, chorus and per-track distortion on Drum, Sample, Bass and Lead instruments; four LFOs and two filter envelopes with per-track routing.
 - Track-specific **INTERNAL AUDIO / MIDI OUT ONLY** routing with selectable MIDI channel 1–16; MIDI-only tracks silence their internal instrument.
 - Sample editing with conditional loop handles (visible only when **LOOP ON**).
 - **UNDO / REDO**, 1–6× ratchets, chance, velocity, gate, step FX and song arrangement.
@@ -59,7 +69,7 @@ Read [HELP.md](HELP.md) for the full English user guide.
 | Click a note/FX step | Select it, without changing its on/off state |
 | Hold and drag across steps | Select a rectangular range across tracks |
 | Delete | Clear selected notes, retaining FX |
-| Enter on a sequencer cell | Toggle that step |
+| Hold Enter on a sequencer cell | Toggle the step and audition an enabled note; release Enter to stop the sound |
 | Z/S/X/D/C/V/G/B/H/N/J/M | Lower ProTracker octave |
 | Q/2/W/3/E/R/5/T/6/Y/7/U | Upper ProTracker octave |
 | Alt+1–8 | Select track 1–8 |
@@ -69,17 +79,17 @@ Read [HELP.md](HELP.md) for the full English user guide.
 
 ## Repository files
 
-- `index.html` — **current Squirrel Studio Web 0.1.47** application
+- `index.html` — **current Squirrel Studio Web 0.1.48** application
 - `demo.json` — included song with sample data
 - `squirrel-icon.webp` — mascot and favicon
 - `README.md` — current version, downloads and overview
 - `HELP.md` — English user manual
 - `START_STUDIO.cmd` — local Windows development server
-- `tests/track-routing.test.js` — offline regression tests, run with `node tests/track-routing.test.js` (no npm installs or GitHub Actions required)
+- `tests/track-routing.test.js` and `tests/pattern-bank-and-enter.test.js` — offline regression tests, run with `node tests/track-routing.test.js` (no npm installs or GitHub Actions required)
 - `windows/` — experimental desktop port, which may lag behind web features
 
 ### Audio and limitations
 
 The web edition uses **Web Audio**, not direct ASIO. MIDI device access depends on browser permissions and supported operating systems. The Windows JUCE desktop source is experimental. Audio playback and browser behavior require manual testing on the actual device in addition to code-level regression tests.
 
-To check that the latest build loaded, look for **BUILD 0.1.47** in the app header. If an earlier build appears, replace locally extracted files or force refresh (**Ctrl+F5**).
+To check that the latest build loaded, look for **BUILD 0.1.48** in the app header. If an earlier build appears, replace locally extracted files or force refresh (**Ctrl+F5**).
