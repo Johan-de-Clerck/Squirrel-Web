@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.1.78 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.1.79 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -799,7 +799,7 @@ input[type="password"],textarea,
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.78</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.79</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -885,7 +885,7 @@ const bases=[
  {name:'EMPTY 8',type:'empty',channel:8,volume:0,pan:0,color:'#887b6d',note:48}
 ];
 function defaultSound(t){const patch= t.type==='chord'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:8,pulseWidth:50,cutoff:1500,resonance:0.9,attack:.09,decay:.42,sustain:.68,release:.7,chord:'minor'}:t.type==='synth'&&t.name==='BASS'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'square',detune:9,pulseWidth:43,cutoff:1350,resonance:1.8,attack:.009,decay:.22,sustain:.52,release:.19,chord:'major'}:{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:14,pulseWidth:50,cutoff:4200,resonance:.8,attack:.015,decay:.21,sustain:.65,release:.27,chord:'major'};
- return {...patch,engine:'va',fmRatio:2,fmIndex:3,fmAttack:.01,fmDecay:.3,fmSustain:30}
+ return {...patch,engine:'va',fmRatio:2,fmIndex:3,fmAttack:.01,fmDecay:.3,fmSustain:30,fmMode:'two',fmAlgorithm:'stack',fmOp1Ratio:1,fmOp2Ratio:2,fmOp3Ratio:3,fmOp4Ratio:4,fmOp1Level:100,fmOp2Level:75,fmOp3Level:65,fmOp4Level:55}
 }
 const LFO_TARGETS=[['off','OFF'],...bases.flatMap((_,i)=>['volume','cutoff','pan','pulseWidth'].map(k=>['track'+i+'-'+k,'TRACK '+(i+1)+' · '+k.toUpperCase()]))];
 const LFO_WAVES=['sine','triangle','square','sawtooth'];
@@ -2090,6 +2090,12 @@ function safeSoundPatch(mode,src){
  t.engine=src.engine==='fm'?'fm':'va';
  for(const [k,a,b] of [['fmRatio',.25,16],['fmIndex',0,12],['fmAttack',.003,2],['fmDecay',.01,3],['fmSustain',0,100]])
   if(Number.isFinite(Number(src[k])))t[k]=clamp(Number(src[k]),a,b);
+ t.fmMode=src.fmMode==='four'?'four':'two';
+ if(FM_ALGORITHMS[src.fmAlgorithm])t.fmAlgorithm=src.fmAlgorithm;
+ for(let i=1;i<=4;i++)for(const [suffix,min,max] of [['Ratio',.25,16],['Level',0,100]]){
+  const key='fmOp'+i+suffix;
+  if(src[key]!==undefined&&Number.isFinite(Number(src[key])))t[key]=clamp(Number(src[key]),min,max);
+ }
  return t;
 }
 function migrateModTarget(x){
@@ -2175,6 +2181,12 @@ s.drumSamples=Array.from({length:TRACK_COUNT},(_,t)=>Array.from({length:5},(_,sl
  for(const k of ['osc1On','osc2On','subOn'])if(typeof p[k]==='boolean')target.sound[k]=p[k];
  if(['sine','sawtooth','pulse'].includes(p.subWave))target.sound.subWave=p.subWave;
  if(p.subOctave===-12||p.subOctave===-24)target.sound.subOctave=p.subOctave;for(const [k,a,b] of [['detune',-50,50],['osc1Level',0,100],['osc2Level',0,100],['subDetune',-50,50],['subLevel',0,100],['pulseWidth',5,95],['cutoff',80,12000],['resonance',.1,18],['attack',.003,2],['decay',.01,2],['sustain',0,1],['release',.01,3]])if(Number.isFinite(Number(p[k])))target.sound[k]=clamp(Number(p[k]),a,b);if(p.chord==='minor'||p.chord==='major')target.sound.chord=p.chord;
+  target.sound.fmMode=p.fmMode==='four'?'four':'two';
+  if(FM_ALGORITHMS[p.fmAlgorithm])target.sound.fmAlgorithm=p.fmAlgorithm;
+  for(let i=1;i<=4;i++)for(const [suffix,min,max] of [['Ratio',.25,16],['Level',0,100]]){
+   const key='fmOp'+i+suffix;
+   if(p[key]!==undefined&&Number.isFinite(Number(p[key])))target.sound[key]=clamp(Number(p[key]),min,max);
+  }
   target.sound.engine=p.engine==='fm'?'fm':'va';
   for(const [k,a,b] of [['fmRatio',.25,16],['fmIndex',0,12],['fmAttack',.003,2],['fmDecay',.01,3],['fmSustain',0,100]])
    if(Number.isFinite(Number(p[k])))target.sound[k]=clamp(Number(p[k]),a,b);
@@ -2617,6 +2629,15 @@ function updateLiveOscillatorMix(trackIndex){
   });
  }
 }
+// Each edge [source, destination] modulates the destination oscillator's frequency.
+// All routing diagrams are acyclic; operators use their own Ratio and Level.
+const FM_ALGORITHMS=Object.freeze({
+ stack:{name:'STACK · 4→3→2→1',edges:[[3,2],[2,1],[1,0]],carriers:[0]},
+ pairs:{name:'PAIRS · (2→1) + (4→3)',edges:[[1,0],[3,2]],carriers:[0,2]},
+ fan:{name:'FAN · 2/3/4→1',edges:[[1,0],[2,0],[3,0]],carriers:[0]},
+ additive:{name:'ADDITIVE · 1+2+3+4',edges:[],carriers:[0,1,2,3]}
+});
+function fmFourConfig(sound){return FM_ALGORITHMS[sound?.fmAlgorithm]||FM_ALGORITHMS.stack}
 // Two-operator phase/frequency modulation: operator 2 drives operator 1's
 // frequency at audio rate. The modulation index has its own ADS envelope.
 function updateLiveFM(trackIndex){
