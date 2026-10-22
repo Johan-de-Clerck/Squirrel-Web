@@ -606,7 +606,7 @@ input[type="password"],textarea,
           
         </section>
         <div class="two-cols">
-          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step editor</h2><p class="subtext" id="stepEditorTitle">Track 4 · Step 01</p></div><span class="pill" id="stepOnLabel">STEP OFF</span></div><div class="control-grid"><label class="field hidden" id="stepDrumSampleField"><span class="field-head"><span>SAMPLE</span></span><select id="stepDrumSample" aria-label="Sample for the selected drum step"></select></label><label class="field" id="stepNoteField"><span class="field-head"><span>NOTE</span><output id="stepNoteOut">C3</output></span><select id="stepNote"></select></label><label class="field"><span class="field-head"><span>VELOCITY</span><output id="velocityOut">110</output></span><input id="velocity" type="range" min="1" max="127" value="110"></label><label class="field" id="stepGateField"><span class="field-head"><span>GATE</span><output id="gateOut">85%</output></span><input id="gate" type="range" min="10" max="180" value="85"></label><label class="field"><span class="field-head"><span>CHANCE</span><output id="chanceOut">100%</output></span><input id="chance" type="range" min="0" max="100" value="100"></label><label class="field"><span class="field-head"><span>RATCHET</span><output id="ratchetOut">1×</output></span><input id="ratchet" type="range" min="1" max="6" step="1" value="1"></label></div><div class="setup-actions"><button class="mini-btn" id="toggleStepBtn">TOGGLE STEP</button><button class="mini-btn" id="copyStepBtn" type="button">COPY STEP</button><button class="mini-btn" id="pasteStepBtn" type="button" disabled>PASTE STEP</button><button class="mini-btn" id="undoStepBtn" type="button" disabled>↶ UNDO</button><button class="mini-btn" id="redoStepBtn" type="button" disabled>↷ REDO</button><button class="mini-btn" id="auditionStepBtn">♪ AUDITION</button></div></section>
+          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step editor</h2><p class="subtext" id="stepEditorTitle">Track 4 · Step 01</p></div><span class="pill" id="stepOnLabel">STEP OFF</span></div><div class="control-grid"><label class="field"><span class="field-head">INSTRUMENT TYPE</span><select id="stepTrackKind" aria-label="Instrument type for selected track"><option value="drum">DRUM</option><option value="bass">BASS</option><option value="lead">LEAD</option><option value="sample">SAMPLE</option><option value="chord">CHORD</option></select></label><label class="field hidden" id="stepDrumSampleField"><span class="field-head"><span>SAMPLE</span></span><select id="stepDrumSample" aria-label="Sample for the selected drum step"></select></label><label class="field" id="stepNoteField"><span class="field-head"><span>NOTE</span><output id="stepNoteOut">C3</output></span><select id="stepNote"></select></label><label class="field"><span class="field-head"><span>VELOCITY</span><output id="velocityOut">110</output></span><input id="velocity" type="range" min="1" max="127" value="110"></label><label class="field" id="stepGateField"><span class="field-head"><span>GATE</span><output id="gateOut">85%</output></span><input id="gate" type="range" min="10" max="180" value="85"></label><label class="field"><span class="field-head"><span>CHANCE</span><output id="chanceOut">100%</output></span><input id="chance" type="range" min="0" max="100" value="100"></label><label class="field"><span class="field-head"><span>RATCHET</span><output id="ratchetOut">1×</output></span><input id="ratchet" type="range" min="1" max="6" step="1" value="1"></label></div><div class="setup-actions"><button class="mini-btn" id="toggleStepBtn">TOGGLE STEP</button><button class="mini-btn" id="copyStepBtn" type="button">COPY STEP</button><button class="mini-btn" id="pasteStepBtn" type="button" disabled>PASTE STEP</button><button class="mini-btn" id="undoStepBtn" type="button" disabled>↶ UNDO</button><button class="mini-btn" id="redoStepBtn" type="button" disabled>↷ REDO</button><button class="mini-btn" id="auditionStepBtn">♪ AUDITION</button></div></section>
           <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step FX</h2><p class="subtext" id="fxEditorTitle">Track 4 · Step 01</p></div><span class="pill" id="fxStatus">FX OFF</span></div><div class="control-grid fx-controls"><label class="field"><span class="field-head"><span>FX COMMAND</span></span><select id="stepFx" aria-label="Effect for the selected step"><option value="0">0 · NO EFFECT</option><option value="1">1 · PORTAMENTO UP</option><option value="2">2 · PORTAMENTO DOWN</option><option value="3">3 · OCTAVE UP</option><option value="4">4 · VIBRATO</option><option value="5">5 · OCTAVE DOWN</option><option value="10">A · VOLUME SLIDE DOWN</option><option value="11">B · VOLUME SLIDE UP</option><option value="12">C · NOTE OFF</option></select></label><label class="field hidden" id="stepChordField"><span class="field-head"><span>CHORD MODE</span><output id="chordModeOutput">MIN</output></span><select id="stepChordMode" aria-label="Chord quality for the selected CHORD step"></select></label><label class="field" id="fxAmountField"><span class="field-head"><span id="fxAmountLabel">PERIOD/TICK · HEX</span><output id="fxAmountOut">02</output></span><div class="fx-amount-row"><input id="fxAmount" aria-label="FX amount" type="range" min="0" max="255" step="1" value="2"><input id="fxHex" type="text" maxlength="2" spellcheck="false" autocomplete="off" inputmode="text" aria-label="FX parameter in hex" value="02"></div></label></div><div class="setup-actions fx-actions"><button class="mini-btn" id="clearStepFx">CLEAR FX</button><button class="mini-btn" id="clearTrackFx">CLEAR TRACK FX</button></div></section>
         </div>
       </div>
@@ -1049,8 +1049,14 @@ function drumSampleVoice(t,slot,velocity,when){
 function renderDrumSamples(){
  const select=$('drumTrackSelect'),list=$('drumSlotList');
  if(!select||!list)return;
- select.value=String(drumEditorTrack);
+ const available=state.tracks.flatMap((t,i)=>isDrum(i)?[i]:[]);
+ if(!available.includes(drumEditorTrack))drumEditorTrack=available[0]??0;
+ select.replaceChildren();
+ for(const i of available)select.add(new Option(String(i+1).padStart(2,'0')+' · '+state.tracks[i].name,String(i)));
+ if(!available.length){select.add(new Option('NO DRUM TRACKS — CHOOSE DRUM IN OPTIONS','0'));select.disabled=true;}
+ else {select.disabled=false;select.value=String(drumEditorTrack);}
  list.replaceChildren();
+ if(!available.length)return;
  for(let slot=0;slot<5;slot++){
   const item=state.drumSamples[drumEditorTrack][slot];
   const row=document.createElement('div');row.className='drum-slot-row'+(drumLastSlot(drumEditorTrack)===slot?' active':'');
@@ -1088,7 +1094,7 @@ function bindDrumSamples(){
  $('drumSampleFileInput').onchange=async e=>{
   const file=e.target.files?.[0],target=drumFileTarget;
   e.target.value='';drumFileTarget=null;
-  if(file&&target)await loadDrumSampleFile(target.track,target.slot,file);
+  if(file&&target&&isDrum(target.track))await loadDrumSampleFile(target.track,target.slot,file);
  };
 }
 async function decodeSampler(trackIndex){
@@ -1868,6 +1874,7 @@ function moveGridSelection(key){
 }
 function selectTrack(n){clearStepRange();fxEditMode=false;fxDigitBuffer='';state.selectedTrack=n;state.selectedStep=Math.min(state.selectedStep,trackLength()-1);persist();renderAll()}
 function renderStepEditor(){const step=selectedStep(),t=state.tracks[state.selectedTrack];
+ $('stepTrackKind').value=kindOf(t);
  const drum=isDrum(state.selectedTrack),drumField=$('stepDrumSampleField'),drumSelect=$('stepDrumSample');
  drumField.classList.toggle('hidden',!drum||t.midiOnly);
  if(drum){
@@ -2010,7 +2017,7 @@ function sampleMarkerChanges(track,key,value){
 }
 function drawSampleWaveform(){
  const canvas=$('sampleWaveCanvas');if(!canvas)return;
- const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height,track=state.tracks[selectedSampleEditorTrack],buffer=sampleBuffers.get(selectedSampleEditorTrack);
+ const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height,track=state.tracks[selectedSampleEditorTrack],buffer=isSample(selectedSampleEditorTrack)?sampleBuffers.get(selectedSampleEditorTrack):null;
  ctx.clearRect(0,0,W,H);ctx.fillStyle='#16110e';ctx.fillRect(0,0,W,H);
  for(let i=0;i<=16;i++){const x=i*W/16;ctx.strokeStyle=i%4===0?'#66503f':'#322821';ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
  ctx.fillStyle='rgba(209,159,103,.13)';ctx.fillRect(track.sampleStart*W,0,(track.sampleEnd-track.sampleStart)*W,H);
@@ -2029,9 +2036,18 @@ function drawSampleWaveform(){
  }
 }
 function renderSampleEditor(){
- const select=$('sampleEditTrack');select.value=String(selectedSampleEditorTrack);
+ const select=$('sampleEditTrack');
+ const available=state.tracks.flatMap((t,i)=>isSample(i)?[i]:[]);
+ if(!available.includes(selectedSampleEditorTrack))selectedSampleEditorTrack=available[0]??0;
+ select.replaceChildren();
+ for(const i of available)select.add(new Option(String(i+1).padStart(2,'0')+' · '+state.tracks[i].name,String(i)));
+ select.disabled=!available.length;
+ if(!available.length)select.add(new Option('NO SAMPLE TRACKS — CHOOSE SAMPLE IN OPTIONS','0'));
+ else select.value=String(selectedSampleEditorTrack);
+ $('sampleEditorLoad').disabled=!available.length;
+ $('sampleEditorPreview').disabled=!available.length||!sampleBuffers.has(selectedSampleEditorTrack);
  const track=state.tracks[selectedSampleEditorTrack],grid=$('sampleEditControls');grid.replaceChildren();
- $('sampleEditorFile').textContent=track.sampleName||'NO SAMPLE LOADED';
+ $('sampleEditorFile').textContent=available.length?(track.sampleName||'NO SAMPLE LOADED'):'SELECT SAMPLE AS A TRACK TYPE FIRST';
  const root=document.createElement('label');root.className='field';root.innerHTML='<span class="field-head">ROOT NOTE</span>';
  const rootSelect=document.createElement('select');for(let n=24;n<=95;n++)rootSelect.add(new Option(noteName(n),String(n)));rootSelect.value=String(track.sampleRoot);rootSelect.onchange=()=>{track.sampleRoot=Number(rootSelect.value);persist()};root.append(rootSelect);grid.append(root);
  const loop=document.createElement('label');loop.className='sample-loop-toggle';const cb=document.createElement('input');cb.type='checkbox';cb.checked=track.sampleLoop;cb.onchange=()=>{track.sampleLoop=cb.checked;persist();renderSampleEditor()};loop.append(cb,document.createTextNode('LOOP ON'));grid.append(loop);
@@ -2675,6 +2691,7 @@ function bindings(){
  $('editModeBtn').onclick=()=>{state.editMode=!state.editMode;keyboardDown.clear();keyboardAssignments.clear();persist();renderAll();if(view==='seq')focusSelectedPad(false)};$('octaveInput').onchange=()=>{state.keyboardOctave=Number($('octaveInput').value);persist();if(view==='seq')focusSelectedPad(false)};
  $('bpmInput').onchange=()=>{state.bpm=clamp(Math.round(Number($('bpmInput').value)||120),50,240);applyLFOs();persist();renderAll()};$('swingInput').oninput=()=>{state.swing=Number($('swingInput').value);$('swingOut').textContent=state.swing+'%';persist()};$('masterInput').oninput=()=>{state.master=Number($('masterInput').value);$('masterOut').textContent=state.master+'%';applyTrackMix();persist()};$('patternNameInput').onchange=()=>setPatternName(state.pattern,$('patternNameInput').value);$('patternNameInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('patternNameInput').blur()}};
  $('patternSelect').onchange=()=>{if(playing)stopTransport();state.pattern=clamp(Number($('patternSelect').value),0,PATTERN_COUNT-1);state.selectedStep=Math.min(state.selectedStep,trackLength()-1);currentStep=0;lastVisualStep=-1;resetFXRuntime();persist();renderAll()};$('copyPatternBtn').onclick=()=>{clipboard={lanes:structuredClone(state.patterns[state.pattern]),lengths:[...state.trackLengths[state.pattern]]};notify('Pattern '+patternName(state.pattern)+' copied.')};$('pastePatternBtn').onclick=()=>{if(!clipboard){notify('Copy a pattern first.',true);return}if(playing)stopTransport();state.patterns[state.pattern]=structuredClone(clipboard.lanes);state.trackLengths[state.pattern]=clipboard.lengths?[...clipboard.lengths]:Array(TRACK_COUNT).fill(clipboard.length||32);state.patternLengths[state.pattern]=patternLength();state.selectedStep=Math.min(state.selectedStep,trackLength()-1);persist();renderAll();notify('Pattern and track lengths pasted.')};
+ $('stepTrackKind').onchange=()=>assignTrackKind(state.selectedTrack,$('stepTrackKind').value);
  $('stepDrumSample').onchange=()=>{
   const track=state.selectedTrack,slot=clamp(Number($('stepDrumSample').value)||0,0,4);
   rememberDrumSlot(track,slot);
