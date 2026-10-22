@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.1.50 — User Manual
+# Squirrel Studio Web 0.1.51 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -112,6 +112,24 @@ The **Chord** instrument provides chord modes per step: Major, Minor, sus2, sus4
 
 **SEND FX** provides Delay, Reverb, Chorus and Distortion for Drum, Sample, Bass and Lead instruments. Available effects vary by track. **LFO / ENVELOPES** contains four LFOs (free or tempo-synced divisions) and two filter envelopes with target routing.
 
+### STOP fade for long samples
+
+When you press **STOP**, active voices fade to silence over **85 milliseconds** and their audio sources stop. You do not have to wait for a long sample to finish its 32-step pattern. This works for long Sample tracks, looping samples and loaded Drum samples, as well as the synthesizers. Shared delay and reverb may leave a brief effects tail.
+
+### Tracker FX 9 — SAMPLE OFFSET (%)
+
+Choose **9 · SAMPLE OFFSET (%)** on a step with a sample note, then set a decimal percentage from 00 to 99. The sample starts at that point when the step plays.
+
+| Command | Start position |
+| --- | --- |
+| `900` | 0%, normal start |
+| `925` | 25%, one quarter |
+| `950` | 50%, halfway through the sample |
+| `975` | 75%, three quarters |
+| `999` | 99%, near the end |
+
+The offset is relative to the sample's **START–END region** on Sample tracks and to the **full sample** on a Drum slot. This effect does not change synthesizer oscillator sound or synthesized fallback drum sounds. The new percentage parameter uses **decimal notation**; the existing tracker effects keep hexadecimal parameters. FX 9 is saved in projects and copied with steps and selections.
+
 Tracker FX in **Step FX** include:
 
 | Code | Effect |
@@ -121,6 +139,7 @@ Tracker FX in **Step FX** include:
 | `3xx` | Octave up |
 | `4xy` | Vibrato |
 | `5xx` | Octave down |
+| `9xx` | Sample start offset (00–99%, decimal) |
 | `Axx` | Volume slide down |
 | `Bxx` | Volume slide up |
 | `C00` | Note off |
@@ -144,7 +163,7 @@ You can back up and transfer audio separately from a song using **EXPORT SAMPLE 
 
 **IMPORT SAMPLE BANK** replaces the current audio bank after confirmation but keeps the song arrangement, notes and patterns. Older version-1 sample banks with three drum banks and two sampler slots can still be imported. A Sample Bank is **not** a complete project backup; use **SAVE PROJECT** to preserve instrument configurations, synth patches and patterns as well.
 
-### Mixer signal meters (0.1.50)
+### Mixer signal meters (0.1.51)
 
 Every Mixer track has its own VU meter, connected after that track's volume and panning controls. The meter shows the actual output of **that track only**, before the shared compressor and effect returns. A note on another track cannot cause this meter to move. When a track is silent, its meter falls to zero; Mute and Solo affect which tracks can be heard and measured. Tracks configured as MIDI OUT ONLY have no browser audio to meter.
 
@@ -204,4 +223,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.1.50.**
+**Documentation version: Squirrel Studio Web 0.1.51.**
