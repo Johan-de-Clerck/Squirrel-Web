@@ -617,14 +617,14 @@ input[type="password"],textarea,
 <div id="view-sound" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Synth engine</h2></div><div class="right-buttons"><span class="pill" id="soundTrackLabel">BASS</span><button class="btn" id="soundAuditionBtn">♪ PREVIEW C3</button></div></div><div class="wave-viz" id="waveViz" aria-label="Oscillator visualization"></div><div class="control-grid" id="soundControls"></div><div class="preview"><div><div class="tag">LIVE KEYBOARD</div></div><div class="preview-keys" id="previewKeys"></div></div></section></div>
       <div id="view-mixer" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Eight-track mixer</h2></div><button class="mini-btn" id="resetMixerBtn">RESET MIXER</button></div><div class="mixer" id="mixerStrips"></div></section></div>
       <div id="view-mod" class="hidden"><div class="mod-layout"><section class="panel"><div class="panel-head"><h2 class="section-title">LFO modulation</h2><span class="pill">4 LFO's</span></div><div class="lfo-grid" id="lfoGrid"></div></section><section class="panel"><div class="panel-head"><h2 class="section-title">Filter envelopes</h2><span class="pill">2 ADSR</span></div><div id="envelopeGrid" class="envelope-grid"></div></section></div></div>
-      <div id="view-drum" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Drum samples</h2><div class="sample-bank-tools"><button class="mini-btn" id="drumExportBank" type="button">↓ EXPORT BANK</button><button class="mini-btn" id="drumImportBank" type="button">↑ IMPORT BANK</button><span class="pill">5 SLOTS / TRACK</span></div></div>
+      <div id="view-drum" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Drum samples</h2><div class="sample-bank-tools"><button class="mini-btn" id="drumExportBank" type="button">↓ EXPORT BANK</button><button class="mini-btn" id="drumImportBank" type="button">↑ IMPORT BANK</button><span class="pill">5 SLOTS / DRUM TRACK</span></div></div>
 <div class="drum-panel-top"><label class="field"><span class="field-head">DRUM TRACK</span><select id="drumTrackSelect"><option value="0">01 · DRUMS 1</option><option value="1">02 · DRUMS 2</option><option value="2">03 · DRUMS 3</option></select></label></div>
 <div id="drumSlotList" class="drum-slot-list"></div>
 <input id="drumSampleFileInput" type="file" accept="audio/*,.wav,.wave,.aiff,.aif,.mp3,.ogg" class="hidden"></section></div>
-<div id="view-sample" class="hidden"><section class="panel sample-editor-panel"><div class="panel-head"><h2 class="section-title">Waveform sample editor</h2><span class="pill">8 FLEXIBLE TRACKS</span></div><div class="sample-editor-top"><label class="field"><span class="field-head">SAMPLER TRACK</span><select id="sampleEditTrack"><option value="6">07 · SAMPLER</option><option value="7">08 · SAMPLER</option></select></label><button class="btn" id="sampleEditorLoad">↑ LOAD WAV</button><button class="btn" id="sampleEditorPreview">▶ AUDITION</button><span id="sampleEditorFile" class="sample-filename">NO SAMPLE</span><span id="samplePlayStatus" class="sample-play-status" aria-live="off">POS —</span></div><div class="waveform-wrap"><canvas id="sampleWaveCanvas" width="1200" height="230" aria-label="Waveform with draggable START, END, LOOP START and LOOP END markers"></canvas><div class="sample-wave-legend"><span>START</span><span>LOOP START</span><span>LOOP END</span><span>END</span><span style="color:#b2f1ce">◆ PLAYHEAD</span></div></div><div id="sampleEditControls" class="sample-editor-controls"></div><input id="sampleEditorFileInput" type="file" accept=".wav,.wave,.mp3,.ogg,.aiff,.aif,audio/*" class="hidden"></section></div>
+<div id="view-sample" class="hidden"><section class="panel sample-editor-panel"><div class="panel-head"><h2 class="section-title">Waveform sample editor</h2><span class="pill">8 FLEXIBLE TRACKS</span></div><div class="sample-editor-top"><label class="field"><span class="field-head">SAMPLE TRACK</span><select id="sampleEditTrack"><option value="6">07 · SAMPLER</option><option value="7">08 · SAMPLER</option></select></label><button class="btn" id="sampleEditorLoad">↑ LOAD WAV</button><button class="btn" id="sampleEditorPreview">▶ AUDITION</button><span id="sampleEditorFile" class="sample-filename">NO SAMPLE</span><span id="samplePlayStatus" class="sample-play-status" aria-live="off">POS —</span></div><div class="waveform-wrap"><canvas id="sampleWaveCanvas" width="1200" height="230" aria-label="Waveform with draggable START, END, LOOP START and LOOP END markers"></canvas><div class="sample-wave-legend"><span>START</span><span>LOOP START</span><span>LOOP END</span><span>END</span><span style="color:#b2f1ce">◆ PLAYHEAD</span></div></div><div id="sampleEditControls" class="sample-editor-controls"></div><input id="sampleEditorFileInput" type="file" accept=".wav,.wave,.mp3,.ogg,.aiff,.aif,audio/*" class="hidden"></section></div>
       <div id="view-send" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Track effects · Delay / Reverb / Chorus / Distortion</h2><span class="pill">8 TRACKS</span></div><div class="sends-grid" id="sendsGrid"></div><div class="send-global" id="sendGlobal"></div></section></div>
       <div id="view-options" class="hidden"><section class="panel options-panel"><div class="panel-head"><h2 class="section-title">Pattern options</h2><span class="pill">MAX 32 STEPS</span></div><div id="optionsPatterns" class="options-patterns"></div>
-        <div class="options-slots-head"><h3>Instrument slots</h3><span class="pill">ANY TRACK · ANY INSTRUMENT</span></div>
+        <div class="options-slots-head"><h3>TRACK INSTRUMENT TYPES</h3><span class="pill">ANY TRACK · ANY INSTRUMENT</span></div>
         <div id="optionsSlots" class="options-slots"></div>
 <div class="options-demo midi-track-panel"><h3>TRACK AUDIO / MIDI OUTPUT</h3>
 <div class="midi-track-list" id="optionsMidiTracks"></div>
@@ -701,6 +701,7 @@ function assignTrackKind(i,kind){
  if(playing)stopTransport();
  midiOffTrack(i);
  const previous=kindOf(t);
+ if(audio){for(const v of [...scheduledVoices])if(v.trackIndex===i&&!v.released)releaseVoice(v,audio.ctx.currentTime);}
  t.trackKind=kind;t.type=kind==='drum'?'kick':kind==='chord'?'chord':kind==='sample'?'empty':'synth';
  t.slotKind=kind==='sample'?'sampler':'empty';
  if(!t.sound||previous==='drum'||previous==='sample')
@@ -1017,9 +1018,9 @@ function drumSampleVoice(t,slot,velocity,when){
  gain.gain.setValueAtTime(0,when);
  gain.gain.linearRampToValueAtTime(clamp(velocity/127,0,1),when+.002);
  src.connect(gain).connect(modGain).connect(audio.trackGains[t]);
- const group=clamp(Math.round(Number(state.drumSamples[t][slot]?.chokeGroup)||0),0,4);
+ const group=clamp(Math.round(Number(state.drumSamples[t][slot]?.chokeGroup)||0),0,4),groupKey=t+':'+group;
  if(group){
-  const prior=activeChokeVoices.get(group);
+  const prior=activeChokeVoices.get(groupKey);
   if(prior){
    for(const entry of [...prior]){
     const at=Math.max(when,c.currentTime);
@@ -1036,11 +1037,11 @@ function drumSampleVoice(t,slot,velocity,when){
  const voice={pitchParams:[src.detune],modGain,drum:true,released:false};
  const groupEntry={src,gain,level:clamp(velocity/127,0,1)};
  if(group){
-  if(!activeChokeVoices.has(group))activeChokeVoices.set(group,new Set());
-  activeChokeVoices.get(group).add(groupEntry);
+  if(!activeChokeVoices.has(groupKey))activeChokeVoices.set(groupKey,new Set());
+  activeChokeVoices.get(groupKey).add(groupEntry);
  }
  src.onended=()=>{
-  if(group)activeChokeVoices.get(group)?.delete(groupEntry);
+  if(group)activeChokeVoices.get(groupKey)?.delete(groupEntry);
   try{src.disconnect();gain.disconnect();modGain.disconnect()}catch(e){}
  };
  src.start(when);src.stop(when+buffer.duration+.01);
@@ -1106,7 +1107,7 @@ async function decodeSampler(trackIndex){
  const decoded=await audio.ctx.decodeAudioData(array.buffer);
  sampleBuffers.set(trackIndex,decoded);return true;
 }
-async function decodeAllSamplers(){for(let t=6;t<TRACK_COUNT;t++){
+async function decodeAllSamplers(){for(let t=0;t<TRACK_COUNT;t++){
  if(state.tracks[t].slotKind!=='sampler'||!state.tracks[t].sampleData)continue;
  try{await decodeSampler(t)}catch(e){notify('Sample track '+(t+1)+' could not be decoded: '+e.message,true)}
 }}
@@ -1388,7 +1389,7 @@ function updateLiveCutoff(trackIndex){nativeUpdateVAMix(trackIndex);if(!audio)re
  for(const voice of scheduledVoices){if(voice.trackIndex===trackIndex&&voice.filter&&!voice.released)voice.filter.frequency.setTargetAtTime(filterBaseCutoff(trackIndex),now,.02)}
  applyLFOs();
 }
-function applyTrackMix(){for(let i=0;i<6;i++)nativeUpdateVAMix(i);if(!audio)return;const solo=state.tracks.some(t=>t.solo);state.tracks.forEach((t,i)=>{const isOn=!t.muted&&!t.midiOnly&&(!solo||t.solo);audio.trackGains[i].gain.setTargetAtTime(isOn?(t.volume/100)**1.4:0,audio.ctx.currentTime,.018);audio.trackPans[i].pan.setTargetAtTime(t.pan/100,audio.ctx.currentTime,.02);
+function applyTrackMix(){for(let i=0;i<TRACK_COUNT;i++)nativeUpdateVAMix(i);if(!audio)return;const solo=state.tracks.some(t=>t.solo);state.tracks.forEach((t,i)=>{const isOn=!t.muted&&!t.midiOnly&&(!solo||t.solo);audio.trackGains[i].gain.setTargetAtTime(isOn?(t.volume/100)**1.4:0,audio.ctx.currentTime,.018);audio.trackPans[i].pan.setTargetAtTime(t.pan/100,audio.ctx.currentTime,.02);
  audio.delaySends[i].gain.setTargetAtTime((t.delaySend/100)*.7,audio.ctx.currentTime,.03);
  audio.reverbSends[i].gain.setTargetAtTime((t.reverbSend/100)*.85,audio.ctx.currentTime,.03);audio.chorusSends[i].gain.setTargetAtTime((t.chorusSend/100)*.45,audio.ctx.currentTime,.03)});audio.masterGain.gain.setTargetAtTime((state.master/100)*.84,audio.ctx.currentTime,.018);updateDistortionEngine();applyLFOs()}
 function getNoise(){if(audio.noise)return audio.noise;const length=Math.round(audio.ctx.sampleRate*1.5),arr=new Float32Array(length);for(let i=0;i<length;i++)arr[i]=(Math.random()*2-1);const b=audio.ctx.createBuffer(1,length,audio.ctx.sampleRate);b.getChannelData(0).set(arr);audio.noise=b;return b}
@@ -2056,7 +2057,7 @@ function renderSampleEditor(){
  const root=document.createElement('label');root.className='field';root.innerHTML='<span class="field-head">ROOT NOTE</span>';
  const rootSelect=document.createElement('select');for(let n=24;n<=95;n++)rootSelect.add(new Option(noteName(n),String(n)));rootSelect.value=String(track.sampleRoot);rootSelect.onchange=()=>{track.sampleRoot=Number(rootSelect.value);persist()};root.append(rootSelect);grid.append(root);
  const loop=document.createElement('label');loop.className='sample-loop-toggle';const cb=document.createElement('input');cb.type='checkbox';cb.checked=track.sampleLoop;cb.onchange=()=>{track.sampleLoop=cb.checked;persist();renderSampleEditor()};loop.append(cb,document.createTextNode('LOOP ON'));grid.append(loop);
- // Sampler 7/8 hebben elk een eigen cutoff en resonantie; ook LFO/ADSR mag deze moduleren.
+ // Every sample track has its own cutoff and resonance, modulated by LFO/ADSR.
  for(const [key,label,min,max,step,unit] of [['sampleCutoff','FILTER CUTOFF',80,12000,10,' Hz'],['sampleResonance','RESONANCE',.1,18,.1,' Q']]){
   const field=document.createElement('label');field.className='field';const top=document.createElement('span');top.className='field-head';const out=document.createElement('output');
   const fmt=()=>key==='sampleCutoff'?Math.round(track[key])+unit:track[key].toFixed(1)+unit;
