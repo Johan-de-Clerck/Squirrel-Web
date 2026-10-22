@@ -2,71 +2,77 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.42**
+**Current web version: 0.1.46**  
+**Current application:** [index.html](index.html)  
+**Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
-Squirrel Studio is a browser-based eight-track groovebox and step sequencer featuring synthesized instruments, sampled drums, MIDI, effects, and a draggable song arrangement.
+> The previous `SquirrelStudio_Web_0.1.42.zip` was an outdated package. The branch ZIP above always includes the current `index.html` and documentation. GitHub Pages or locally extracted old files may still require a hard refresh or replacement.
+
+Squirrel Studio is a browser-based eight-track groovebox combining synthesized and sampled instruments, a tracker-style step sequencer, MIDI, effects and a draggable song arrangement.
 
 ## Start here
 
-1. Place `index.html` and `demo.json` together on your web server (HTTPS recommended).
-2. Open the site in **Chrome** or **Microsoft Edge**.
-3. Click **AUDIO ON** to enable audio playback, then press **PLAY**.
+1. Download the **latest ZIP** linked above and extract it, or use the files from the `main` branch.
+2. On a web server, place `index.html`, `demo.json` and `squirrel-icon.webp` in the same directory.
+3. Open the app in a current Chrome or Microsoft Edge browser over HTTP/HTTPS.
+4. Click **START AUDIO** and then **PLAY**.
 
-For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Opening `index.html` directly with `file://` can prevent loading `demo.json`.
+For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
-Read **[HELP.md](HELP.md)** for the complete English user guide.
+Read [HELP.md](HELP.md) for the full English user guide.
 
-## Features
+## What is new in 0.1.46
 
-- Eight tracks: Drums 1, Drums 2, Drums 3, Bass, Lead, Chord, and two configurable sampler slots. The three drum tracks retain their original built-in synthesized kick/snare/hat defaults when no samples are loaded.
-- 16 patterns, custom pattern names, and independent 1–32 step lengths per track (default 32).
-- Song Mode with draggable pattern tiles; shorter tracks repeat until the longest one finishes.
-- Five loadable drum sample slots on each of tracks 1–3 (15 total), with per-step selection, remembered active slots, and four configurable choke groups.
-- Samplers on tracks 7–8, including waveform preview, conditional loop handles (only visible when LOOP ON), root note, filter and resonance.
-- Bass, Lead and Chord synthesizers: dual oscillators, sub oscillator, filter and envelopes.
-- Step FX, delay, reverb, chorus, supported-track distortion, four LFOs, and two filter envelopes.
-- Mouse-drag step range selection (including across tracks); Delete clears the range's notes without changing FX.
-- Fixed Step Sequencer height when changing tracks: the Step Editor and Step FX panels have stable height and scroll independently.
-- UNDO / REDO with Ctrl+Z, Ctrl+Y or Ctrl+Shift+Z, plus editor buttons.
-- Per-track **MIDI OUT ONLY** mode with individually selectable MIDI channel 1–16; the internal synth/sample is silent on that track.
-- Web MIDI input/output through supported browsers; external MIDI OUT requires port selection and activation.
-- Save/load complete project JSON, including embedded samples; import/export separate sample bank JSON.
-- Optional project filename, online `demo.json`, and a locally saved project.
+- **Freely assignable instrument types on all eight tracks:** DRUM, BASS, LEAD and SAMPLE, plus legacy-compatible CHORD. For example, four independent samplers with four drum tracks, or eight bass synths, are possible.
+- Each DRUM track has **five independent sample slots** and a choice of synthesized kick, snare or hi-hat when no suitable sample is available.
+- Any SAMPLE track has its own root note, start/end markers, optional loop markers, cutoff and resonance.
+- Each BASS/LEAD/CHORD track has its own oscillator, sub-oscillator, filter and envelope patch. Switching between synth types preserves their respective sound presets.
+- Track-type selection is available both in **SEQUENCER → Step Editor** and **OPTIONS → Track Instrument Types**.
+- The sample and drum editors show the tracks configured for their instrument type.
+- Fixes in 0.1.46: sampler root-note persistence, sample loading during project/track switching, default sampler volume when resetting the mixer, MIDI-independent audio device wording, and clearer empty-sampler behavior.
+- The Step Editor and Step FX retain a consistent height; their vertical scrollbars are hidden.
+- Import/export sample banks supports **all eight tracks** (bank format v2); older v1 sample banks can still be imported.
 
-## Quick keyboard reference
+## Core features
+
+- Eight-track sequencer, 16 patterns (A1–D4), custom names, independent **1–32 steps** per track and draggable Song Mode.
+- Click to select a step; drag to select a range; Delete removes notes without deleting step FX.
+- ProTracker note keyboard: **Z** starts lower C, **Q** starts the next octave C.
+- Dual oscillators plus sub oscillator, selectable waveforms, detune, PWM, filters and envelopes.
+- Delay, reverb, chorus and instrument-appropriate distortion; four LFOs and two filter envelopes with per-track routing.
+- Track-specific **INTERNAL AUDIO / MIDI OUT ONLY** routing with selectable MIDI channel 1–16; MIDI-only tracks silence their internal instrument.
+- Sample editing with conditional loop handles (visible only when **LOOP ON**).
+- **UNDO / REDO**, 1–6× ratchets, chance, velocity, gate, step FX and song arrangement.
+- Complete project JSON including samples; portable sample banks and optional `demo.json` auto-loading.
+
+## Shortcuts
 
 | Input | Action |
 | --- | --- |
-| Click a note/FX step | Select only; do not modify it |
-| Hold and drag over steps | Select a rectangular range across steps and tracks |
-| Delete with a range selected | Remove selected notes, preserving their FX |
-| Ctrl+Z / Ctrl+Y | Undo / redo an edit |
-| Z / S / X / D / C / V / G / B / H / N / J / M | ProTracker lower octave, C through B |
-| Q / 2 / W / 3 / E / R / 5 / T / 6 / Y / 7 / U | ProTracker upper octave, C through B |
-| Alt+1..8 | Select track 1..8 |
-| Enter on a focused sequencer cell | Toggle the selected note |
-| Delete | Remove the selected note; preserve FX |
-| Home / End | Jump to first / last step for that track |
-| Arrow keys | Move through steps and tracks |
-| Ctrl+C / Ctrl+V with grid focus | Copy / paste the complete selected step |
-| Space | Toggle playback |
-| Edit On + ProTracker note keys | Enter notes in selected step |
+| Click a note/FX step | Select it, without changing its on/off state |
+| Hold and drag across steps | Select a rectangular range across tracks |
+| Delete | Clear selected notes, retaining FX |
+| Enter on a sequencer cell | Toggle that step |
+| Z/S/X/D/C/V/G/B/H/N/J/M | Lower ProTracker octave |
+| Q/2/W/3/E/R/5/T/6/Y/7/U | Upper ProTracker octave |
+| Alt+1–8 | Select track 1–8 |
+| Ctrl+Z / Ctrl+Y | Undo / redo |
+| Ctrl+C / Ctrl+V with grid focus | Copy / paste selected step |
+| Space | Start/stop playback |
 
-## Current files on `main`
+## Repository files
 
-- `index.html` — current web application\n- `squirrel-icon.webp` — squirrel mascot used as the web favicon and application logo
-- `demo.json` — the **Johan_01** demo (120 BPM, Main / Odd Track / Odd Snare), including embedded kick, clap, hi-hat and snare samples
-- `SquirrelStudio_Web_0.1.42.zip` — current web package
-- `README.md` — overview
-- `HELP.md` — detailed English manual
-- `START_STUDIO.cmd` — local web server launcher
-- `windows/` — separate experimental desktop source
-- `.github/workflows/windows-desktop.yml` — manual Windows build
+- `index.html` — **current Squirrel Studio Web 0.1.46** application
+- `demo.json` — included song with sample data
+- `squirrel-icon.webp` — mascot and favicon
+- `README.md` — current version, downloads and overview
+- `HELP.md` — English user manual
+- `START_STUDIO.cmd` — local Windows development server
+- `tests/track-routing.test.js` — offline regression tests, run with `node tests/track-routing.test.js` (no npm installs or GitHub Actions required)
+- `windows/` — experimental desktop port, which may lag behind web features
 
-Older numbered HTML and ZIP copies were removed from the current branch to avoid confusion. Previous code revisions remain in normal Git history.
+### Audio and limitations
 
-### Web Audio and ASIO
+The web edition uses **Web Audio**, not direct ASIO. MIDI device access depends on browser permissions and supported operating systems. The Windows JUCE desktop source is experimental. Audio playback and browser behavior require manual testing on the actual device in addition to code-level regression tests.
 
-The browser version uses **Web Audio**, not direct ASIO. The `windows/` JUCE desktop project is experimental and may not yet reproduce every web feature, especially newer drum-sample features.
-
-*User documentation for Squirrel Studio Web 0.1.42.*
+To check that the latest build loaded, look for **BUILD 0.1.46** in the app header. If an earlier build appears, replace locally extracted files or force refresh (**Ctrl+F5**).
