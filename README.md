@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.72**  
+**Current web version: 0.1.73**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,16 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.73
+
+- **Triggered cutoff sweep per drum slot:** two new controls, **DEPTH** (-48 to +48 semitones) and **TIME** (0–3000 ms), sit beneath each DRUM slot's multimode FILTER. Each sample trigger starts the cutoff above or below the selected base frequency and sweeps exponentially back to that frequency.
+- Positive DEPTH creates a downward filter sweep; negative DEPTH produces an upward sweep. Set DEPTH or TIME to 0 to disable modulation and hear the unmodulated filter.
+- Compatible with LOW-PASS, HIGH-PASS and BAND-PASS on any of the five slots per drum track, independent even when sharing one library sample.
+- **Live editing:** changes to DEPTH, TIME, CUTOFF or FILTER TYPE are reflected in already playing filtered voices. For a running sweep, the scheduler recalculates the elapsed phase and continues to the base cutoff in the remaining time. Filter envelopes also respect the device sample rate / Nyquist limit.
+- New controls offer sliders and exact numerical inputs and become disabled when that slot's FILTER is OFF. Disabled filters still allocate no audio processing nodes.
+- **RESET FILTER** resets both modulation parameters to 0 as well as turning the filter OFF and restoring LOW-PASS, 12,000 Hz cutoff and 0.7 resonance. Slot audio, other mixer settings, and the amplitude envelope are unaffected.
+- Project format v23 and sample bank v3 remain compatible; older files restore DEPTH 0 and TIME 0. Added `tests/drum-filter-sweep.test.js` with 33 audio timing / compatibility checks.
 
 ## What is new in 0.1.72
 
