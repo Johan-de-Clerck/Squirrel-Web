@@ -41,7 +41,7 @@ const run = new Function('window', 'document', 'localStorage', 'console', 'struc
  assertEq(state.tracks.filter(t=>t.trackKind==='lead').length,8,'Eight lead tracks');
  function assertFresh(){assertEq(fresh(false).tracks.slice(6).map(t=>t.volume),[78,78],'Sampler default volumes')}
  function assertEq(actual,expected,label){if(JSON.stringify(actual)!==JSON.stringify(expected))throw Error(label+': '+JSON.stringify(actual)+' vs '+JSON.stringify(expected))}
- return 'OK: 9 instrument, project, bank and patch checks passed';
+ return 'OK: 10 instrument, project, bank and patch checks passed';
 `);
 console.log(run({}, {}, {getItem:()=>null,setItem:()=>{}},
  {log:()=>{},warn:()=>{},error:()=>{}}, structuredClone));
