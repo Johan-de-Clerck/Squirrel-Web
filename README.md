@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.78**  
+**Current web version: 0.1.79**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,20 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.79
+
+- **Four-operator FM mode:** the existing **SYNTH → FM · TWO OPERATORS** engine now has a separate **OPERATORS** selector: **2 OP** (original behavior) or **4 OP** (new). All old FM patches stay in 2 OP, and existing VA patches stay VA.
+- **Four selectable FM algorithms**, with an independent sine oscillator for every operator:
+  - **STACK** — OP4 → OP3 → OP2 → OP1. Deep, evolving and metallic FM timbres.
+  - **PAIRS** — (OP2 → OP1) + (OP4 → OP3). Two audible FM carriers mixed together.
+  - **FAN** — OP2 + OP3 + OP4 all modulate OP1. One audible carrier with several modulation ratios.
+  - **ADDITIVE** — OP1 + OP2 + OP3 + OP4 audible with no FM routing, for layered sine tones.
+- **Independent OP1–OP4 RATIO and LEVEL:** 0.25–16× pitch ratios and 0–100% levels. LEVEL controls audible amplitude for carrier operators, or frequency-modulation intensity for modulators. The existing **FM INDEX**, **FM ATTACK**, **FM DECAY**, **FM SUSTAIN** and normal amplitude ADSR/filter are shared. The FM envelope runs per modulation link.
+- **Live updates:** while playing, RATIO, LEVEL, INDEX and SUSTAIN can alter active 4 OP notes without retriggering. Algorithm changes apply to new notes, leaving existing voices intact.
+- **C00 / note-off:** the carrier envelope and all modulation envelopes enter RELEASE; operator nodes, filter buses and output gains are disconnected at voice end. Four-op notes remain compatible with pitch/volume tracker effects.
+- Mode, algorithm and all operator settings are included in project JSON and instrument patches without changing file format version. Invalid algorithms and out-of-range settings are normalized, while older 2 OP sounds remain unchanged.
+- Added `tests/fm-four-operator.test.js` with 94 checks including all algorithms, live modulation, note-off, project save/load and old patch compatibility.
 
 ## What is new in 0.1.78
 
