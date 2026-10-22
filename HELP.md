@@ -1,6 +1,21 @@
-# Squirrel Studio Web 0.1.78 — User Manual
+# Squirrel Studio Web 0.1.79 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New: Four-operator FM — algorithms and operator controls
+
+Select a **BASS**, **LEAD**, or **CHORD** synthesizer track, open **SYNTH** and choose **FM · TWO OPERATORS** in SYNTHESIS ENGINE. Within the FM controls choose **OPERATORS → 4 OP · MULTI-ALGORITHM** to unlock four operators and their dedicated controls. Choose **OPERATORS → 2 OP · ORIGINAL FM** to return to the existing 2-operator engine. This second selector retains the original patch settings.
+
+**FM ALGORITHM** controls how the oscillators connect:
+
+- **STACK — 4 → 3 → 2 → 1:** three layers of frequency modulation. OP1 is the audible carrier.
+- **PAIRS — (2 → 1) + (4 → 3):** two independently modulated audible carriers (OP1 and OP3).
+- **FAN — 2/3/4 → 1:** three modulation operators influence one audible carrier (OP1).
+- **ADDITIVE — 1 + 2 + 3 + 4:** four audible sine oscillators with no frequency modulation connections.
+
+Each **OPERATOR 1–4** has its own **RATIO** (0.25–16×) and **LEVEL** (0–100%). Ratio controls its frequency relative to the played note. Level controls output amplitude if the operator is a carrier, or modulation intensity if it is a modulator. **FM INDEX** controls the shared overall modulation strength (0–12); **FM ATTACK / DECAY / SUSTAIN** control the shape of each modulation envelope. The main **FILTER / AMP ENVELOPE** section still controls the final sound's cutoff, resonance and amplitude ADSR, including RELEASE after C00 or key-up.
+
+Changing RATIO, LEVEL, INDEX or SUSTAIN updates already playing four-operator notes smoothly. Choosing a new algorithm takes effect when the next note triggers; notes already playing keep their previous routing. The waveform preview illustrates the combined FM signal; it is an approximation, not an oscilloscope recording. FM4 settings are saved per synth track and in instrument patches. Legacy FM patches default to 2 OP, and older VA projects still sound as before.
 
 ### SYNTH — VA and FM engines
 
