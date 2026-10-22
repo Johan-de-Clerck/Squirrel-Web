@@ -479,6 +479,13 @@
 @media(max-width:850px){.song-mode-grid{grid-template-columns:1fr}#view-send .send-title,#view-send .send-row{min-width:660px;gap:10px}#view-send .sends-grid{overflow-x:auto}#view-send .send-global{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:1100px) and (max-height:850px){#view-send .send-row{min-height:43px;padding:5px 11px}}
 
+/* 0.1.78: VA/FM engine switch and FM operator editor */
+.synth-engine-field{display:flex;flex-direction:column;gap:5px;max-width:360px;padding:9px 12px;background:#28241c;border:1px solid #775e42;border-radius:8px}
+.synth-engine-field select{background:#211a15;color:#caeddb;padding:8px;border:1px solid #8f795b;border-radius:6px}
+.fm-engine-controls{max-width:640px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 15px}
+.fm-engine-controls h3,.fm-engine-controls .fm-engine-hint{grid-column:1/-1}
+.fm-engine-hint{font-size:11px;color:#b9a68f;line-height:1.5}
+@media(max-width:600px){.fm-engine-controls{grid-template-columns:1fr}}
 /* 0.1.77: per-step CONTINUE checkbox on sample and drum lanes */
 .seq-step-cell{position:relative;min-width:0;width:100%;display:block}
 .seq-step-cell>.pad{display:block;width:100%;margin:0!important}
@@ -3432,7 +3439,7 @@ function soundFieldControl(s,f){
 }
 function renderSound(){
  const t=state.tracks[state.selectedTrack],s=t.sound;
- $('soundTrackLabel').textContent=isSynth(state.selectedTrack)?t.name+' · 3 OSC':t.name;
+ $('soundTrackLabel').textContent=isSynth(state.selectedTrack)?t.name+(s.engine==='fm'?' · FM 2-OP':' · VA 3-OSC'):t.name;
  $('soundAuditionBtn').textContent='♪ PREVIEW '+noteName(isSample(state.selectedTrack)?t.sampleRoot:t.note);
  $('soundAuditionBtn').disabled=isSample(state.selectedTrack)&&!sampleBuffers.has(state.selectedTrack);
  const area=$('soundControls');area.replaceChildren();area.classList.remove('synth-controls');
@@ -3450,8 +3457,17 @@ function renderSound(){
   drawWave();return;
  }
  area.classList.add('synth-controls');
- area.append(slotSelect(state.selectedTrack));const row=document.createElement('div');row.className='oscillator-sections';
- const groups=[
+ area.append(slotSelect(state.selectedTrack));
+ const engineRow=document.createElement('label');engineRow.className='field synth-engine-field';
+ const engineHead=document.createElement('span');engineHead.className='field-head';engineHead.textContent='SYNTHESIS ENGINE';
+ const engineSelect=document.createElement('select');engineSelect.setAttribute('aria-label','Synthesis engine');
+ engineSelect.add(new Option('VA · VIRTUAL ANALOG','va'));
+ engineSelect.add(new Option('FM · TWO OPERATORS','fm'));
+ engineSelect.value=s.engine==='fm'?'fm':'va';
+ engineSelect.onchange=()=>{s.engine=engineSelect.value;persist();renderSound()};
+ engineRow.append(engineHead,engineSelect);area.append(engineRow);
+ const row=document.createElement('div');row.className='oscillator-sections';
+ const groups=s.engine==='fm'?[]:[
   ['OSCILLATOR 1',['wave1','pulseWidth','osc1Level']],
   ['OSCILLATOR 2',['wave2','detune','osc2Level']],
   ['SUB OSCILLATOR',['subWave','subOctave','subDetune','subLevel']]
@@ -3474,6 +3490,21 @@ function renderSound(){
   };
   fields.forEach(key=>card.append(soundFieldControl(s,oscillatorFields.find(x=>x.k===key))));
   row.append(card);
+ }
+ if(s.engine==='fm'){
+  const fmCard=document.createElement('section');fmCard.className='osc-section fm-engine-controls';
+  const title=document.createElement('h3');title.textContent='2-OPERATOR FM · OP2 → OP1 FREQUENCY';
+  const description=document.createElement('p');description.className='fm-engine-hint';
+  description.textContent='OP1 is the sine carrier; OP2 modulates its frequency. RATIO sets harmonic spacing, INDEX sets brightness, and the FM envelope changes INDEX across each note.';
+  fmCard.append(title,description);
+  for(const field of [
+   {k:'fmRatio',label:'OP2 RATIO',min:.25,max:16,step:.25,unit:'×'},
+   {k:'fmIndex',label:'FM INDEX',min:0,max:12,step:.1,unit:''},
+   {k:'fmAttack',label:'FM ATTACK',min:.003,max:2,step:.001,unit:' s'},
+   {k:'fmDecay',label:'FM DECAY',min:.01,max:3,step:.01,unit:' s'},
+   {k:'fmSustain',label:'FM SUSTAIN',min:0,max:100,step:1,unit:'%'}
+  ])fmCard.append(soundFieldControl(s,field));
+  row.append(fmCard);
  }
  const filterSection=document.createElement('section');filterSection.className='synth-filter-section';
  const filterHeading=document.createElement('h3');filterHeading.textContent='FILTER / AMP ENVELOPE';filterSection.append(filterHeading);
@@ -3634,6 +3665,16 @@ function bindSampleEditor(){
 function drawWave(){
  const t=state.tracks[state.selectedTrack];if(!t.sound)return;
  const sound=t.sound;
+ if(sound.engine==='fm'){
+  const index=clamp(Number(sound.fmIndex??3),0,12),ratio=clamp(Number(sound.fmRatio??2),.25,16),pts=[];
+  for(let i=0;i<=170;i++){
+   const phase=i/170*6*Math.PI,y=Math.sin(phase+index*Math.sin(phase*ratio));
+   pts.push((i/170*760).toFixed(1)+','+(60-y*30).toFixed(1));
+  }
+  $('waveViz').innerHTML='<svg viewBox="0 0 760 120" preserveAspectRatio="none" role="img" aria-label="FM sound preview">'+
+   '<line class="guide" x1="0" y1="60" x2="760" y2="60"/><polyline points="'+pts.join(' ')+'" style="stroke:#a4dcbf"/></svg>';
+  return;
+ }
  const waveform=(wave,octave=0,detune=0)=>{
   const p=[],ratio=Math.pow(2,octave/12+detune/1200);
   for(let i=0;i<=170;i++){
