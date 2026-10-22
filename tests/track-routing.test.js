@@ -39,9 +39,22 @@ const run = new Function('window', 'document', 'localStorage', 'console', 'struc
  assertEq(state.tracks[0].sound.cutoff,777,'Synth patch preserved');
  types.forEach((_,i)=>assignTrackKind(i,'lead'));
  assertEq(state.tracks.filter(t=>t.trackKind==='lead').length,8,'Eight lead tracks');
+ const legacy=JSON.parse(JSON.stringify(fresh(false)));legacy.version=20;
+ for(const track of legacy.tracks)delete track.trackKind;
+ legacy.tracks[6].volume=0;legacy.tracks[7].volume=0;
+ const migrated=validate(legacy);
+ assertEq(migrated.tracks.map(x=>x.trackKind),['drum','drum','drum','bass','lead','chord','sample','sample'],'Older project track migration');
+ assertEq(migrated.tracks.slice(6).map(t=>t.volume),[78,78],'Older silent sampler migration');
+ state.tracks[1].sampleRoot=69;
+ assertEq(validate(JSON.parse(JSON.stringify(state))).tracks[1].sampleRoot,69,'Sample root is serialized');
+ state.tracks[7].sampleName='Loop.wav';state.tracks[7].sampleData='data:audio/wav;base64,AAAA';
+ assignTrackKind(7,'sample');assignTrackKind(7,'lead');assignTrackKind(7,'sample');
+ assertEq([state.tracks[7].sampleName,state.tracks[7].sampleData],['Loop.wav','data:audio/wav;base64,AAAA'],'Sample retained through instrument switch');
+ types.forEach((_,i)=>assignTrackKind(i,'drum'));
+ assertEq(state.tracks.filter(t=>t.trackKind==='drum').length,8,'Eight drum tracks');
  function assertFresh(){assertEq(fresh(false).tracks.slice(6).map(t=>t.volume),[78,78],'Sampler default volumes')}
  function assertEq(actual,expected,label){if(JSON.stringify(actual)!==JSON.stringify(expected))throw Error(label+': '+JSON.stringify(actual)+' vs '+JSON.stringify(expected))}
- return 'OK: 10 instrument, project, bank and patch checks passed';
+ return 'OK: 15 instrument, project, bank and patch checks passed';
 `);
 console.log(run({}, {}, {getItem:()=>null,setItem:()=>{}},
  {log:()=>{},warn:()=>{},error:()=>{}}, structuredClone));
