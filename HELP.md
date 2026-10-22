@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.1.46 — User Manual
+# Squirrel Studio Web 0.1.47 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -33,12 +33,16 @@ Use **SEQUENCER**, **SONG MODE**, **SYNTH**, **MIXER**, **LFO / ENVELOPES**, **D
 
 ## 3. Sequencer and entering notes
 
+### Larger step text without larger cells
+
+In 0.1.47, active notes and FX text are slightly larger, centered and clipped within the existing step dimensions. The step layout and sequencer height do not change.
+
 ### Stable sequencer height
 
 Switching between Drums 1, Drums 2, Drums 3, Bass, Lead, Chord, Sampler or MIDI-only tracks no longer changes the **height of the Step Sequencer**. The **Step Editor** and **Step FX** panels below it keep a fixed, responsive height. If selecting a track reveals more settings than fit inside either editor, **scroll with the mouse wheel or touchpad inside that panel (the scrollbar is hidden)**; the sequencer remains at the same height. This applies to the compact desktop layout and smaller screens as well.
 
 
-Clicking any note cell **only selects** that cell: it does not insert or erase a note. **Hold the left mouse button and drag** from one step to another to select a highlighted, rectangular range; this also works across multiple tracks. Release the button to finish. Drag-selecting does not change the music. Press **Delete** to clear the notes in the range (FX remain). Clicking once elsewhere clears the range and selects a single step. An active step displays its note or the relevant drum sample slot. Select a cell and use **Enter** to toggle it on/off, **Delete** to clear its note, or enter a pitch with the computer keyboard while **EDIT ON**.
+Clicking any note cell **only selects** that cell: it does not insert or erase a note. **Hold the left mouse button and drag** from one step to another to select a highlighted, rectangular range; this also works across multiple tracks. Release the button to finish. Drag-selecting does not change the music. **Ctrl+C** copies the entire rectangular selection, including inactive (off) notes and their step FX; click the first destination step on another track and press **Ctrl+V** to paste every copied step at matching offsets. Copying multiple tracks pastes on consecutive destination tracks. Steps outside the target track length or beyond track 8 are skipped. The clipboard is a snapshot and can be pasted multiple times or into another pattern. If no range is selected, Ctrl+C/V continues to copy/paste one step. Press **Delete** to clear the notes in the range (FX remain). Clicking once elsewhere clears the range and selects a single step. An active step displays its note or the relevant drum sample slot. Select a cell and use **Enter** to toggle it on/off, **Delete** to clear its note, or enter a pitch with the computer keyboard while **EDIT ON**.
 
 The **ProTracker keyboard layout** uses two rows. The **lower octave** starts at **Z = C**, with **S = C#**, **X = D**, **D = D#**, **C = E**, **V = F**, **G = F#**, **B = G**, **H = G#**, **N = A**, **J = A#**, **M = B**. The **upper octave** starts at **Q = C**, then **2 = C#**, **W = D**, **3 = D#**, **E = E**, **R = F**, **5 = F#**, **T = G**, **6 = G#**, **Y = A**, **7 = A#**, **U = B**. The top row continues at **I = the next C**, **9 = C#**, **O = D**, **0 = D#**, **P = E**. Use the octave selector to choose the base octave. **Alt+1 through Alt+8** selects tracks without conflicting with the upper-row sharp-note keys. When editing notes, the cursor advances unless already at the end of the selected track.
 
@@ -49,7 +53,7 @@ The **ProTracker keyboard layout** uses two rows. The **lower octave** starts at
 | Home / End | Jump to step 1 / final step in the selected track |
 | Left / Right | Previous / next step |
 | Up / Down | Previous / next track |
-| Ctrl+C / Ctrl+V (focused grid cell) | Copy / paste the whole step |
+| Ctrl+C / Ctrl+V (sequencer) | Copy / paste the entire selected range, or one step if none |
 | Ctrl+Z / Ctrl+Y | Undo / redo an edit; Ctrl+Shift+Z also redoes |
 | Drag the mouse from one step to another | Select a rectangular range across steps/tracks |
 | Delete with a range selected | Delete notes in that range, keeping FX |
@@ -60,7 +64,7 @@ The **ProTracker keyboard layout** uses two rows. The **lower octave** starts at
 | Alt+1 through Alt+8 | Select a track directly |
 | Mouse click on grid | Move selection only |
 
-**UNDO / REDO** buttons are available in the Step Editor. They reverse changes to notes, step parameters, pattern lengths, pattern names and other editable project parameters. They do not undo loading a different project or importing/replacing the audio files. A copied step may be pasted onto a different track, step or pattern. **COPY PATTERN** and **PASTE PATTERN** copy the entire pattern and its per-track lengths. In the Step Editor you can also edit velocity, gate, ratchet, chance and the selected drum sample.
+**COPY RANGE / PASTE RANGE** buttons appear automatically when range copying is in use. The Step Editor includes **UNDO / REDO** buttons. They reverse changes to notes, step parameters, pattern lengths, pattern names and other editable project parameters. They do not undo loading a different project or importing/replacing the audio files. A copied step may be pasted onto a different track, step or pattern. **COPY PATTERN** and **PASTE PATTERN** copy the entire pattern and its per-track lengths. In the Step Editor you can also edit velocity, gate, ratchet, chance and the selected drum sample.
 
 ## 4. Patterns, lengths and Song Mode
 
@@ -184,4 +188,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.1.46.**
+**Documentation version: Squirrel Studio Web 0.1.47.**
