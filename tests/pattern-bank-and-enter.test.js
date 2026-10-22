@@ -26,7 +26,7 @@ const run=new Function('window','document','localStorage','console','structuredC
  eq([migrated.patterns.length,migrated.pattern,migrated.songSequence],[32,27,[0,8,11,16,27]],'old song migration');
  eq([migrated.patterns[8][2][0].note,migrated.patternNames[8],migrated.trackLengths[8][2]],[87,'Old 4',7],'B1 pattern content preserved');
  eq([migrated.patternNames[4],migrated.patternNames[15],migrated.patternNames[31]],['A5','B8','D8'],'new slots empty with defaults');
- eq([validate(JSON.parse(JSON.stringify(fresh(false)))).patterns.length,fresh(false).version],[32,22],'new project format');
+ eq([validate(JSON.parse(JSON.stringify(fresh(false)))).patterns.length,fresh(false).version],[32,23],'new project format');
  // Enter key preview uses the selected note, selected drum slot and velocity.
  state=fresh(false);state.selectedTrack=0;state.selectedStep=0;
  const step=state.patterns[0][0][0];step.on=true;step.note=55;step.velocity=96;step.sampleSlot=4;
