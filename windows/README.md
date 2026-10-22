@@ -1,15 +1,20 @@
-# Squirrel Studio Desktop 0.1.6 — eerste native JUCE synthesizer
+# Squirrel Studio Desktop 0.1.7 — Native JUCE drums
 
-Bass (track 4), Lead (track 5) en Chord (track 6) genereren nu de oscillatoren, filter en ADSR in JUCE, op het gekozen Windows-audioapparaat (ook Focusrite ASIO indien beschikbaar). De WebView2-interface plant noten en stuurt Note On, Note Off, pitchslides, vibrato en volumewijzigingen door via een native bridge.
+De Windows-app gebruikt nu **6 native audiotracks** via dezelfde geselecteerde Windows-uitgang (inclusief Focusrite ASIO wanneer geïnstalleerd): Kick, Snare, Hi-Hat, Bass, Lead en Chord.
 
-**Dit is een eerste technische versie.** De native synth bevat OSC 1, OSC 2, SUB, detune, niveau, stereo-panning, filter en amplitude-ADSR. De klank is nog niet identiek aan de browser-versie. Kick/Snare/Hi-Hat, sampletracks 7/8, send-FX en LFO/filter-modulatie blijven momenteel via Web Audio lopen. Daardoor kan audio tijdelijk via verschillende apparaten lopen: de ASIO-uitgang voor de synth en Windows-standaardaudio voor drums/samples.
+- **KICK:** sinus met snelle pitch-envelope en korte decay.
+- **SNARE:** gefilterde ruis met korte tooncomponent.
+- **HI-HAT:** korte hoogdoorlaat-ruis.
+- **BASS / LEAD / CHORD:** dual oscillators plus sub, filter en amplitude-ADSR.
 
-MIDI IN/OUT blijft native via JUCE. De 440 Hz-testtoon gebruikt dezelfde native uitgang. Selecteer bij AUDIO / ASIO de gewenste Focusrite-driver, zet het volume laag en speel een Bass- of Lead-step. Als de backend geen verbinding kan maken, test de webversie apart.
+De sequencer verstuurt getimede Note On-, drum-, pitch/volume- en NOTE OFF-commando's naar JUCE. Ratchets, snelheid, mute/solo, trackvolume, panning en mastervolume worden aan de native engine doorgegeven. STOP annuleert ook geplande hits en noten.
+
+**Nog niet native:** WAV-samplers 7/8, Delay/Reverb, volledige LFO/filtermodulatie. Deze functies lopen in de Windows-app voorlopig nog via Web Audio; stuur ze via Windows naar een passend audioapparaat. De native drums kunnen iets anders klinken dan hun Web Audio-versie.
+
+Voor testen: selecteer onder **AUDIO / ASIO** de Focusrite, begin met laag volume, activeer AUDIO en speel een patroon met Kick, Snare, Hi-Hat en Bass. De 440 Hz-testtoon gebruikt dezelfde native uitgang.
 
 ## Bouwen
 
-GitHub Actions compileert de Windows-EXE met JUCE en WebView2. In de Windows-projectmap kun je lokaal `BUILD_WINDOWS.cmd` gebruiken (CMake, NuGet en Visual Studio C++ nodig).
+GitHub Actions bouwt automatisch een Windows x64-EXE via JUCE en WebView2. Voor lokaal bouwen: Visual Studio 2022 (C++), CMake, NuGet WebView2 SDK, en `BUILD_WINDOWS.cmd`.
 
-## Volgende mijlpalen
-
-Breng drumtracks en WAV-samplers naar dezelfde JUCE-audiobus, gevolgd door Delay/Reverb en volledige LFO/envelope-mapping. Pas daarna is het een uniforme ASIO-groovebox.
+Dit is een technische tussenversie. De volgende mijlpaal is WAV-samplers 7/8 native aansluiten en vervolgens de sends en modulatie naar dezelfde JUCE-mix verplaatsen.
