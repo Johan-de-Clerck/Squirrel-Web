@@ -96,6 +96,8 @@ Open **DRUM SAMPLES** and choose any track whose instrument type is **DRUM**. Th
 
 When creating or switching a track to **DRUM** under **OPTIONS**, that track immediately gains five sample dropdowns. Each dropdown can reference any of the 15 loaded sounds in the shared drum library. The choices are independent for each drum track; reusing a library sample does not create another audio copy. Use **OPEN DRUM LIBRARY / SAMPLE EDITOR** to load sounds into the 15 slots. The per-slot EDIT button in **DRUM SAMPLES** controls individual trim and loop points.
 
+Every DRUM slot also has its own **VOL** slider (0–200%) and **PITCH** slider (-24 to +24 semitones) in the DRUM SAMPLES page. These settings belong to the slot, not the shared library sample, and are saved in project and sample bank files.
+
 Each track remembers its most recently selected drum slot. A drum note uses the slot specified by that sequencer step. The Step Editor shows green **S1–S5 quick-select buttons** for DRUM tracks. Choose a step, then click its intended sample slot; this is stored on that step even before the step is switched ON. You can also **Shift+click a drum step in the main grid** to cycle S1–S5 without changing whether its note is on. Hover any drum step to see the full sample name. Each of these five slots can be assigned any of the 15 shared library samples. The sample dropdown remains available.
 
 If no usable sample is present, the track plays its built-in Drum sound (Kick, Snare or Hi-hat), selectable using **DRUM SOUND (IF NO SAMPLES)**.
