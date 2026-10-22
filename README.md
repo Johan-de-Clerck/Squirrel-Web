@@ -23,7 +23,7 @@ Read [HELP.md](HELP.md) for the full English user guide.
 
 ## What is new in 0.1.79
 
-- **Four-operator FM mode:** the existing **SYNTH → FM · TWO OPERATORS** engine now has a separate **OPERATORS** selector: **2 OP** (original behavior) or **4 OP** (new). All old FM patches stay in 2 OP, and existing VA patches stay VA.
+- **Four-operator FM mode:** the existing **SYNTH → FM · FREQUENCY MODULATION** engine now has a separate **OPERATORS** selector: **2 OP** (original behavior) or **4 OP** (new). All old FM patches stay in 2 OP, and existing VA patches stay VA.
 - **Four selectable FM algorithms**, with an independent sine oscillator for every operator:
   - **STACK** — OP4 → OP3 → OP2 → OP1. Deep, evolving and metallic FM timbres.
   - **PAIRS** — (OP2 → OP1) + (OP4 → OP3). Two audible FM carriers mixed together.
