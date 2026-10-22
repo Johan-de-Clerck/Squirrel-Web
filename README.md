@@ -6,7 +6,7 @@
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
-> The previous `SquirrelStudio_Web_0.1.42.zip` was an outdated package. The branch ZIP above always includes the current `index.html` and documentation. GitHub Pages or locally extracted old files may still require a hard refresh or replacement.
+> Download the ZIP linked above rather than an older file from a previous checkout. This branch archive always includes the current `index.html` and documentation. If you still see an older build, replace locally extracted files or hard-refresh the hosted page.
 
 Squirrel Studio is a browser-based eight-track groovebox combining synthesized and sampled instruments, a tracker-style step sequencer, MIDI, effects and a draggable song arrangement.
 
