@@ -678,13 +678,13 @@ const bases=[
  {name:'EMPTY 8',type:'empty',channel:8,volume:0,pan:0,color:'#887b6d',note:48}
 ];
 function defaultSound(t){return t.type==='chord'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:8,pulseWidth:50,cutoff:1500,resonance:0.9,attack:.09,decay:.42,sustain:.68,release:.7,chord:'minor'}:t.type==='synth'&&t.name==='BASS'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'square',detune:9,pulseWidth:43,cutoff:1350,resonance:1.8,attack:.009,decay:.22,sustain:.52,release:.19,chord:'major'}:{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:14,pulseWidth:50,cutoff:4200,resonance:.8,attack:.015,decay:.21,sustain:.65,release:.27,chord:'major'}}
-const LFO_TARGETS=[['off','OFF'],['lead-volume','LEAD · VOLUME'],['lead-cutoff','LEAD · FILTER CUTOFF'],['bass-volume','BASS · VOLUME'],['bass-cutoff','BASS · FILTER CUTOFF'],['bass-pan','BASS · PANNING'],['lead-pan','LEAD · PANNING'],['chord-pan','CHORD · PANNING'],['sampler7-volume','SAMPLER 7 · VOLUME'],['sampler7-cutoff','SAMPLER 7 · FILTER'],['sampler7-pan','SAMPLER 7 · PANNING'],['sampler8-volume','SAMPLER 8 · VOLUME'],['sampler8-cutoff','SAMPLER 8 · FILTER'],['sampler8-pan','SAMPLER 8 · PANNING']];
+const LFO_TARGETS=[['off','OFF'],...bases.flatMap((_,i)=>['volume','cutoff','pan'].map(k=>['track'+i+'-'+k,'TRACK '+(i+1)+' · '+k.toUpperCase()]))];
 const LFO_WAVES=['sine','triangle','square','sawtooth'];
 const LFO_DIVISIONS=['free','1/1','1/2','1/4','1/8','1/16','1/32'];
 function lfoFrequency(l){const sync=LFO_DIVISIONS.includes(l.sync)?l.sync:'free';if(sync==='free')return l.rate;const denominator=Number(sync.split('/')[1]);return Math.max(.01,state.bpm*denominator/240)}
-const ENVELOPE_TARGETS=[['off','OFF'],['bass-cutoff','BASS · FILTER CUTOFF'],['bass-resonance','BASS · RESONANCE'],['lead-cutoff','LEAD / SYNTH · FILTER CUTOFF'],['lead-resonance','LEAD / SYNTH · RESONANCE'],['sampler7-cutoff','SAMPLER 7 · FILTER'],['sampler7-resonance','SAMPLER 7 · RESONANCE'],['sampler8-cutoff','SAMPLER 8 · FILTER'],['sampler8-resonance','SAMPLER 8 · RESONANCE']];
-const defaultEnvelopes=()=>['bass-cutoff','lead-cutoff'].map(target=>({enabled:false,target,attack:.02,decay:.26,sustain:30,release:.3,amount:65}));
-const defaultLFOs=()=>['lead-volume','lead-cutoff','bass-volume','bass-cutoff'].map((target,i)=>({enabled:false,target,wave:i%2?'triangle':'sine',rate:i<2?2.2:0.45,sync:'free',depth:30}));
+const ENVELOPE_TARGETS=[['off','OFF'],...bases.flatMap((_,i)=>['cutoff','resonance'].map(k=>['track'+i+'-'+k,'TRACK '+(i+1)+' · '+k.toUpperCase()]))];
+const defaultEnvelopes=()=>['track3-cutoff','track4-cutoff'].map(target=>({enabled:false,target,attack:.02,decay:.26,sustain:30,release:.3,amount:65}));
+const defaultLFOs=()=>['track4-volume','track4-cutoff','track3-volume','track3-cutoff'].map((target,i)=>({enabled:false,target,wave:i%2?'triangle':'sine',rate:i<2?2.2:0.45,sync:'free',depth:30}));
 const defaultSendFX=()=>({delayTime:0.34,feedback:32,reverbDecay:1.8,chorusRate:0.8,chorusDepth:4.0});
 // Every track independently owns its drum bank, sample, synthesizer and effects.
 const TRACK_KINDS=[['drum','DRUM'],['bass','BASS'],['lead','LEAD'],['sample','SAMPLE'],['chord','CHORD']];
@@ -1137,6 +1137,11 @@ const keyboardDown=new Set();
 function srcChordDefault(data){
  return data.tracks?.[5]?.sound?.chord==='major'?'major':'minor';
 }
+function migrateModTarget(x){
+ if(typeof x!=='string')return 'off';
+ const old={bass:'track3',lead:'track4',chord:'track5',sampler7:'track6',sampler8:'track7'};
+ return x.replace(/^(bass|lead|chord|sampler7|sampler8)-/,(_,p)=>old[p]+'-');
+}
 function validate(data){
  if(!data||![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21].includes(data.version)||!Array.isArray(data.tracks)||![AUDIO_TRACK_COUNT,TRACK_COUNT].includes(data.tracks.length)||!Array.isArray(data.patterns)||![4,PATTERN_COUNT].includes(data.patterns.length))throw Error('Invalid project file format');
  if(data.patterns.length===4){
@@ -1182,13 +1187,13 @@ function validate(data){
  if(p.subOctave===-12||p.subOctave===-24)target.sound.subOctave=p.subOctave;for(const [k,a,b] of [['detune',-50,50],['osc1Level',0,100],['osc2Level',0,100],['subDetune',-50,50],['subLevel',0,100],['pulseWidth',5,95],['cutoff',80,12000],['resonance',.1,18],['attack',.003,2],['decay',.01,2],['sustain',0,1],['release',.01,3]])if(Number.isFinite(Number(p[k])))target.sound[k]=clamp(Number(p[k]),a,b);if(p.chord==='minor'||p.chord==='major')target.sound.chord=p.chord;
  }for(let b=0;b<PATTERN_COUNT;b++){if(!Array.isArray(data.patterns[b])||data.patterns[b].length<AUDIO_TRACK_COUNT)continue;for(let t=0;t<TRACK_COUNT;t++){if(!Array.isArray(data.patterns[b][t])||data.patterns[b][t].length<16)continue;for(let i=0;i<Math.min(MAX_STEPS,data.patterns[b][t].length);i++){const p=data.patterns[b][t][i];if(!p||typeof p!=='object')continue;s.patterns[b][t][i]={on:!!p.on,note:clamp(Math.round(Number(p.note)||bases[t].note),24,95),sampleSlot:clamp(Math.round(Number(p.sampleSlot)||0),0,4),velocity:clamp(Math.round(Number(p.velocity)||100),1,127),gate:clamp(Number(p.gate)||85,10,180),ratchet:clamp(Math.round(Number(p.ratchet)||1),1,6),chance:clamp(Number(p.chance??100),0,100),fx:FX_OPTIONS.some(x=>x.id===(data.version===1&&Number(p.fx)===4?5:Number(p.fx)))?(data.version===1&&Number(p.fx)===4?5:Number(p.fx)):0,fxAmount:data.version===1?clamp(Math.round(Number(p.fxAmount)||2)*3,1,255):clamp(Math.round(Number(p.fxAmount??2))||0,0,255),
   chordMode:CHORD_MODES_BY_ID.has(p.chordMode)?p.chordMode:srcChordDefault(data)}}}}
- if(Array.isArray(data.lfos)){data.lfos.slice(0,4).forEach((x,i)=>{if(!x||typeof x!=='object')return;const l=s.lfos[i];l.enabled=!!x.enabled;l.target=LFO_TARGETS.some(t=>t[0]===x.target)?x.target:l.target;l.wave=LFO_WAVES.includes(x.wave)?x.wave:l.wave;l.rate=clamp(Number(x.rate)||l.rate,.05,20);l.sync=LFO_DIVISIONS.includes(x.sync)?x.sync:'free';l.depth=clamp(Number(x.depth??l.depth),0,100)})}
+ if(Array.isArray(data.lfos)){data.lfos.slice(0,4).forEach((x,i)=>{if(!x||typeof x!=='object')return;const l=s.lfos[i];l.enabled=!!x.enabled;l.target=LFO_TARGETS.some(t=>t[0]===migrateModTarget(x.target))?migrateModTarget(x.target):l.target;l.wave=LFO_WAVES.includes(x.wave)?x.wave:l.wave;l.rate=clamp(Number(x.rate)||l.rate,.05,20);l.sync=LFO_DIVISIONS.includes(x.sync)?x.sync:'free';l.depth=clamp(Number(x.depth??l.depth),0,100)})}
  if(Array.isArray(data.envelopes)){
   data.envelopes.slice(0,2).forEach((x,i)=>{
    if(!x||typeof x!=='object')return;
    const e=s.envelopes[i];
    e.enabled=!!x.enabled;
-   e.target=ENVELOPE_TARGETS.some(t=>t[0]===x.target)?x.target:e.target;
+   e.target=ENVELOPE_TARGETS.some(t=>t[0]===migrateModTarget(x.target))?migrateModTarget(x.target):e.target;
    for(const [name,lo,hi] of [['attack',.003,2],['decay',.01,3],['sustain',0,100],['release',.01,4],['amount',-100,100]]){
     const value=Number(x[name]);if(Number.isFinite(value))e[name]=clamp(value,lo,hi);
    }
@@ -1348,9 +1353,9 @@ function updateSendEngine(){if(!audio)return;const now=audio.ctx.currentTime,f=s
 // oscillator adds a left/right offset to StereoPannerNode.pan. At full depth
 // the sweep spans all available stereo width without exceeding [-1, 1].
 // Multiple LFOs routed to one destination are normalized to avoid clipping.
-const LFO_PAN_TRACKS={'bass-pan':3,'lead-pan':4,'chord-pan':5,'sampler7-pan':6,'sampler8-pan':7};
-const LFO_VOLUME_TRACKS={'bass-volume':3,'lead-volume':4,'sampler7-volume':6,'sampler8-volume':7};
-const LFO_CUTOFF_TRACKS={'bass-cutoff':3,'lead-cutoff':4,'sampler7-cutoff':6,'sampler8-cutoff':7};
+const LFO_PAN_TRACKS=Object.fromEntries(bases.map((_,i)=>['track'+i+'-pan',i]));
+const LFO_VOLUME_TRACKS=Object.fromEntries(bases.map((_,i)=>['track'+i+'-volume',i]));
+const LFO_CUTOFF_TRACKS=Object.fromEntries(bases.map((_,i)=>['track'+i+'-cutoff',i]));
 function filterBaseCutoff(index){return isSample(index)?state.tracks[index].sampleCutoff:state.tracks[index].sound.cutoff}
 function filterBaseResonance(index){return isSample(index)?state.tracks[index].sampleResonance:state.tracks[index].sound.resonance}
 function lfoModulationAmount(l,target,normalizer){
