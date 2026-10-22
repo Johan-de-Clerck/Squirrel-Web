@@ -94,13 +94,34 @@ const run=new Function('window','document','localStorage','console','structuredC
  // Generic synth and sampler preview without a specific step remains at START.
  playPreview(6,48,95);
  close(sources.at(-1).starts[0][1],2,'Generic sample preview ignores unrequested step FX');
+ // FX 9 and LOOP ON: valid loop markers must not be moved to the start offset.
+ // Trim region is 2-8s, loop is 3-4s; a 10% offset starts at 2.6s.
+ state.tracks[6].sampleLoop=true;
+ state.tracks[6].loopStart=.3;state.tracks[6].loopEnd=.4;
+ const normalLoop=samplePlaybackPlan(state.tracks[6],10,.10);
+ close(normalLoop.startAt,2.6,'Offset inside loop seek');
+ eq([normalLoop.loop,normalLoop.loopStart,normalLoop.loopEnd],[true,3,4],'Loop boundaries remain unchanged');
+ const loopingVoice=sampleVoice(6,48,100,10,0,.10),loopSrc=sources.at(-1);
+ eq(loopSrc.loop,true,'Looping sampler still loops for in-range sample offset');
+ eq([loopSrc.loopStart,loopSrc.loopEnd],[3,4],'Valid loop markers reach AudioBufferSourceNode');
+ close(loopSrc.starts[0][1],2.6,'Looping sample starts at desired offset');
+ eq(loopSrc.stops.length,0,'Looping voice has no automatic end');
+ // A 50% offset is at 5s, past LOOP END (4s). Respect 950 by
+ // playing the trimmed tail once, not by generating invalid loopStart > loopEnd.
+ const beyond=samplePlaybackPlan(state.tracks[6],10,.50);
+ eq(beyond.loop,false,'Offset at or after LOOP END plays one-shot tail');
+ close(beyond.startAt,5,'FX 950 still seeks to 50% with loop enabled');
+ const afterLoopVoice=sampleVoice(6,48,100,10,0,.50),tailSrc=sources.at(-1);
+ eq(!!tailSrc.loop,false,'Tail sample loop remains disabled');
+ close(tailSrc.starts[0][1],5,'Tail begins at requested offset');
+ close(tailSrc.stops.at(-1),13,'Tail voice ends at trimmed sample end');
  playing=true;stopTransport();
  eq(scheduledVoices.size,0,'Second STOP also fades all preview/restarted voices');
  const oldState=validate(JSON.parse(JSON.stringify(state)));
  oldState.patterns[0][6][0].on=true;oldState.patterns[0][6][0].fx=9;oldState.patterns[0][6][0].fxAmount=50;
  const loaded=validate(JSON.parse(JSON.stringify(oldState)));
  eq([loaded.patterns[0][6][0].fx,loaded.patterns[0][6][0].fxAmount],[9,50],'FX 950 survives save/load');
- return 'PASS: 9xx offset, step audition, repeated STOP/PLAY cleanup, drum choke reset and project persistence';
+ return 'PASS: 9xx offset and LOOP markers, tail one-shot, step audition, STOP cleanup and project persistence';
 `);
 console.log(run({}, {getElementById:()=>({classList:{remove(){}}})},
  {getItem:()=>null,setItem:()=>{}},{warn:()=>{},error:()=>{},log:()=>{}},
