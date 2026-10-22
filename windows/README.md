@@ -1,20 +1,25 @@
-# Squirrel Studio Desktop 0.1.7 — Native JUCE drums
+# Squirrel Studio Desktop (experimental JUCE build)
 
-De Windows-app gebruikt nu **6 native audiotracks** via dezelfde geselecteerde Windows-uitgang (inclusief Focusrite ASIO wanneer geïnstalleerd): Kick, Snare, Hi-Hat, Bass, Lead en Chord.
+The `windows/` folder contains a separate **Windows desktop** integration of the Squirrel Studio web interface. The browser release (`index.html`) is authoritative; the native application is a technical prototype and does not yet have complete feature parity with the current web version **0.1.35**.
 
-- **KICK:** sinus met snelle pitch-envelope en korte decay.
-- **SNARE:** gefilterde ruis met korte tooncomponent.
-- **HI-HAT:** korte hoogdoorlaat-ruis.
-- **BASS / LEAD / CHORD:** dual oscillators plus sub, filter en amplitude-ADSR.
+## Existing native features
 
-De sequencer verstuurt getimede Note On-, drum-, pitch/volume- en NOTE OFF-commando's naar JUCE. Ratchets, snelheid, mute/solo, trackvolume, panning en mastervolume worden aan de native engine doorgegeven. STOP annuleert ook geplande hits en noten.
+The JUCE-native audio path was previously implemented for Kick, Snare, Hi-Hat, Bass, Lead and Chord: note/drum triggers, dual oscillator + sub voice generation, panning/volume and transport-related controls. The Windows project can also display the current browser UI through WebView2.
 
-**Nog niet native:** WAV-samplers 7/8, Delay/Reverb, volledige LFO/filtermodulatie. Deze functies lopen in de Windows-app voorlopig nog via Web Audio; stuur ze via Windows naar een passend audioapparaat. De native drums kunnen iets anders klinken dan hun Web Audio-versie.
+**Important:** Newer web features such as the five sample slots on each drum track, portable Sample Bank, updated Song Mode, and some sampler or send-FX paths may still use Web Audio or remain unsupported in the native engine. Do not assume full ASIO routing for these functions.
 
-Voor testen: selecteer onder **AUDIO / ASIO** de Focusrite, begin met laag volume, activeer AUDIO en speel een patroon met Kick, Snare, Hi-Hat en Bass. De 440 Hz-testtoon gebruikt dezelfde native uitgang.
+## Building locally
 
-## Bouwen
+Prerequisites: Visual Studio 2022 C++ toolchain, CMake, WebView2 SDK (NuGet), JUCE as required by the project, and suitable Windows audio drivers.
 
-GitHub Actions bouwt automatisch een Windows x64-EXE via JUCE en WebView2. Voor lokaal bouwen: Visual Studio 2022 (C++), CMake, NuGet WebView2 SDK, en `BUILD_WINDOWS.cmd`.
+Run `BUILD_WINDOWS.cmd` from this folder as documented in its script, or use the manually triggered **Windows Desktop (JUCE + ASIO)** GitHub Actions workflow.
 
-Dit is een technische tussenversie. De volgende mijlpaal is WAV-samplers 7/8 native aansluiten en vervolgens de sends en modulatie naar dezelfde JUCE-mix verplaatsen.
+The workflow copies the root `index.html` into the Windows package before compilation. It does **not** imply that newer web synth features have been ported to JUCE.
+
+## Audio routing
+
+The browser/web editor uses Web Audio. The Windows test implementation contains a separate JUCE device path that can select a Focusrite ASIO device when correctly installed. Some sounds and effects may be routed to the browser output rather than the JUCE output.
+
+For the latest browser controls and project/sample-bank instructions, see [../HELP.md](../HELP.md).
+
+*Windows README updated to reflect web release 0.1.35. Native build and full integration have not been verified in this update.*
