@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.1.52 — User Manual
+# Squirrel Studio Web 0.1.53 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -163,7 +163,13 @@ You can back up and transfer audio separately from a song using **EXPORT SAMPLE 
 
 **IMPORT SAMPLE BANK** replaces the current audio bank after confirmation but keeps the song arrangement, notes and patterns. Older version-1 sample banks with three drum banks and two sampler slots can still be imported. A Sample Bank is **not** a complete project backup; use **SAVE PROJECT** to preserve instrument configurations, synth patches and patterns as well.
 
-### Mixer signal meters (0.1.52)
+### Mixer MUTE / SOLO buttons (0.1.53)
+
+**MUTE turns red** when a track is muted manually. **SOLO turns green** when active. Choosing SOLO on one track also mutes all other tracks automatically: their MUTE buttons turn red in both the Mixer and sequencer lane controls. Click the green SOLO button again to switch SOLO off and restore previously audible tracks, or click SOLO on another track to move the selection there.
+
+SOLO is exclusive, so only one track is soloed at a time. The red MUTE buttons of other tracks are temporarily locked while SOLO is on to avoid changing saved mute settings. Any manually muted tracks retain their mute setting after SOLO is disabled. Track-specific MIDI output respects these mute/solo changes, with note-off sent to excluded tracks.
+
+### Mixer signal meters (0.1.53)
 
 Every Mixer track has its own VU meter, connected after that track's volume and panning controls. The meter shows the actual output of **that track only**, before the shared compressor and effect returns. A note on another track cannot cause this meter to move. When a track is silent, its meter falls to zero; Mute and Solo affect which tracks can be heard and measured. Tracks configured as MIDI OUT ONLY have no browser audio to meter.
 
@@ -223,4 +229,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.1.52.**
+**Documentation version: Squirrel Studio Web 0.1.53.**
