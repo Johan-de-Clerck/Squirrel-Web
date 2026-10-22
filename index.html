@@ -2497,62 +2497,50 @@ async function applyOutput(){if(!await initAudio())return;const id=$('audioOutpu
 async function chooseOutput(){if(!navigator.mediaDevices?.selectAudioOutput){notify('Select an audio device in system sound settings; in-browser device selection is not supported.',true);return}try{const x=await navigator.mediaDevices.selectAudioOutput();await refreshOutputs();if(x?.deviceId&&![...$('audioOutput').options].some(o=>o.value===x.deviceId))$('audioOutput').add(new Option(x.label||'Selected output',x.deviceId));if(x?.deviceId)$('audioOutput').value=x.deviceId;notify('Audio device selected. Click SET OUTPUT.')}catch(e){notify('No device selected: '+e.message,true)}}
 
 const SAMPLE_BANK_FORMAT='squirrel-studio-sample-bank';
-const SAMPLE_BANK_VERSION=1;
+const SAMPLE_BANK_VERSION=2;
 const SAMPLE_BANK_MAX_BYTES=450*1024*1024;
 function sampleBankSnapshot(){
- return {
-  format:SAMPLE_BANK_FORMAT,version:SAMPLE_BANK_VERSION,
-  createdAt:new Date().toISOString(),
+ return {format:SAMPLE_BANK_FORMAT,version:SAMPLE_BANK_VERSION,createdAt:new Date().toISOString(),
   sourceProject:state.projectName||'',
   drumSamples:state.drumSamples.map(row=>row.map(item=>({name:item.name||'',data:item.data||null,chokeGroup:item.chokeGroup||0}))),
-  samplers:[6,7].map(t=>{
-   const tr=state.tracks[t];
-   if(tr.slotKind!=='sampler'||!tr.sampleData)return null;
-   return {
-    name:tr.sampleName||'',data:tr.sampleData,
-    root:tr.sampleRoot,start:tr.sampleStart,end:tr.sampleEnd,
-    loopStart:tr.loopStart,loopEnd:tr.loopEnd,loop:!!tr.sampleLoop,
-    cutoff:tr.sampleCutoff,resonance:tr.sampleResonance
-   };
-  })
- };
+  samplers:state.tracks.map(tr=>tr.sampleData?{
+   name:tr.sampleName||'',data:tr.sampleData,root:tr.sampleRoot,start:tr.sampleStart,end:tr.sampleEnd,
+   loopStart:tr.loopStart,loopEnd:tr.loopEnd,loop:!!tr.sampleLoop,cutoff:tr.sampleCutoff,resonance:tr.sampleResonance
+  }:null)};
 }
 function validateSampleBank(pack){
- if(!pack||pack.format!==SAMPLE_BANK_FORMAT||pack.version!==SAMPLE_BANK_VERSION)
-  throw Error('Not a Squirrel Studio sample bank (version 1)');
- if(!Array.isArray(pack.drumSamples)||pack.drumSamples.length!==3||
+ if(!pack||pack.format!==SAMPLE_BANK_FORMAT||![1,2].includes(pack.version))
+  throw Error('Not a Squirrel Studio sample bank (supported versions: 1 and 2)');
+ const drumCount=pack.version===1?3:TRACK_COUNT,samplerCount=pack.version===1?2:TRACK_COUNT;
+ if(!Array.isArray(pack.drumSamples)||pack.drumSamples.length!==drumCount||
     !pack.drumSamples.every(row=>Array.isArray(row)&&row.length===5))
-  throw Error('The sample bank must contain 3 × 5 drum slots');
- if(!Array.isArray(pack.samplers)||pack.samplers.length!==2)
-  throw Error('The sample bank must contain 2 sampler slots (tracks 7 and 8)');
- const nameOf=s=>typeof s==='string'?s.slice(0,160):'';
- const dataOf=v=>{
-  if(v===null||v===undefined)return null;
-  if(typeof v!=='string'||v.length>26000000||!/^data:[^;]*;base64,[A-Za-z0-9+/=]+$/i.test(v))
+  throw Error('Invalid drum bank: expected '+drumCount+' banks of five slots');
+ if(!Array.isArray(pack.samplers)||pack.samplers.length!==samplerCount)
+  throw Error('Invalid sampler bank: expected '+samplerCount+' tracks');
+ const drumsInput=Array.from({length:TRACK_COUNT},(_,t)=>pack.drumSamples[t]||Array.from({length:5},()=>({name:'',data:null,chokeGroup:0})));
+ const samplersInput=Array.from({length:TRACK_COUNT},(_,t)=>pack.version===1?(t>=6?pack.samplers[t-6]:null):pack.samplers[t]);
+ const nameOf=x=>typeof x==='string'?x.slice(0,160):'';
+ const dataOf=x=>{
+  if(x===null||x===undefined)return null;
+  if(typeof x!=='string'||x.length>26000000||!/^data:[^;]*;base64,[A-Za-z0-9+/=]+$/i.test(x))
    throw Error('Invalid embedded audio data');
-  return v;
+  return x;
  };
- const drums=pack.drumSamples.map(row=>row.map(item=>{
-  if(!item||typeof item!=='object'||Array.isArray(item))throw Error('Invalid drum slot');
+ const drums=drumsInput.map(row=>row.map(item=>{
+  if(!item||typeof item!=='object'||Array.isArray(item))throw Error('Invalid drum sample slot');
   const data=dataOf(item.data);
   return {name:data?nameOf(item.name):'',data,chokeGroup:clamp(Math.round(Number(item.chokeGroup)||0),0,4)};
  }));
- const samplers=pack.samplers.map(item=>{
+ const samplers=samplersInput.map(item=>{
   if(item===null)return null;
   if(!item||typeof item!=='object'||Array.isArray(item))throw Error('Invalid sampler slot');
-  const data=dataOf(item.data);
-  if(!data)return null;
-  const numeric=(value,def,lo,hi)=>Number.isFinite(Number(value))?clamp(Number(value),lo,hi):def;
-  const start=numeric(item.start,0,0,.995),end=numeric(item.end,1,start+.005,1);
-  const loopStart=numeric(item.loopStart,.2,start,end-.005);
-  const loopEnd=numeric(item.loopEnd,.8,loopStart+.005,end);
-  return {
-   name:nameOf(item.name),data,
-   root:Math.round(numeric(item.root,48,24,95)),
+  const data=dataOf(item.data);if(!data)return null;
+  const num=(v,d,lo,hi)=>Number.isFinite(Number(v))?clamp(Number(v),lo,hi):d;
+  const start=num(item.start,0,0,.995),end=num(item.end,1,start+.005,1);
+  const loopStart=num(item.loopStart,.2,start,end-.005),loopEnd=num(item.loopEnd,.8,loopStart+.005,end);
+  return {name:nameOf(item.name),data,root:Math.round(num(item.root,48,24,95)),
    start,end,loopStart,loopEnd,loop:!!item.loop,
-   cutoff:numeric(item.cutoff,12000,80,12000),
-   resonance:numeric(item.resonance,.7,.1,18)
-  };
+   cutoff:num(item.cutoff,12000,80,12000),resonance:num(item.resonance,.7,.1,18)};
  });
  return {drums,samplers};
 }
@@ -2576,10 +2564,8 @@ async function importSampleBank(file){
  if(file.size>SAMPLE_BANK_MAX_BYTES){notify('Sample bank file is too large.',true);return}
  try{
   const bank=validateSampleBank(JSON.parse(await file.text()));
-  if(!window.confirm('Replace all drum sample slots and sampler tracks 7–8 with this sample bank? Notes, patterns and the song arrangement will be kept.'))return;
+  if(!window.confirm('Replace drum and sampler audio on all eight tracks? Notes, patterns and arrangement remain unchanged.'))return;
   await Promise.all([restoredSamples,restoredDrumSamples]);
-  // Decode every audio file BEFORE replacing the active bank so an invalid bank
-  // cannot silently replace working sounds with unreadable data.
   if(!await initAudio())throw Error('Audio engine unavailable');
   const decodedDrums=new Map(),decodedSamplers=new Map();
   const decode=async encoded=>{
@@ -2590,42 +2576,40 @@ async function importSampleBank(file){
    if(!buffer.length)throw Error('Empty audio sample');
    return buffer;
   };
-  for(let t=0;t<TRACK_COUNT;t++)for(let slot=0;slot<5;slot++){
-   const item=bank.drums[t][slot];
-   if(item.data)decodedDrums.set(drumSlotKey(t,slot),await decode(item.data));
+  // Decode all sound files before mutating the current bank.
+  for(let t=0;t<TRACK_COUNT;t++){
+   for(let slot=0;slot<5;slot++){
+    const item=bank.drums[t][slot];
+    if(item.data)decodedDrums.set(drumSlotKey(t,slot),await decode(item.data));
+   }
+   if(bank.samplers[t])decodedSamplers.set(t,await decode(bank.samplers[t].data));
   }
-  for(let i=0;i<2;i++)if(bank.samplers[i]){
-   decodedSamplers.set(6+i,await decode(bank.samplers[i].data));
-  }
-  stopTransport();
-  sampleSession++;
-  state.drumSamples=bank.drums;
-  drumSampleBuffers.clear();
+  stopTransport();sampleSession++;
+  state.drumSamples=bank.drums;drumSampleBuffers.clear();
   for(const [key,buffer] of decodedDrums)drumSampleBuffers.set(key,buffer);
-  for(let i=0;i<2;i++){
-   const t=i+6,info=bank.samplers[i],tr=state.tracks[t];
+  for(let t=0;t<TRACK_COUNT;t++){
+   const info=bank.samplers[t],tr=state.tracks[t];
    sampleBuffers.delete(t);
    if(info){
-    tr.slotKind='sampler';tr.name=slotTrackName(t,'sampler');
+    tr.trackKind='sample';tr.type='empty';tr.slotKind='sampler';tr.name=kindName(t,'sample');
     tr.sampleName=info.name;tr.sampleData=info.data;tr.sampleRoot=info.root;
     tr.sampleStart=info.start;tr.sampleEnd=info.end;
     tr.loopStart=info.loopStart;tr.loopEnd=info.loopEnd;tr.sampleLoop=info.loop;
     tr.sampleCutoff=info.cutoff;tr.sampleResonance=info.resonance;
-    sanitizeSampleMarkers(tr);
-    if(tr.volume===0)tr.volume=78;
+    sanitizeSampleMarkers(tr);if(tr.volume===0)tr.volume=78;
     sampleBuffers.set(t,decodedSamplers.get(t));
    }else{
     tr.sampleName='';tr.sampleData=null;
-    if(tr.slotKind==='sampler'){tr.slotKind='empty';tr.name=slotTrackName(t,'empty')}
+    // Do not change the instrument type if no sample exists in the bank.
    }
   }
   let storageProblems=0;
-  for(let t=0;t<TRACK_COUNT;t++)for(let slot=0;slot<5;slot++){
-   const key=drumSlotKey(t,slot),item=state.drumSamples[t][slot];
-   try{if(item.data)await sampleDB('put',key,item);else await sampleDB('delete',key)}
-   catch(e){storageProblems++;console.warn(e)}
-  }
-  for(let t=6;t<8;t++){
+  for(let t=0;t<TRACK_COUNT;t++){
+   for(let slot=0;slot<5;slot++){
+    const key=drumSlotKey(t,slot),item=state.drumSamples[t][slot];
+    try{if(item.data)await sampleDB('put',key,item);else await sampleDB('delete',key)}
+    catch(e){storageProblems++;console.warn(e)}
+   }
    const tr=state.tracks[t];
    try{
     if(tr.sampleData)await sampleDB('put',t,{data:tr.sampleData,name:tr.sampleName,root:tr.sampleRoot});
