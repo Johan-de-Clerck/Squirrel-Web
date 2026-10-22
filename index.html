@@ -937,7 +937,7 @@ function sanitizeSampleMarkers(track){
 function clearSamplerSlot(trackIndex){clearSamplePlaybackTrack(trackIndex);sampleBuffers.delete(trackIndex);state.tracks[trackIndex].sampleData=null;state.tracks[trackIndex].sampleName='';}
 async function restoreStoredSamples(){
  const generation=sampleSession;
- for(let t=6;t<TRACK_COUNT;t++){
+ for(let t=0;t<TRACK_COUNT;t++){
   if(state.tracks[t].sampleData)continue;
   try{const saved=await sampleDB('get',t);
    if(generation!==sampleSession)return;
@@ -950,7 +950,7 @@ let restoredSamples=restoreStoredSamples();
 let restoredDrumSamples=restoreStoredDrumSamples();
 async function restoreStoredDrumSamples(){
  const generation=sampleSession;
- for(let t=0;t<3;t++)for(let slot=0;slot<5;slot++){
+ for(let t=0;t<TRACK_COUNT;t++)for(let slot=0;slot<5;slot++){
   const item=state.drumSamples[t][slot];if(item.data)continue;
   try{
    const saved=await sampleDB('get',drumSlotKey(t,slot));
@@ -974,13 +974,13 @@ async function decodeDrumSample(t,slot){
  drumSampleBuffers.set(key,buffer);return true;
 }
 async function decodeAllDrumSamples(){
- for(let t=0;t<3;t++)for(let i=0;i<5;i++){
+ for(let t=0;t<TRACK_COUNT;t++)for(let i=0;i<5;i++){
   if(!state.drumSamples[t][i].data)continue;
   try{await decodeDrumSample(t,i)}catch(e){console.warn('Drum sample decode failed:',e);notify('Could not decode '+drumName(t,i),true)}
  }
 }
 async function clearDrumSamplesStorage(){
- for(let t=0;t<3;t++)for(let i=0;i<5;i++){
+ for(let t=0;t<TRACK_COUNT;t++)for(let i=0;i<5;i++){
   try{await sampleDB('delete',drumSlotKey(t,i))}catch(e){console.warn(e)}
  }
 }
@@ -1243,7 +1243,7 @@ function restoreUndoState(raw){
   for(const key of HISTORY_KEYS)state[key]=saved[key];
   state.tracks=saved.tracks.map((t,i)=>({...t,sampleData:currentSamples[i]}));
   state.drumSamples=drumSamples;
-  if(saved.drumChoke)for(let t=0;t<3;t++)for(let slot=0;slot<5;slot++)state.drumSamples[t][slot].chokeGroup=saved.drumChoke[t]?.[slot]||0;
+  if(saved.drumChoke)for(let t=0;t<TRACK_COUNT;t++)for(let slot=0;slot<5;slot++)state.drumSamples[t][slot].chokeGroup=saved.drumChoke[t]?.[slot]||0;
   state.selectedStep=Math.min(state.selectedStep,trackLength());
   state.selectedStep=clamp(state.selectedStep,0,trackLength()-1);
   persist();
@@ -1272,7 +1272,7 @@ function patternLength(bank=state.pattern){return Math.max(...(state.trackLength
 function selectedStep(){return state.patterns[state.pattern][state.selectedTrack][state.selectedStep]}
 function drumLastSlot(t){return clamp(Math.round(Number(state.drumLastSlots?.[t])||0),0,4)}
 function rememberDrumSlot(t,slot){
- if(t<0||t>=3)return;
+ if(t<0||t>=TRACK_COUNT)return;
  state.drumLastSlots[t]=clamp(Math.round(Number(slot)||0),0,4);
  persist();
 }
@@ -1310,7 +1310,7 @@ function updateDistortionEngine(){
  if(!audio)return;
  const now=audio.ctx.currentTime;
  state.tracks.forEach((tr,t)=>{
-  const d=DISTORTION_TRACKS.has(t)?clamp(Number(tr.distortion)||0,0,100)/100:0;
+  const d=(isDrum(t)||isSample(t))?clamp(Number(tr.distortion)||0,0,100)/100:0;
   const stage=audio.distortionStages[t];
   stage.dry.gain.setTargetAtTime(1-d,now,.012);
   stage.wet.gain.setTargetAtTime(d,now,.012);
@@ -1345,8 +1345,8 @@ function updateSendEngine(){if(!audio)return;const now=audio.ctx.currentTime,f=s
 const LFO_PAN_TRACKS={'bass-pan':3,'lead-pan':4,'chord-pan':5,'sampler7-pan':6,'sampler8-pan':7};
 const LFO_VOLUME_TRACKS={'bass-volume':3,'lead-volume':4,'sampler7-volume':6,'sampler8-volume':7};
 const LFO_CUTOFF_TRACKS={'bass-cutoff':3,'lead-cutoff':4,'sampler7-cutoff':6,'sampler8-cutoff':7};
-function filterBaseCutoff(index){return index>=AUDIO_TRACK_COUNT?state.tracks[index].sampleCutoff:state.tracks[index].sound.cutoff}
-function filterBaseResonance(index){return index>=AUDIO_TRACK_COUNT?state.tracks[index].sampleResonance:state.tracks[index].sound.resonance}
+function filterBaseCutoff(index){return isSample(index)?state.tracks[index].sampleCutoff:state.tracks[index].sound.cutoff}
+function filterBaseResonance(index){return isSample(index)?state.tracks[index].sampleResonance:state.tracks[index].sound.resonance}
 function lfoModulationAmount(l,target,normalizer){
  if(!l.enabled||target==='off')return 0;
  const ratio=(l.depth/100)/normalizer;
@@ -1489,7 +1489,7 @@ function synthVoice(track,note,velocity,when,gate=null){
  const c=audio.ctx,s=track.sound,f=hz(note),trackIndex=state.tracks.indexOf(track);
  // Windows native mode: JUCE renders this VA voice through ASIO/WASAPI.
  // Web mode falls back to the original Web Audio synthesis below unchanged.
- if(nativeVAEnabled() && trackIndex>=3 && trackIndex<=5){
+ if(nativeVAEnabled() && trackIndex>=3 && trackIndex<=5 && isSynth(trackIndex)){
   const nativeId=++nativeVoiceSerial;
   nativeVAMessage('on',{id:nativeId,track:trackIndex,note,velocity,patch:nativeVAPatch(trackIndex)},when);
   const voice={nativeId,trackIndex,released:false,release:Math.max(.02,s.release),oscs:[],pitchParams:[],drum:false};
@@ -1545,7 +1545,7 @@ function oneShot(type,track,velocity,when,pitch=0){
  // Embedded Windows desktop: Kick/Snare/Hi-Hat now use the same JUCE/ASIO
  // audio device as Bass/Lead/Chord. Browser mode keeps Web Audio unchanged.
  const nativeTrack=state.tracks.indexOf(track);
- if(nativeVAEnabled()&&nativeTrack>=0&&nativeTrack<=2){
+ if(nativeVAEnabled()&&nativeTrack>=0&&nativeTrack<=2&&isDrum(nativeTrack)){
   const nativeId=++nativeVoiceSerial;
   nativeVAMessage('drum',{id:nativeId,track:nativeTrack,velocity,pitch,patch:nativeVAPatch(nativeTrack)},when);
   return [{nativeId,drum:true,released:false,trackIndex:nativeTrack}];
@@ -1580,22 +1580,31 @@ function sampleVoice(t,note,velocity,when,pitch=0){
  if(!track.sampleLoop){const rate=src.playbackRate.value;src.stop(when+Math.max(.001,(endAt-startAt)/rate));}
  return voice;
 }
-function playTrack(t,note,velocity,when,gate=null,pitch=0,quality=null,sampleSlot=0){if(!audio||t<0||t>=TRACK_COUNT)return null;const track=state.tracks[t];if(track.midiOnly||track.muted||(state.tracks.some(x=>x.solo)&&!track.solo))return null;if(t>=AUDIO_TRACK_COUNT){if(track.slotKind!=='sampler')return null;const voice=sampleVoice(t,note,velocity,when,pitch);return voice?[voice]:null;}if(t<3&&hasDrumSamples(t)){const voice=drumSampleVoice(t,clamp(sampleSlot|0,0,4),velocity,when);return voice?[voice]:null;}
-if(track.type==='kick'||track.type==='snare'||track.type==='hat'){return oneShot(track.type,track,velocity,when,pitch)}if(track.type==='chord'){
- const notes=chordNotes(note+pitch,quality||track.sound.chord);
- // Control polyphonic loudness without hard clipping for extended 5-note chords.
- const perNoteVelocity=velocity*Math.sqrt(3/notes.length)*.72;
- return notes.map(n=>synthVoice(track,clamp(n,24,108),perNoteVelocity,when,gate));
-}return [synthVoice(track,clamp(note+pitch,24,108),velocity,when,gate)]}
+function playTrack(t,note,velocity,when,gate=null,pitch=0,quality=null,sampleSlot=0){
+ if(!audio||t<0||t>=TRACK_COUNT)return null;
+ const track=state.tracks[t],kind=kindOf(track);
+ if(track.midiOnly||track.muted||(state.tracks.some(x=>x.solo)&&!track.solo))return null;
+ if(kind==='sample'){const voice=sampleVoice(t,note,velocity,when,pitch);return voice?[voice]:null;}
+ if(kind==='drum'){
+  if(hasDrumSamples(t)){const voice=drumSampleVoice(t,clamp(sampleSlot|0,0,4),velocity,when);return voice?[voice]:null;}
+  return oneShot(track.drumType||'kick',track,velocity,when,pitch);
+ }
+ if(kind==='chord'){
+  const notes=chordNotes(note+pitch,quality||track.sound.chord);
+  const perNoteVelocity=velocity*Math.sqrt(3/notes.length)*.72;
+  return notes.map(n=>synthVoice(track,clamp(n,24,108),perNoteVelocity,when,gate));
+ }
+ return [synthVoice(track,clamp(note+pitch,24,108),velocity,when,gate)];
+}
 function playPreview(t,note,velocity=100){
- if(t>=TRACK_COUNT||t>=AUDIO_TRACK_COUNT&&state.tracks[t].slotKind!=='sampler'&&!state.tracks[t].midiOnly)return;
+ if(t<0||t>=TRACK_COUNT)return;
  if(!audio){initAudio().then(ok=>{if(ok)playPreview(t,note,velocity)});return}
- const when=audio.ctx.currentTime+.008,quality=t===5?selectedStep().chordMode:null;
+ const when=audio.ctx.currentTime+.008,quality=kindOf(state.tracks[t])==='chord'?selectedStep().chordMode:null;
  if(state.tracks[t].midiOnly){
   midiPlayStep(t,note,velocity,when,false,.20,quality);
   return;
  }
- playTrack(t,note,velocity,when,.22,0,quality,t<3?(t===state.selectedTrack&&selectedStep().on?selectedStep().sampleSlot||0:drumLastSlot(t)):0);
+ playTrack(t,note,velocity,when,.22,0,quality,isDrum(t)?(t===state.selectedTrack&&selectedStep().on?selectedStep().sampleSlot||0:drumLastSlot(t)):0);
 }
 function stepDuration(){return 60/state.bpm/4}
 // Bass en Lead zijn mono-step-hold: nieuwe noten vervangen de huidige,
@@ -1622,7 +1631,7 @@ function scheduleStep(idx,when){
   // voice afgesloten en begint de nieuwe noot daarna op de verse toonhoogte.
   if(step.fx===12){
    midiOffTrack(t,when);
-   if(track.type==='synth'||track.type==='chord'||track.slotKind==='sampler'){
+   if(isSynth(t)||isSample(t)){
     for(const v of rt.voices)if(v&&!v.drum&&!v.released)releaseVoiceScheduled(v,when);
     rt.voices=[];
    }
@@ -1633,7 +1642,7 @@ function scheduleStep(idx,when){
    rt.voices=[];rt.basePeriod=periodForNote(step.note);rt.period=rt.basePeriod;rt.level=64;rt.phase=0;rt.activeFx=0;
    // Blijf een voice vasthouden tot de volgende noot als een latere step
    // (eventueel na lege steps) een effect op diezelfde noot gaat uitvoeren.
-   const hold=(t===3||t===4||track.slotKind==='sampler')||((track.type==='synth'||track.type==='chord')&&shouldHoldFXVoice(t,laneStep));
+   const hold=(isSample(t)||kindOf(track)==='bass'||kindOf(track)==='lead')||(kindOf(track)==='chord'&&shouldHoldFXVoice(t,laneStep));
    const hits=clamp(step.ratchet||1,1,6);
    const swingStep=dur*(idx%2===0?1+state.swing/200:1-state.swing/200);
    const subDuration=swingStep/hits;
@@ -2148,7 +2157,7 @@ function renderSendFX(){
   const label=document.createElement('strong');label.textContent=String(t+1).padStart(2,'0')+' '+track.name;
   row.appendChild(label);
   for(const [key,name] of [['delaySend','Delay'],['reverbSend','Reverb'],['chorusSend','Chorus'],['distortion','Distortion']]){
-   const supported=key!=='distortion'||DISTORTION_TRACKS.has(t);
+   const supported=key!=='distortion'||isDrum(t)||isSample(t);
    const field=document.createElement('label');field.className='send-fader'+(supported?'':' unavailable');
    const slider=document.createElement('input');slider.type='range';slider.min='0';slider.max='100';slider.step='1';slider.disabled=!supported;
    slider.value=supported?track[key]:0;slider.setAttribute('aria-label',name+' for '+track.name);
@@ -2264,12 +2273,12 @@ async function applyLoadedProject(project){
  sampleSession++;sampleBuffers.clear();drumSampleBuffers.clear();
  stepClipboard=null;clearStepRange();state=project;songPosition=0;fxEditMode=false;fxDigitBuffer='';
  // Replace IndexedDB samples as a single project, never mixing the demo with the previous song.
- for(let t=0;t<3;t++)for(let slot=0;slot<5;slot++){
+ for(let t=0;t<TRACK_COUNT;t++)for(let slot=0;slot<5;slot++){
   const item=state.drumSamples[t][slot],key=drumSlotKey(t,slot);
   try{if(item.data)await sampleDB('put',key,item);else await sampleDB('delete',key)}
   catch(e){console.warn('Drum sample project storage:',e)}
  }
- for(let i=6;i<TRACK_COUNT;i++){
+ for(let i=0;i<TRACK_COUNT;i++){
   const track=state.tracks[i];
   try{
    if(track.sampleData)await sampleDB('put',i,{data:track.sampleData,name:track.sampleName,root:track.sampleRoot});
@@ -2306,7 +2315,7 @@ function newSong(){
   stopTransport();
   for(const [key,voices] of activeLive){for(const voice of voices)if(!voice.drum)releaseVoice(voice,audio?.ctx.currentTime||0)}
   activeLive.clear();keyboardDown.clear();keyboardAssignments.clear();
-  sampleSession++;sampleBuffers.clear();for(let i=6;i<TRACK_COUNT;i++)removeStoredSample(i);
+  sampleSession++;sampleBuffers.clear();for(let i=0;i<TRACK_COUNT;i++)removeStoredSample(i);
   state=fresh(false);drumSampleBuffers.clear();clearDrumSamplesStorage();songPosition=0; // eight tracks, sixteen blank patterns
   clipboard=null;stepClipboard=null;clearStepRange();fxEditMode=false;fxDigitBuffer='';
   if(audio){applyTrackMix();updateSendEngine();applyLFOs()}
@@ -2559,7 +2568,7 @@ async function importSampleBank(file){
    if(!buffer.length)throw Error('Empty audio sample');
    return buffer;
   };
-  for(let t=0;t<3;t++)for(let slot=0;slot<5;slot++){
+  for(let t=0;t<TRACK_COUNT;t++)for(let slot=0;slot<5;slot++){
    const item=bank.drums[t][slot];
    if(item.data)decodedDrums.set(drumSlotKey(t,slot),await decode(item.data));
   }
@@ -2589,7 +2598,7 @@ async function importSampleBank(file){
    }
   }
   let storageProblems=0;
-  for(let t=0;t<3;t++)for(let slot=0;slot<5;slot++){
+  for(let t=0;t<TRACK_COUNT;t++)for(let slot=0;slot<5;slot++){
    const key=drumSlotKey(t,slot),item=state.drumSamples[t][slot];
    try{if(item.data)await sampleDB('put',key,item);else await sampleDB('delete',key)}
    catch(e){storageProblems++;console.warn(e)}
@@ -2705,7 +2714,7 @@ function bindings(){
   autoDemoOnStart=desired;
   try{localStorage.setItem(DEMO_AUTO_KEY,desired?'1':'0')}catch(e){console.warn(e)}
  };
- $('newSongBtn').onclick=newSong;$('demoBtn').onclick=()=>{if(!confirm('Restore demo? Unsaved changes in this session will be overwritten.'))return;stopTransport();sampleSession++;sampleBuffers.clear();for(let i=6;i<TRACK_COUNT;i++)removeStoredSample(i);state=fresh();drumSampleBuffers.clear();clearDrumSamplesStorage();songPosition=0;persist();applyTrackMix();renderAll();notify('Demo restored.')};
+ $('newSongBtn').onclick=newSong;$('demoBtn').onclick=()=>{if(!confirm('Restore demo? Unsaved changes in this session will be overwritten.'))return;stopTransport();sampleSession++;sampleBuffers.clear();for(let i=0;i<TRACK_COUNT;i++)removeStoredSample(i);state=fresh();drumSampleBuffers.clear();clearDrumSamplesStorage();songPosition=0;persist();applyTrackMix();renderAll();notify('Demo restored.')};
   // Houd de padnavigatie direct bereikbaar na muis-/touchbediening van een slider.
   // Sliderinput blijft tijdens het slepen gefocust; na loslaten gaat de focus
   // terug naar de huidige step. Daardoor wijzigen de pijltjes daarna niet
