@@ -1805,7 +1805,7 @@ function playTrack(t,note,velocity,when,gate=null,pitch=0,quality=null,sampleSlo
 }
 function playPreview(t,note,velocity=100,stepOverride=null){
  if(t<0||t>=TRACK_COUNT)return;
- if(!audio){initAudio().then(ok=>{if(ok)playPreview(t,note,velocity)});return}
+ if(!audio){initAudio().then(ok=>{if(ok)playPreview(t,note,velocity,stepOverride)});return}
  const when=audio.ctx.currentTime+.008,
   step=stepOverride&&typeof stepOverride==='object'?stepOverride:null,
   quality=kindOf(state.tracks[t])==='chord'?(step?.chordMode||selectedStep().chordMode):null,
