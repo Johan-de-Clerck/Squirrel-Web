@@ -94,6 +94,8 @@ The effective pattern length is the **longest** enabled track length. For exampl
 
 Open **DRUM SAMPLES** and choose any track whose instrument type is **DRUM**. The upper section is the shared **15-SAMPLE DRUM LIBRARY**. Use LOAD beside a library position to import a WAV, AIFF, MP3 or OGG sample; it can then be assigned to any of the five slots of a Drum track. You can assign the same library sample to several slots or tracks without duplicating the audio file. Use the per-slot assignment dropdown to select a library number; clear it to unassign. Each Drum track still has five slots (up to 40 assignments if all eight tracks are DRUM). Direct LOAD remains available for older individually loaded samples. Press **LOAD**, **USE**, **PREVIEW** or **CLEAR** for a slot. File decoding depends on the browser; WAV is recommended. Each sample may be at most 16 MB.
 
+When creating or switching a track to **DRUM** under **OPTIONS**, that track immediately gains five sample dropdowns. Each dropdown can reference any of the 15 loaded sounds in the shared drum library. The choices are independent for each drum track; reusing a library sample does not create another audio copy. Use **OPEN DRUM LIBRARY / SAMPLE EDITOR** to load sounds into the 15 slots. The per-slot EDIT button in **DRUM SAMPLES** controls individual trim and loop points.
+
 Each track remembers its most recently selected drum slot. A drum note uses the slot specified by that sequencer step. The Step Editor lets you change an existing step's sample slot independently.
 
 If no usable sample is present, the track plays its built-in Drum sound (Kick, Snare or Hi-hat), selectable using **DRUM SOUND (IF NO SAMPLES)**.
