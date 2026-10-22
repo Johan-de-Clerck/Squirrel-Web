@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.1.51 — User Manual
+# Squirrel Studio Web 0.1.52 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -128,7 +128,7 @@ Choose **9 · SAMPLE OFFSET (%)** on a step with a sample note, then set a decim
 | `975` | 75%, three quarters |
 | `999` | 99%, near the end |
 
-The offset is relative to the sample's **START–END region** on Sample tracks and to the **full sample** on a Drum slot. This effect does not change synthesizer oscillator sound or synthesized fallback drum sounds. The new percentage parameter uses **decimal notation**; the existing tracker effects keep hexadecimal parameters. FX 9 is saved in projects and copied with steps and selections.
+The offset is relative to the sample's **START–END region** on Sample tracks and to the **full sample** on a Drum slot. You can hear the correct offset using the **AUDITION** button in the Step Editor, or by holding Enter on the selected note. The normal Synth/Sample instrument preview still starts from its usual position. This effect does not change synthesizer oscillator sound or synthesized fallback drum sounds. The new percentage parameter uses **decimal notation**; the existing tracker effects keep hexadecimal parameters. FX 9 is saved in projects and copied with steps and selections.
 
 Tracker FX in **Step FX** include:
 
@@ -163,7 +163,7 @@ You can back up and transfer audio separately from a song using **EXPORT SAMPLE 
 
 **IMPORT SAMPLE BANK** replaces the current audio bank after confirmation but keeps the song arrangement, notes and patterns. Older version-1 sample banks with three drum banks and two sampler slots can still be imported. A Sample Bank is **not** a complete project backup; use **SAVE PROJECT** to preserve instrument configurations, synth patches and patterns as well.
 
-### Mixer signal meters (0.1.51)
+### Mixer signal meters (0.1.52)
 
 Every Mixer track has its own VU meter, connected after that track's volume and panning controls. The meter shows the actual output of **that track only**, before the shared compressor and effect returns. A note on another track cannot cause this meter to move. When a track is silent, its meter falls to zero; Mute and Solo affect which tracks can be heard and measured. Tracks configured as MIDI OUT ONLY have no browser audio to meter.
 
@@ -223,4 +223,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.1.51.**
+**Documentation version: Squirrel Studio Web 0.1.52.**
