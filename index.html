@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.18 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.19 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1042,6 +1042,21 @@ input[type="password"],textarea,
 #view-sample .sample-wave-time{margin-left:auto;color:#9dd1ad;font:11px Consolas,monospace;white-space:nowrap}
 #view-sample #sampleWaveFit{padding:6px 11px}
 @media(max-width:750px){#view-sample .sample-wave-time{flex-basis:100%;margin-left:0}}
+
+/* v0.2.19: the per-step sample carry option is permanently visible on Step FX.
+   Keep the same two-column position regardless of selected track or FX. */
+#view-seq .fx-controls{grid-template-columns:repeat(2,minmax(0,1fr));align-items:end;gap:8px 11px}
+#view-seq .fx-controls #stepContinueField{display:flex;min-width:0;grid-column:2;grid-row:1;align-self:end}
+#view-seq .fx-controls #stepContinueField .step-continue-control{min-height:35px;width:100%;font-size:10px;line-height:1.35}
+#view-seq .fx-controls #stepContinueField .step-continue-control input{flex:0 0 17px}
+#view-seq .fx-controls #stepContinueField.continue-unavailable .step-continue-control{background:#30271f;border-color:#71543b;color:#c9ae8c}
+#view-seq .fx-controls #stepContinueField.continue-unavailable .step-continue-control input{opacity:.55;cursor:not-allowed}
+#view-seq .fx-controls #fxAmountField{grid-column:1;grid-row:2}
+#view-seq .fx-controls.chord-mode #stepContinueField{grid-column:2;grid-row:1}
+#view-seq .fx-controls.chord-mode #stepChordField{grid-column:1;grid-row:2}
+#view-seq .fx-controls.chord-mode #fxAmountField{grid-column:2;grid-row:2}
+@media(max-width:600px){#view-seq .fx-controls{grid-template-columns:1fr}#view-seq .fx-controls #stepContinueField{grid-column:1;grid-row:auto}#view-seq .fx-controls #fxAmountField,#view-seq .fx-controls.chord-mode #stepChordField,#view-seq .fx-controls.chord-mode #fxAmountField{grid-column:1;grid-row:auto}}
+
 </style>
 </head>
 <body>
@@ -1053,7 +1068,7 @@ input[type="password"],textarea,
 <button type="button" id="fileRenderSynth">RENDER SYNTH TO WAV</button>
 <button type="button" id="fileExportSong">EXPORT SONG TO WAV</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.18</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.19</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -4170,6 +4185,20 @@ function selectDrumStepSlot(track,slot){
  selectedStep().sampleSlot=slot;
  persist();renderGrid();renderStepEditor();focusSelectedPad(false);
 }
+// The carry flag is step-specific; the UI stays visible for every instrument
+// so the option cannot appear to disappear when changing tracks.
+function syncStepContinueControl(step=selectedStep()){
+ const track=state.selectedTrack;
+ const field=$('stepContinueField'),input=$('stepContinue');
+ const supported=stepCanContinue(track),noteOff=step.fx===12;
+ field.classList.remove('hidden');
+ field.classList.toggle('continue-unavailable',!supported||noteOff);
+ input.checked=supported&&stepContinuesSample(step);
+ input.disabled=!supported||noteOff;
+ const reason=!supported?'Available on DRUM and SAMPLE tracks with internal audio only.':noteOff?'NOTE OFF stops the sample. Choose another FX command to continue it.':'Carry this sample or drum voice into the next pattern until Note Off or a new note.';
+ field.title=reason;
+ input.title=reason;
+}
 function renderStepEditor(){const step=selectedStep(),t=state.tracks[state.selectedTrack];
  $('stepTrackKind').value=kindOf(t);
  const drum=isDrum(state.selectedTrack),drumField=$('stepDrumSampleField'),drumSelect=$('stepDrumSample');
@@ -4189,12 +4218,10 @@ function renderStepEditor(){const step=selectedStep(),t=state.tracks[state.selec
    }
  }
 $('stepOnLabel').textContent=step.on?'STEP ON':'STEP OFF';
- const supportsContinue=stepCanContinue(state.selectedTrack);
- $('stepContinueField').classList.toggle('hidden',!supportsContinue);
- $('stepContinue').checked=supportsContinue&&stepContinuesSample(step);
- $('stepContinue').disabled=!supportsContinue||step.fx===12;$('stepNoteField').classList.toggle('hidden',!t.midiOnly&&drum);$('gate').disabled=kindOf(t)==='bass'||kindOf(t)==='lead';$('gateOut').textContent=$('gate').disabled?'HOLD':step.gate+'%';$('stepNote').value=String(step.note);$('stepNoteOut').textContent=noteName(step.note);$('velocity').value=step.velocity;$('velocityOut').textContent=step.velocity;$('gate').value=step.gate;$('ratchet').value=step.ratchet||1;$('ratchetOut').textContent=(step.ratchet||1)+'×';$('chance').value=step.chance;$('chanceOut').textContent=step.chance+'%';}
+ syncStepContinueControl(step);$('stepNoteField').classList.toggle('hidden',!t.midiOnly&&drum);$('gate').disabled=kindOf(t)==='bass'||kindOf(t)==='lead';$('gateOut').textContent=$('gate').disabled?'HOLD':step.gate+'%';$('stepNote').value=String(step.note);$('stepNoteOut').textContent=noteName(step.note);$('velocity').value=step.velocity;$('velocityOut').textContent=step.velocity;$('gate').value=step.gate;$('ratchet').value=step.ratchet||1;$('ratchetOut').textContent=(step.ratchet||1)+'×';$('chance').value=step.chance;$('chanceOut').textContent=step.chance+'%';}
 function renderFXEditor(){
  const step=selectedStep(),t=state.tracks[state.selectedTrack];
+ syncStepContinueControl(step);
  
  $('stepFx').value=String(step.fx);
  const offset=step.fx===9,limit=offset?99:(step.fx===10||step.fx===11)?15:255;
@@ -6117,7 +6144,9 @@ function bindings(){
  $('stepTrackKind').onchange=()=>assignTrackKind(state.selectedTrack,$('stepTrackKind').value);
  $('stepDrumSample').onchange=()=>selectDrumStepSlot(state.selectedTrack,$('stepDrumSample').value);
  $('stepNote').onchange=()=>{selectedStep().note=Number($('stepNote').value);persist();renderAll();focusSelectedPad(false)};for(const [id,k] of [['velocity','velocity'],['gate','gate'],['chance','chance'],['ratchet','ratchet']])$(id).oninput=()=>{selectedStep()[k]=Number($(id).value);$(id+'Out').textContent=$(id).value+(id==='velocity'?'':id==='ratchet'?'×':'%');persist();renderGrid()};$('stepContinue').onchange=()=>{
-  if(!setStepContinue(state.selectedTrack,state.selectedStep,$('stepContinue').checked))return;
+  if(!setStepContinue(state.selectedTrack,state.selectedStep,$('stepContinue').checked)){
+   syncStepContinueControl();return;
+  }
   persist();renderGrid();renderFXEditor();
  };
  $('toggleStepBtn').onclick=toggleSelectedNote;
