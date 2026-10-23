@@ -2599,6 +2599,16 @@ function releaseFMModulation(v,when){
   }catch(e){console.warn('FM operator release:',e)}
  }
 }
+function releaseFMOperatorCarriers(v,when){
+ if(v.engine!=='fm4')return;
+ for(const {index,gain} of v.fmCarrierGains||[]){
+  const p=gain.gain,t=Math.max(.01,v.fmOperatorReleases?.[index]??v.release);
+  try{if(typeof p.cancelAndHoldAtTime==='function')p.cancelAndHoldAtTime(when);
+   else{p.cancelScheduledValues(when);p.setValueAtTime(Math.max(0,p.value),when)}
+   p.linearRampToValueAtTime(0,when+t);
+  }catch(e){console.warn('FM carrier release:',e)}
+ }
+}
 function releaseVoice(v,when){if(v.released)return;
  if(v.nativeId){v.released=true;nativeVAMessage('off',{id:v.nativeId},when);scheduledVoices.delete(v);return;}
  if(v.drum){
@@ -2619,7 +2629,7 @@ function releaseVoice(v,when){if(v.released)return;
   }
   return;
  }
- v.released=true;const t=Math.max(audio.ctx.currentTime,when);try{const p=v.env.gain;const level=voiceGainAt(v,t);p.cancelScheduledValues(t);p.setValueAtTime(level,t);p.exponentialRampToValueAtTime(.0001,t+v.release);releaseFMModulation(v,t);releaseFilterEnvelopes(v,t);v.oscs.forEach(o=>o.stop(t+v.release+.04));setTimeout(()=>scheduledVoices.delete(v),Math.max(50,(t+v.release+.2-audio.ctx.currentTime)*1000))}catch(e){scheduledVoices.delete(v)}}
+ v.released=true;const t=Math.max(audio.ctx.currentTime,when);try{const p=v.env.gain;const level=voiceGainAt(v,t);p.cancelScheduledValues(t);p.setValueAtTime(level,t);p.exponentialRampToValueAtTime(.0001,t+v.release);releaseFMModulation(v,t);releaseFMOperatorCarriers(v,t);releaseFilterEnvelopes(v,t);const tail=Math.max(v.release,...(v.fmOperatorReleases||[]));v.oscs.forEach(o=>o.stop(t+tail+.04));setTimeout(()=>scheduledVoices.delete(v),Math.max(50,(t+tail+.2-audio.ctx.currentTime)*1000))}catch(e){scheduledVoices.delete(v)}}
 const pulseCache=new Map();function pulseWave(ctx,duty){const key=Math.round(duty);if(pulseCache.has(key))return pulseCache.get(key);const d=key/100,len=65,re=new Float32Array(len),im=new Float32Array(len);for(let n=1;n<len;n++){re[n]=2*Math.sin(Math.PI*n*d)**2/(Math.PI*n);im[n]=Math.sin(2*Math.PI*n*d)/(Math.PI*n)}const wave=ctx.createPeriodicWave(re,im,{disableNormalization:false});pulseCache.set(key,wave);return wave}
 function oscillatorMixGain(s,osc){
  if(osc===0)return s.osc1On===false?0:.46*clamp(s.osc1Level??100,0,100)/100;
