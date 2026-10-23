@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.41 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.42 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -6278,7 +6278,7 @@ function songStemManifest(trackIds,request,sequence,duration,includeMix){
  const clean=s=>String(s??'').replace(/[\r\n\t]+/g,' ').trim();
  const lines=[
   'SQUIRREL STUDIO · STEM EXPORT',
-  'Version: 0.2.41',
+  'Version: 0.2.42',
   'Project: '+clean(state.projectName||'Squirrel Song'),
   'Tempo: '+Number(state.bpm).toFixed(1)+' BPM',
   'Swing: '+clamp(Number(state.swing??0),0,65)+'%',
@@ -6556,6 +6556,56 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
   pan.connect(chorusSend).connect(chorusInput);
   return gain;
  });
+ // Schedule an ADSR that respects note-off even if it occurs during attack
+ // or decay, without crossing audio-param automation timestamps.
+ function exportAdsr(param,start,noteOff,peak,attack,decay,sustain,release){
+  const a=Math.max(.003,Number(attack)||.003),d=Math.max(.01,Number(decay)||.01);
+  const s=clamp(Number(sustain)||0,0,1),r=Math.max(.01,Number(release)||.01);
+  const off=Math.max(start,Number.isFinite(noteOff)?noteOff:duration);
+  const attackEnd=start+a,decayEnd=attackEnd+d;
+  param.setValueAtTime(0,start);
+  if(off>=attackEnd)param.linearRampToValueAtTime(peak,attackEnd);
+  if(off>=decayEnd)param.linearRampToValueAtTime(peak*s,decayEnd);
+  const current=off<attackEnd?peak*(off-start)/a:
+   off<decayEnd?peak*(1-(1-s)*(off-attackEnd)/d):peak*s;
+  if(off<decayEnd)param.linearRampToValueAtTime(current,off);
+  else param.setValueAtTime(current,off);
+  param.linearRampToValueAtTime(0,off+r);
+ }
+ // Live filter modulation uses additive Hz/Q offsets, not a replacement
+ // cutoff. Preserve the base filter and any routed LFO modulation.
+ function exportFilterEnvelopes(filter,trackIndex,start,noteOff){
+  const track=state.tracks[trackIndex],name='track'+trackIndex;
+  const baseCutoff=filterBaseCutoff(trackIndex),baseQ=filterBaseResonance(trackIndex);
+  const connectEnvelope=(target,amount,settings,patch=false)=>{
+   const isCutoff=target==='cutoff',base=isCutoff?baseCutoff:baseQ;
+   const depth=clamp(Number(amount)||0,-100,100);
+   const peak=isCutoff
+    ?clamp(base*Math.pow(2,depth/100*3.4),80,patch?18000:12000)
+    :clamp(base+(depth/100)*(depth>=0?12:Math.max(.1,base-.1)),.1,18);
+   const delta=peak-base;
+   if(!Number.isFinite(delta)||Math.abs(delta)<1e-8)return;
+   const source=ctx.createConstantSource(),param=source.offset;
+   const attack=Math.max(.003,Number(settings.attack??.003));
+   const decay=Math.max(.01,Number(settings.decay??.1));
+   const sustain=clamp(Number(settings.sustain??100),0,100)/100;
+   const release=Math.max(.01,Number(settings.release??.3));
+   exportAdsr(param,start,noteOff,delta,attack,decay,sustain,release);
+   source.connect(isCutoff?filter.frequency:filter.Q);
+   source.start(start);source.stop(noteOff+release+.02);
+  };
+  for(const settings of state.envelopes||[]){
+   if(!settings.enabled||!settings.amount)continue;
+   if(settings.target===name+'-cutoff')connectEnvelope('cutoff',settings.amount,settings);
+   else if(settings.target===name+'-resonance')connectEnvelope('resonance',settings.amount,settings);
+  }
+  if(isSynth(trackIndex)){
+   const patch=track.sound?.filterEnvelope;
+   if(patch&&patch.enabled!==false&&Number(patch.amount))
+    connectEnvelope('cutoff',patch.amount,patch,true);
+  }
+ }
+
  const activeExportSamples=Array.from({length:TRACK_COUNT},()=>[]);
  const stopExportSample=(i,time,voiceFilter=null,releaseOverride=null)=>{
   const list=activeExportSamples[i];
@@ -6752,40 +6802,47 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
   for(const lfo of lfoNodes)if(lfo.target==='track'+i+'-cutoff')lfo.depth.connect(filter.frequency);
   filter.connect(env).connect(outputs[i]);
   const attack=Math.max(.003,Number(sound.attack??.01)),decay=Math.max(.01,Number(sound.decay??.2)),release=Math.max(.02,Number(sound.release??.2));
-  const sustain=clamp(Number(sound.sustain??.6),0,1),peak=vel*.35;
+  const sustain=clamp(Number(sound.sustain??.6),0,1),peak=vel*.5;
   env.gain.setValueAtTime(0,time);
   env.gain.linearRampToValueAtTime(peak,time+Math.min(attack,length*.45));
   env.gain.linearRampToValueAtTime(peak*sustain,time+Math.min(length*.9,attack+decay));
   env.gain.setValueAtTime(peak*sustain,time+length);
   env.gain.linearRampToValueAtTime(0,time+length+release);
   const end=time+length+release+.01;
+  exportFilterEnvelopes(filter,i,time,time+length);
   if(sound.engine==='fm'){
    if(sound.fmMode==='four'){
-    const config=fmFourConfig(sound),operators=[],sum=ctx.createGain();
-    sum.gain.value=1/Math.max(1,config.carriers.length);sum.connect(filter);
-    for(let op=0;op<4;op++){
-     const key='fmOp'+(op+1),osc=ctx.createOscillator(),level=ctx.createGain();
+    // FM edges receive their own modulation-index ADSR; carrier operators
+    // each get an independent output ADSR, just as in live playback.
+    const config=fmFourConfig(sound),maxHz=rate*.45;
+    const operators=Array.from({length:4},(_,op)=>{
+     const key='fmOp'+(op+1),osc=ctx.createOscillator();
      osc.type=fmOperatorWave(sound,op);
-     osc.frequency.value=freq*clamp(Number(sound[key+'Ratio']??(op+1)),.25,16)*Math.pow(2,Number(sound[key+'Fine']??0)/1200);
-     const a=Math.max(.003,Number(sound[key+'Attack']??.01));
-     const d=Math.max(.01,Number(sound[key+'Decay']??.3));
-     const sustainLevel=clamp(Number(sound[key+'Sustain']??70),0,100)/100;
-     const rel=Math.max(.02,Number(sound[key+'Release']??.35));
-     const peakLevel=clamp(Number(sound[key+'Level']??75),0,100)/100;
-     level.gain.setValueAtTime(0,time);
-     level.gain.linearRampToValueAtTime(peakLevel,time+Math.min(a,length*.4));
-     level.gain.linearRampToValueAtTime(peakLevel*sustainLevel,time+Math.min(length*.9,a+d));
-     level.gain.setValueAtTime(peakLevel*sustainLevel,time+length);
-     level.gain.linearRampToValueAtTime(0,time+length+rel);
-     osc.connect(level);operators.push({osc,level});
-    }
+     osc.frequency.value=Math.min(maxHz,freq*clamp(Number(sound[key+'Ratio']??(op+1)),.25,16));
+     osc.detune.value=clamp(Number(sound[key+'Fine']??0),-100,100);
+     return osc;
+    });
+    const opRelease=op=>Math.max(.01,Number(sound['fmOp'+(op+1)+'Release']??.35));
+    const opEnvelope=(gain,peakLevel,op)=>{
+     const key='fmOp'+(op+1);
+     exportAdsr(gain,time,time+length,peakLevel,
+      sound[key+'Attack']??.01,sound[key+'Decay']??.3,
+      clamp(Number(sound[key+'Sustain']??70),0,100)/100,opRelease(op));
+    };
     for(const [from,to] of config.edges){
      const depth=ctx.createGain();
-     depth.gain.value=freq*clamp(Number(sound.fmIndex??3),0,12);
-     operators[from].level.connect(depth).connect(operators[to].osc.frequency);
+     const level=clamp(Number(sound['fmOp'+(from+1)+'Level']??75),0,100)/100;
+     opEnvelope(depth.gain,Math.min(maxHz,freq*clamp(Number(sound.fmIndex??3),0,12))*level,from);
+     operators[from].connect(depth).connect(operators[to].frequency);
     }
-    for(const op of config.carriers)operators[op].level.connect(sum);
-    for(const op of operators){op.osc.start(time);op.osc.stop(Math.min(duration-.01,end+.5))}
+    for(const op of config.carriers){
+     const gain=ctx.createGain();
+     const level=clamp(Number(sound['fmOp'+(op+1)+'Level']??100),0,100)/100;
+     opEnvelope(gain.gain,.65/config.carriers.length*level,op);
+     operators[op].connect(gain).connect(filter);
+    }
+    const stopAt=time+length+Math.max(release,...operators.map((_,op)=>opRelease(op)))+.05;
+    for(const osc of operators){osc.start(time);osc.stop(stopAt)}
    }else{
     const carrier=ctx.createOscillator(),mod=ctx.createOscillator(),depth=ctx.createGain();
     // Live FM2 uses a separate envelope for its modulation index.
@@ -6796,12 +6853,10 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
     carrier.type='sine';mod.type='sine';
     carrier.frequency.value=Math.min(freq,maxHz);
     mod.frequency.value=Math.min(freq*clamp(Number(sound.fmRatio??2),.25,16),maxHz);
-    depth.gain.setValueAtTime(0,time);
-    depth.gain.linearRampToValueAtTime(modPeak,time+Math.min(modAttack,length*.45));
-    depth.gain.linearRampToValueAtTime(modPeak*modSustain,time+Math.min(modAttack+modDecay,length*.9));
-    depth.gain.setValueAtTime(modPeak*modSustain,time+length);
-    depth.gain.linearRampToValueAtTime(0,time+length+release);
-    mod.connect(depth).connect(carrier.frequency);carrier.connect(filter);
+    exportAdsr(depth.gain,time,time+length,modPeak,modAttack,modDecay,modSustain,release);
+    mod.connect(depth).connect(carrier.frequency);
+    const carrierLevel=ctx.createGain();carrierLevel.gain.value=.65;
+    carrier.connect(carrierLevel).connect(filter);
     carrier.start(time);mod.start(time);carrier.stop(end);mod.stop(end);
    }
   }else{
