@@ -825,7 +825,7 @@ input[type="password"],textarea,
 <button type="button" id="fileRenderSynth">RENDER SYNTH TO WAV</button>
 <button type="button" id="fileExportSong">EXPORT SONG TO WAV</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.90</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.91</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -4855,7 +4855,21 @@ async function exportSongStereoWav(){
     pan.pan.value=clamp(Number(item?.slotPan??0),-100,100)/100;
     amp.connect(pan);output=pan;
    }
-   source.connect(amp);output.connect(outputs[i]);
+   if(drum&&item?.slotFilterOn){
+    const filter=ctx.createBiquadFilter();
+    filter.type=drumSlotFilterType(item);
+    scheduleDrumSlotFilterSweep(filter.frequency,item,time,ctx);
+    filter.Q.setValueAtTime(drumSlotFilterResonance(item),time);
+    source.connect(filter).connect(amp);
+   }else if(!drum){
+    const filter=ctx.createBiquadFilter();
+    filter.type='lowpass';
+    filter.frequency.setValueAtTime(clamp(Number(track.sampleCutoff??12000),20,20000),time);
+    filter.Q.setValueAtTime(clamp(Number(track.sampleResonance??.7),.1,18),time);
+    for(const lfo of lfoNodes)if(lfo.target==='track'+i+'-cutoff')lfo.depth.connect(filter.frequency);
+    source.connect(filter).connect(amp);
+   }else source.connect(amp);
+   output.connect(outputs[i]);
    const startAt=clamp(plan.startAt,0,Math.max(0,source.buffer.duration-.001));
    if(startAt>=source.buffer.duration)return;
    source.start(time,startAt);
