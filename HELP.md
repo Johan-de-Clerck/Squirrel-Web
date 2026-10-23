@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.2.44 — User Manual
+# Squirrel Studio Web 0.2.45 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -274,6 +274,16 @@ The **FILE → RENDER / EXPORT** menu now has a **SYNTH SAMPLE DESTINATION** sel
 - **DOWNLOAD WAV + SAVE TO LIBRARY** — downloads and stores the same rendered file.
 
 Once saved, go to **DRUM SAMPLES** and choose the library entry for one of a drum track's five slots. The new sample does not automatically replace a drum track's existing assignment. Existing library entries are protected from overwriting; if all 15 entries are used, clear an unused one first. The library is retained in complete song JSON and sample-bank exports; when local browser storage fails, save a full song JSON to keep your work. Sample playback uses the exact WAV's sampling rate and PCM audio, including any export normalization/dither. Built-in FX and their effect tails are already included in the sample. The chosen destination is remembered locally.
+
+### Bounce Pattern to Sample (version 0.2.45)
+
+Use **FILE → RENDER / EXPORT → BOUNCE SELECTED PATTERN TO SAMPLE**. This bounces **only the currently selected pattern**, even when Song Mode is enabled. The bounce includes internal VA/FM synthesis, loaded/built-in drum sounds, sample tracks and mixer FX, but **does not include tracks with MUTE enabled**. An active Solo also restricts which unmuted tracks are audible. External hardware on MIDI-only tracks cannot be captured through the browser's internal offline renderer.
+
+Set **BOUNCE DESTINATION** to **DOWNLOAD WAV FILE**, or choose **SLOT 01–15**. The slot selector displays each library entry's current name or EMPTY. Selecting an occupied slot asks for confirmation to **replace its audio**, affecting every drum slot already assigned to that shared sample. Cancelling leaves it unchanged. The WAV is not assigned to a drum track automatically; assign it afterwards in **DRUM SAMPLES**. Bouncing does not change the current pattern's note data, Mute/Solo state or Song Mode arrangement.
+
+Set **PATTERN BOUNCE LENGTH** to **EXACT PATTERN · LOOP** (no extra tail, useful for beat loops), or add **3, 6 or 10 seconds** to capture delay/reverb decay. It uses the File menu's sample rate, 16/24-bit PCM, peak normalization and dither options; the normal Song Export Source setting is ignored. For a 15-sample library slot, the rendered WAV must fit the 16 MB slot limit. 24-bit stereo at 48 kHz can exceed that limit on longer patterns; use 16-bit / 44.1 kHz or a shorter tail. With Exact Pattern selected, reverb and note releases reaching beyond the pattern boundary will be cut at the bounce's end.
+
+A successfully saved bounce can be exported in a **song JSON** or **sample-bank backup**. If local storage fails, save the song as JSON to preserve the sample. If the project or selected slot changes during rendering, saving is cancelled instead of overwriting unrelated data.
 
 ### Stereo song WAV and stem export
 
