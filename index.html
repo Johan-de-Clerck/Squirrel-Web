@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.40 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.41 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -6278,7 +6278,7 @@ function songStemManifest(trackIds,request,sequence,duration,includeMix){
  const clean=s=>String(s??'').replace(/[\r\n\t]+/g,' ').trim();
  const lines=[
   'SQUIRREL STUDIO · STEM EXPORT',
-  'Version: 0.2.40',
+  'Version: 0.2.41',
   'Project: '+clean(state.projectName||'Squirrel Song'),
   'Tempo: '+Number(state.bpm).toFixed(1)+' BPM',
   'Swing: '+clamp(Number(state.swing??0),0,65)+'%',
@@ -6743,11 +6743,11 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
    return;
   }
   if(!isSynth(i))return;
-  const sound=track.sound||{},freq=440*Math.pow(2,(note-69)/12);
+  const sound=track.sound||{},soundNote=clamp(note+Number(sound.transpose||0),0,127),freq=hz(soundNote);
   const env=ctx.createGain(),filter=ctx.createBiquadFilter();
   filter.type=validSynthFilter(sound);
   filter.frequency.value=sound.filterEnabled===false?20000:
-   clamp(Number(sound.cutoff??4000)*Math.pow(2,(note-60)/12*Number(sound.filterKeyTrack??0)/100),80,18000);
+   clamp(Number(sound.cutoff??4000)*Math.pow(2,(soundNote-60)/12*Number(sound.filterKeyTrack??0)/100),80,18000);
   filter.Q.value=clamp(Number(sound.resonance??.7),.1,18);
   for(const lfo of lfoNodes)if(lfo.target==='track'+i+'-cutoff')lfo.depth.connect(filter.frequency);
   filter.connect(env).connect(outputs[i]);
@@ -6788,8 +6788,19 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
     for(const op of operators){op.osc.start(time);op.osc.stop(Math.min(duration-.01,end+.5))}
    }else{
     const carrier=ctx.createOscillator(),mod=ctx.createOscillator(),depth=ctx.createGain();
-    carrier.frequency.value=freq;mod.frequency.value=freq*Number(sound.fmRatio||2);
-    depth.gain.value=freq*Number(sound.fmIndex||3);
+    // Live FM2 uses a separate envelope for its modulation index.
+    const maxHz=rate*.45,modAttack=Math.max(.003,Number(sound.fmAttack??.01));
+    const modDecay=Math.max(.01,Number(sound.fmDecay??.3));
+    const modSustain=clamp(Number(sound.fmSustain??30),0,100)/100;
+    const modPeak=Math.min(maxHz,freq*clamp(Number(sound.fmIndex??3),0,12));
+    carrier.type='sine';mod.type='sine';
+    carrier.frequency.value=Math.min(freq,maxHz);
+    mod.frequency.value=Math.min(freq*clamp(Number(sound.fmRatio??2),.25,16),maxHz);
+    depth.gain.setValueAtTime(0,time);
+    depth.gain.linearRampToValueAtTime(modPeak,time+Math.min(modAttack,length*.45));
+    depth.gain.linearRampToValueAtTime(modPeak*modSustain,time+Math.min(modAttack+modDecay,length*.9));
+    depth.gain.setValueAtTime(modPeak*modSustain,time+length);
+    depth.gain.linearRampToValueAtTime(0,time+length+release);
     mod.connect(depth).connect(carrier.frequency);carrier.connect(filter);
     carrier.start(time);mod.start(time);carrier.stop(end);mod.stop(end);
    }
@@ -6797,7 +6808,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
    const oscillators=[
     [sound.osc1On!==false,sound.wave1||'sawtooth',1,sound.osc1Level??100],
     [sound.osc2On!==false,sound.wave2||'triangle',Math.pow(2,Number(sound.detune||0)/1200),sound.osc2Level??100],
-    [sound.subOn!==false,sound.subWave||'sine',Math.pow(2,Number(sound.subOctave??-12)/12),sound.subLevel??35]
+    [sound.subOn!==false,sound.subWave||'sine',Math.pow(2,Number(sound.subOctave??-12)/12)*Math.pow(2,Number(sound.subDetune??0)/1200),sound.subLevel??35]
    ];
    for(const [index,[enabled,wave,ratio,level]] of oscillators.entries()){
     if(!enabled||level<=0)continue;
@@ -6813,17 +6824,13 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
      inverse.gain.value=-1;
      delay.delayTime.setValueAtTime(duty/frequency,time);
      osc.connect(delay).connect(inverse).connect(amp);
+     // Live VA only modulates PWM through explicitly assigned LFOs.
      const pwmDepth=clamp(Number(sound['pwmDepth'+oscIndex]??100),0,100)/100;
-     if(pwmDepth>0){
-      const lfo=ctx.createOscillator(),depth=ctx.createGain();
-      lfo.type='sine';lfo.frequency.value=clamp(Number(sound.pwmRate??sound.lfoRate??2),.05,30);
-      depth.gain.value=Math.max(0,Math.min(duty-.05,.95-duty))/frequency*pwmDepth;
-      lfo.connect(depth).connect(delay.delayTime);lfo.start(time);lfo.stop(end);
-     }
      for(const lfo of lfoNodes)if(lfo.target==='track'+i+'-pulseWidth'){
-      const mod=ctx.createGain();
-      mod.gain.value=1/frequency*.35;
-      lfo.depth.connect(mod).connect(delay.delayTime);
+      const smoother=ctx.createBiquadFilter(),mod=ctx.createGain();
+      smoother.type='lowpass';smoother.frequency.value=75;smoother.Q.value=.5;
+      mod.gain.value=Math.max(0,Math.min(duty-.05,.95-duty))/frequency*pwmDepth;
+      lfo.depth.connect(smoother).connect(mod).connect(delay.delayTime);
      }
     }
     amp.connect(filter);osc.start(time);osc.stop(end);
@@ -6835,7 +6842,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
     for(let j=0;j<size;j++)data[j]=synthNoiseRandom()*2-1;
     const noise=ctx.createBufferSource(),tone=ctx.createBiquadFilter(),amp=ctx.createGain();
     noise.buffer=buf;tone.type='lowpass';tone.frequency.value=200+clamp(Number(sound.noiseTone??70),0,100)/100*16000;
-    amp.gain.value=clamp(Number(sound.noiseLevel),0,100)/300;
+    amp.gain.value=oscillatorMixGain(sound,3);
     noise.connect(tone).connect(amp).connect(filter);noise.start(time);
    }
   }
