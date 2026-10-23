@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.30 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.31 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1123,7 +1123,7 @@ input[type="password"],textarea,
 <button type="button" id="fileLoadDemo">↑ LOAD DEMO.JSON</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.30</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.31</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1409,6 +1409,8 @@ function markSampleContinuation(t,voice,when=audio?.ctx?.currentTime??0){
  // D00 appears checked but the audio stops early at the previous gate.
  const source=voice?.src||(voice?.sampleVoice?voice?.oscs?.[0]:null);
  if(!voice||voice.released||!source||!(voice.sampleVoice||voice.drum))return false;
+ // A completed drum envelope is silent regardless of its loop flag.
+ if(voice.drum&&Number.isFinite(voice.drumEnvelopeStop)&&when>=voice.drumEnvelopeStop)return false;
  if(voice.drum&&source.loop&&Number.isFinite(voice.gateOff)){
   // A voice that has already passed its gate cannot be resurrected.
   if(when>=voice.gateOff)return false;
@@ -6172,9 +6174,12 @@ async function exportSongStereoWav(){
    // Prune finished voices even when a selective choke filter is applied.
    if(Number.isFinite(voice.naturalEnd)&&time>=voice.naturalEnd){voice.stopped=true;continue}
    if(voiceFilter&&!voiceFilter(voice))continue;
-   if(time<=voice.started)continue;
+   // A drum loop with no Carry must honor its step gate. A later D00 can
+   // cancel the pending gate ONLY while the voice is still playing.
+   const releaseTime=Number.isFinite(voice.gateAt)?Math.min(time,voice.gateAt):time;
+   if(releaseTime<=voice.started)continue;
    const release=Math.max(.003,Number(releaseOverride??voice.release)||.065);
-   const end=Math.min(duration-.008,Math.max(voice.started+.004,time));
+   const end=Math.min(duration-.008,Math.max(voice.started+.004,releaseTime));
    const stopAt=Math.min(duration-.002,Math.max(end+.002,end+release));
    const currentLevel=voice.drumEnvelope?drumSlotEnvelopeGainAt(voice.drumEnvelope,end):end<voice.started+.003?voice.level*Math.max(0,(end-voice.started)/.003):voice.level;
    voice.amp.gain.cancelScheduledValues(end);
@@ -6294,9 +6299,18 @@ async function exportSongStereoWav(){
    if(startAt>=source.buffer.duration)return;
    source.start(time,startAt);
    const playbackSpeed=source.playbackRate.value*Math.pow(2,source.detune.value/1200);
-   const naturalEnd=plan.loop?Infinity:time+Math.max(0,plan.endAt-plan.startAt)/Math.max(.001,playbackSpeed);
+   const sampleEnd=plan.loop?Infinity:time+Math.max(0,plan.endAt-plan.startAt)/Math.max(.001,playbackSpeed);
+   // Live drum envelopes end a source when its attack/decay reaches silence;
+   // a finite gate ends a looping source earlier unless Step FX arms Carry.
+   const envelopeEnd=drum&&drumEnvelope?.decayEnd!==null?drumEnvelope.decayEnd+.01:Infinity;
+   const naturalEnd=Math.min(sampleEnd,envelopeEnd);
    if(Number.isFinite(naturalEnd)&&naturalEnd>time&&naturalEnd<duration)source.stop(naturalEnd);
-   activeExportSamples[i].push({source,amp,level,note,slot,chokeGroup,carryAcrossPatterns:stepContinuesSample(step),started:time,naturalEnd,stopped:false,drumEnvelope,release:drum?clamp(Number(item?.slotRelease??65),1,3000)/1000:sampleReleaseSeconds(track)});
+   const carrying=stepContinuesSample(step);
+   const gateAt=drum&&plan.loop&&!carrying&&Number.isFinite(cutoffTime)
+    ?Math.min(cutoffTime,envelopeEnd):Infinity;
+   activeExportSamples[i].push({source,amp,level,note,slot,chokeGroup,carryAcrossPatterns:carrying,gateAt,
+    started:time,naturalEnd,stopped:false,drumEnvelope,
+    release:drum?clamp(Number(item?.slotRelease??18),0,2000)/1000:sampleReleaseSeconds(track)});
    return;
   }
   if(!isSynth(i))return;
@@ -6395,6 +6409,16 @@ async function exportSongStereoWav(){
    }
   }
  }
+ // Deferred gate scheduling lets D00 on a later step keep an already
+ // playing drum loop alive, while still stopping non-carried loops precisely
+ // at their gate time. Do not schedule an irreversible source.stop early.
+ const expireExportDrumGates=(t,at)=>{
+  for(const voice of [...activeExportSamples[t]]){
+   if(!voice.stopped&&Number.isFinite(voice.gateAt)&&voice.gateAt<=at){
+    stopExportSample(t,at,v=>v===voice);
+   }
+  }
+ };
  let cursor=0;
  const carriedAtBoundary=Array(TRACK_COUNT).fill(false);
  // Each voice owns its carry flag, allowing independent overlapping drum slots.
@@ -6408,9 +6432,12 @@ async function exportSongStereoWav(){
     const lastStep=previousLane?.[lastIndex];
     const boundaryTime=cursor*stepSeconds;
     if(!(isSample(t)||isDrum(t)))continue;
+    if(isDrum(t))expireExportDrumGates(t,boundaryTime);
     // D00 on the last row can mark existing voices for continuation.
     if(stepContinuesSample(lastStep)&&!lastStep?.on)
-     for(const voice of activeExportSamples[t])if(!voice.stopped&&voice.naturalEnd>boundaryTime)voice.carryAcrossPatterns=true;
+     for(const voice of activeExportSamples[t])if(!voice.stopped&&voice.naturalEnd>boundaryTime){
+      voice.carryAcrossPatterns=true;voice.gateAt=Infinity;
+     }
     carriedAtBoundary[t]=activeExportSamples[t].some(v=>!v.stopped&&v.carryAcrossPatterns&&v.naturalEnd>boundaryTime);
     stopExportSample(t,boundaryTime,voice=>!voice.carryAcrossPatterns);
    }
@@ -6423,9 +6450,12 @@ async function exportSongStereoWav(){
     if(!lane?.length)continue;
     const step=lane[stepIndex%trackLength(pattern,t)];
     if(!step)continue;
+    if(isDrum(t))expireExportDrumGates(t,at);
     if(step.fx===12){stopExportSample(t,at);carriedAtBoundary[t]=false;continue}
     if(!step.on&&stepContinuesSample(step)&&(isSample(t)||isDrum(t))){
-     for(const voice of activeExportSamples[t])if(!voice.stopped&&voice.naturalEnd>at)voice.carryAcrossPatterns=true;
+     for(const voice of activeExportSamples[t])if(!voice.stopped&&voice.naturalEnd>at){
+      voice.carryAcrossPatterns=true;voice.gateAt=Infinity;
+     }
     }
     // An explicit empty row without D00 does not cancel a previous carry request.
     // A new note or C00 below changes that state.
@@ -6469,6 +6499,7 @@ async function exportSongStereoWav(){
  // Release remaining sample voices at the exact end of the arrangement.
  // The three-second render tail captures their release and the effect returns.
  const songEnd=cursor*stepSeconds;
+ for(let t=0;t<TRACK_COUNT;t++)if(isDrum(t))expireExportDrumGates(t,songEnd);
  for(let t=0;t<TRACK_COUNT;t++)if(isSample(t)||isDrum(t))stopExportSample(t,songEnd);
  notify('Rendering stereo song WAV…');
  const rendered=await ctx.startRendering();
