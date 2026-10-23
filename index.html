@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.21 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.22 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1066,18 +1066,39 @@ input[type="password"],textarea,
 #view-seq #applyCarryRange:disabled{opacity:.42;cursor:default}
 @media(max-width:600px){#view-seq .fx-controls{grid-template-columns:1fr}#view-seq .fx-controls #stepContinueField{grid-column:1;grid-row:auto}#view-seq .fx-controls #fxAmountField,#view-seq .fx-controls.chord-mode #stepChordField,#view-seq .fx-controls.chord-mode #fxAmountField{grid-column:1;grid-row:auto}}
 
+
+/* 0.2.22 — one File menu groups song/sample/import/export workflows. */
+.file-menubar{background:#1d1814;border-color:#654c39;padding:5px 14px}
+.file-menubar details{position:relative}
+.file-menubar summary{list-style:none;padding:7px 16px;border:1px solid #866144;border-radius:6px;background:#32271e;color:#f3c48e;font-weight:800;letter-spacing:.6px}
+.file-menubar summary::-webkit-details-marker{display:none}
+.file-menubar .file-menu-items{background:#271e18;border:1px solid #946947;border-radius:8px;min-width:300px;max-width:min(390px,95vw);max-height:75dvh;overflow-y:auto;z-index:99;padding:9px;gap:2px;box-shadow:0 14px 35px #000b}
+.file-menubar .file-menu-heading{font:800 10px Consolas,monospace;letter-spacing:1px;color:#aa886b;border-bottom:1px solid #5b4233;margin:7px 5px 2px;padding-bottom:4px}
+.file-menubar .file-menu-items button{color:#ead1ac;padding:9px 10px;border-radius:4px;font:700 11px Consolas,monospace}
+.file-menubar .file-menu-items button:hover,.file-menubar .file-menu-items button:focus{background:#4f3827;color:#ffdbac}
+.file-menu-project{display:flex;align-items:center;gap:8px;padding:7px 10px;color:#c5a584;font:700 10px Consolas,monospace}
+.file-menu-project input{flex:1;min-width:0;padding:7px;border:1px solid #775641;border-radius:5px;background:#1c1714;color:#efd2af}
 </style>
 </head>
 <body>
 <div class="shell">
-<nav class="file-menubar" aria-label="File menu"><details id="fileMenu"><summary>FILE</summary><div class="file-menu-items">
-<button type="button" id="fileLoadSong">OPEN SONG (.JSON)</button>
-<button type="button" id="fileSaveSong">SAVE SONG (.JSON)</button>
-<button type="button" id="fileLoadSample">LOAD SAMPLE TO SELECTED TRACK</button>
-<button type="button" id="fileRenderSynth">RENDER SYNTH TO WAV</button>
-<button type="button" id="fileExportSong">EXPORT SONG TO WAV</button>
+<nav class="file-menubar" aria-label="File menu"><details id="fileMenu"><summary>▤ FILE</summary><div class="file-menu-items" role="group" aria-label="Song, sample and export actions">
+<div class="file-menu-heading">SONG</div>
+<button type="button" id="fileNewSong">＋ NEW SONG</button>
+<button type="button" id="fileLoadSong">↑ OPEN SONG (.JSON)</button>
+<button type="button" id="fileSaveSong">↓ SAVE SONG (.JSON)</button>
+<label class="file-menu-project"><span>PROJECT NAME</span><input id="projectNameInput" type="text" maxlength="80" autocomplete="off" spellcheck="false" placeholder="Song name" aria-label="Project name"></label>
+<div class="file-menu-heading">SAMPLES</div>
+<button type="button" id="fileLoadSample">↑ IMPORT WAV / AUDIO TO SELECTED TRACK</button>
+<button type="button" id="fileImportSampleBank">↑ IMPORT SAMPLE BANK</button>
+<button type="button" id="fileExportSampleBank">↓ EXPORT SAMPLE BANK</button>
+<div class="file-menu-heading">RENDER / EXPORT</div>
+<button type="button" id="fileRenderSynth">♫ RENDER VA/FM SYNTH TO WAV</button>
+<button type="button" id="fileExportSong">♫ EXPORT SONG TO STEREO WAV</button>
+<div class="file-menu-heading">TEMPLATES</div>
+<button type="button" id="fileLoadDemo">↑ LOAD DEMO.JSON</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.20</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.22</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1118,18 +1139,13 @@ input[type="password"],textarea,
 <div class="midi-track-list" id="optionsMidiTracks"></div>
 <p class="midi-mode-help">MIDI-only tracks do not make internal sound. Connect a MIDI output and switch MIDI OUT ON in MIDI &amp; AUDIO to hear them.</p>
 </div>
-<div class="options-demo"><h3>SAMPLE BANK</h3>
- <div class="sample-bank-tools"><button class="btn" type="button" id="exportSampleBankBtn">↓ EXPORT SAMPLE BANK</button>
- <button class="btn" type="button" id="importSampleBankBtn">↑ IMPORT SAMPLE BANK</button>
- <span class="pill">ALL 8 TRACKS</span>
- <input type="file" id="sampleBankFileInput" accept=".json,.sqsamples,application/json" class="hidden"></div>
-</div>
+<div class="file-legacy-actions" hidden><button type="button" id="exportSampleBankBtn">EXPORT SAMPLE BANK</button><button type="button" id="importSampleBankBtn">IMPORT SAMPLE BANK</button><input type="file" id="sampleBankFileInput" accept=".json,.sqsamples,application/json"></div>
 <div class="options-demo">
  <h3>DEMO SONG</h3>
  <div class="options-demo-actions"><button class="btn" type="button" id="loadDemoJsonBtn">↑ LOAD DEMO.JSON</button>
  <label class="options-demo-switch"><input type="checkbox" id="autoDemoJson"> AUTO-LOAD ON START</label></div>
 </div>
-<div class="new-song-actions"><button class="btn" type="button" id="newSongBtn">＋ NEW SONG</button></div></section></div>
+<div class="file-legacy-actions" hidden><button type="button" id="newSongBtn">NEW SONG</button></div></section></div>
       <div id="view-setup" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">MIDI & audio</h2></div></div>
         <div class="setting-cols"><div class="setup-box"><h3>USB MIDI input</h3><select id="midiInput"><option value="">No MIDI input selected</option></select><div class="setup-actions"><button class="btn primary" id="connectMidiBtn">CONNECT MIDI</button><button class="mini-btn" id="refreshMidiBtn">REFRESH</button></div><div style="height:14px"></div><label class="field"><span class="field-head"><span>MIDI ROUTING</span></span><select id="midiRouting"><option value="selected">All channels → selected track</option><option value="channels">Per MIDI channel (CH 1–8)</option></select></label></div>
         <div class="setup-box"><h3>MIDI output</h3>
@@ -1140,7 +1156,7 @@ input[type="password"],textarea,
             <label class="field"><span class="field-head">MIDI CHANNEL</span><select id="midiOutChannel"><option value="track">CH 1–8 (per track)</option></select></label>
           </div><div class="midi-out-indicator" id="midiOutStatus">MIDI OUT OFF</div></div>
         <div class="setup-box"><h3>Audio output</h3><select id="audioOutput"><option value="default">Default audio output (Windows)</option></select><div class="setup-actions"><button class="btn primary" id="applyOutputBtn">SET OUTPUT</button><button class="mini-btn" id="refreshAudioBtn">REFRESH DEVICES</button><button class="mini-btn" id="chooseOutputBtn">CHOOSE DEVICE…</button></div><p id="outputHelp" class="hidden" aria-hidden="true"></p><div class="midi-out-indicator">WEB AUDIO / WINDOWS AUDIO · ASIO NOT AVAILABLE IN BROWSER</div></div></div>
-        <div class="setup-box"><h3>Save & load project</h3><label class="project-name-field"><span class="small-label">PROJECT NAME</span><input id="projectNameInput" type="text" maxlength="80" autocomplete="off" spellcheck="false" placeholder="Optional" aria-label="Project name"></label><div class="setup-actions"><button class="btn" id="saveBtn">↓ SAVE PROJECT (.JSON)</button><button class="btn" id="loadBtn">↑ LOAD PROJECT</button><button class="mini-btn" id="demoBtn">RESTORE DEMO PATTERN</button><input type="file" id="loadFile" accept=".json,application/json" class="hidden"></div></div>
+        <div class="file-legacy-actions" hidden><button id="saveBtn">SAVE</button><button id="loadBtn">LOAD</button><button id="demoBtn">RESTORE DEMO</button><input type="file" id="loadFile" accept=".json,application/json"></div>
         </section></div>
       <div id="notice" role="status" class="notice" aria-live="polite"></div>
     </main>
@@ -2011,15 +2027,15 @@ function drumSampleVoice(t,slot,velocity,when,offsetPercent=0,gate=null){
  const item=state.drumSamples[t][slot];
  sanitizeSampleMarkers(item);
  const plan=samplePlaybackPlan(item,buffer.duration,offsetPercent);
- src.buffer=buffer;
+ // Assign buffer only ONCE. A source cannot replace a non-null AudioBuffer.
+ const drumPlaybackBuffer=plan.pingPong?pingPongAudioBuffer(buffer,plan.loopStart,plan.loopEnd):null;
+ src.buffer=drumPlaybackBuffer?drumPlaybackBuffer.buffer:buffer;
  const baseDetune=drumSlotDetuneCents(item);
  src.detune.setValueAtTime(baseDetune,when);
  if(plan.loop){
   src.loop=true;
-  if(plan.pingPong){
-   const mirror=pingPongAudioBuffer(buffer,plan.loopStart,plan.loopEnd);
-   src.buffer=mirror.buffer;src.loopStart=mirror.loopStart;src.loopEnd=mirror.loopEnd;
-  }else{src.loopStart=plan.loopStart;src.loopEnd=plan.loopEnd}
+  if(drumPlaybackBuffer){src.loopStart=drumPlaybackBuffer.loopStart;src.loopEnd=drumPlaybackBuffer.loopEnd}
+  else{src.loopStart=plan.loopStart;src.loopEnd=plan.loopEnd}
  }
  modGain.gain.value=1;
  const peak=clamp(velocity/127,0,1)*clamp(Number(item.slotVolume??100),0,200)/100;
@@ -3637,7 +3653,6 @@ function sampleVoice(t,note,velocity,when,pitch=0,offsetPercent=0){
  const track=state.tracks[t],buffer=sampleBuffers.get(t);
  if(!buffer)return null;
  const c=audio.ctx,src=c.createBufferSource(),env=c.createGain(),modGain=c.createGain(),filter=c.createBiquadFilter();
- src.buffer=buffer;
  const sourceBaseRate=Math.pow(2,((note+pitch)-(track.sampleRoot??48))/12);
  src.playbackRate.setValueAtTime(sourceBaseRate,when);
  env.gain.setValueAtTime(.0001,when);
@@ -3653,12 +3668,12 @@ function sampleVoice(t,note,velocity,when,pitch=0,offsetPercent=0){
  };
  sanitizeSampleMarkers(track);
  const plan=samplePlaybackPlan(track,buffer.duration,offsetPercent);
+ const samplePlaybackBuffer=plan.pingPong?pingPongAudioBuffer(buffer,plan.loopStart,plan.loopEnd):null;
+ src.buffer=samplePlaybackBuffer?samplePlaybackBuffer.buffer:buffer;
  if(plan.loop){
   src.loop=true;
-  if(plan.pingPong){
-   const mirrored=pingPongAudioBuffer(buffer,plan.loopStart,plan.loopEnd);
-   src.buffer=mirrored.buffer;src.loopStart=mirrored.loopStart;src.loopEnd=mirrored.loopEnd;
-  }else{src.loopStart=plan.loopStart;src.loopEnd=plan.loopEnd}
+  if(samplePlaybackBuffer){src.loopStart=samplePlaybackBuffer.loopStart;src.loopEnd=samplePlaybackBuffer.loopEnd}
+  else{src.loopStart=plan.loopStart;src.loopEnd=plan.loopEnd}
  }
  playback=trackSamplePlayback(t,null,src,plan,buffer.duration,when,sourceBaseRate,0);
  voice.samplePlayback=playback;
@@ -5618,11 +5633,11 @@ function updateMidiPorts(){if(!midiAccess)return;const select=$('midiInput'),old
 function selectMidiInput(){if(selectedInput)selectedInput.onmidimessage=null;selectedInput=midiAccess?.inputs.get($('midiInput').value)||null;if(selectedInput){selectedInput.onmidimessage=onMidiMessage;$('midiLed').className='led on';$('midiStatus').textContent=(selectedInput.name||'MIDI').toUpperCase()}else{$('midiLed').className='led';$('midiStatus').textContent='MIDI DISCONNECTED'}}
 function targetFromChannel(ch){return $('midiRouting').value==='channels'?clamp(ch,0,TRACK_COUNT-1):state.selectedTrack}
 function onMidiMessage(e){const [cmd,d1=0,d2=0]=e.data;const status=cmd&0xf0,ch=cmd&0x0f,t=targetFromChannel(ch);if($('midiRouting').value==='channels'&&ch>=TRACK_COUNT)return;if(status===0x90&&d2>0){liveNoteOn(t,d1,d2,ch)}else if(status===0x80||(status===0x90&&d2===0)){liveNoteOff(t,d1,ch)}else if(status===0xb0){if(d1===74&&isSynth(t)){const s=state.tracks[t].sound;s.cutoff=Math.round(100*Math.pow(120,d2/127));updateLiveCutoff(t);if(view==='sound')renderSound();persist()}if(d1===7){state.tracks[t].volume=Math.round(d2/127*100);applyTrackMix();if(view==='seq')renderStepEditor();if(view==='mixer')renderMixer();persist()}}}
-function liveNoteOn(t,note,velocity,ch=0){if(!audio){initAudio().then(ok=>{if(ok)liveNoteOn(t,note,velocity,ch)});return}const key=t+':'+ch+':'+note;liveNoteOff(t,note,ch);const voices=playTrack(t,note,velocity,audio.ctx.currentTime+.005,null,0,kindOf(state.tracks[t])==='chord'?selectedStep().chordMode:null,isDrum(t)?drumLastSlot(t):0);
+function liveNoteOn(t,note,velocity,ch=0,slotOverride=null){if(!audio){initAudio().then(ok=>{if(ok)liveNoteOn(t,note,velocity,ch,slotOverride)});return}const key=t+':'+ch+':'+note;liveNoteOff(t,note,ch);const previewSlot=isDrum(t)?(slotOverride===null?drumLastSlot(t):clamp(Number(slotOverride),0,4)):0;const voices=playTrack(t,note,velocity,audio.ctx.currentTime+.005,null,0,kindOf(state.tracks[t])==='chord'?selectedStep().chordMode:null,previewSlot);
 if(state.tracks[t].midiOnly){
  midiPlayStep(t,note,velocity,audio.ctx.currentTime+.005,true,.20,kindOf(state.tracks[t])==='chord'?selectedStep().chordMode:null);
 }
-if(voices)activeLive.set(key,voices);if(recording&&playing){const globalStep=playheadQueue.length?playheadQueue[0].step:lastVisualStep>=0?lastVisualStep:currentStep;const step=Math.max(0,globalStep)%trackLength(state.pattern,t);const target=state.patterns[state.pattern][t][step];target.on=true;target.note=note;if(isDrum(t))target.sampleSlot=drumLastSlot(t);target.velocity=velocity;persist();renderGrid();renderStepEditor()}}
+if(voices)activeLive.set(key,voices);if(recording&&playing){const globalStep=playheadQueue.length?playheadQueue[0].step:lastVisualStep>=0?lastVisualStep:currentStep;const step=Math.max(0,globalStep)%trackLength(state.pattern,t);const target=state.patterns[state.pattern][t][step];target.on=true;target.note=note;if(isDrum(t))target.sampleSlot=previewSlot;target.velocity=velocity;persist();renderGrid();renderStepEditor()}}
 function liveNoteOff(t,note,ch=0){if(!audio)return;if(state.tracks[t]?.midiOnly)midiOffTrack(t);const key=t+':'+ch+':'+note;const vs=activeLive.get(key);if(vs){vs.forEach(v=>releaseVoice(v,audio.ctx.currentTime));activeLive.delete(key)}}
 async function refreshOutputs(){const s=$('audioOutput'),prev=s.value;s.replaceChildren(new Option('System default audio output','default'));if(!navigator.mediaDevices?.enumerateDevices){$('outputHelp').textContent='This browser cannot list audio outputs. Set your preferred audio interface as the system default.';return}try{const dev=await navigator.mediaDevices.enumerateDevices();for(const d of dev.filter(x=>x.kind==='audiooutput')){if(d.deviceId==='default')continue;s.add(new Option(d.label||'Audio output '+(s.options.length),d.deviceId))}s.value=Array.from(s.options).some(o=>o.value===prev)?prev:'default'}catch(e){notify('Failed to list audio devices: '+e.message,true)}}
 async function applyOutput(){if(!await initAudio())return;const id=$('audioOutput').value;if(id==='default'){try{if(audio.outputElement){audio.outputElement.pause();audio.outputElement.srcObject=null}audio.analyser.disconnect();audio.analyser.connect(audio.ctx.destination);audioSink=id;notify('Audio routed to the system default output.')}catch(e){notify('Failed to reset audio: '+e.message,true)}return}try{if(typeof audio.ctx.setSinkId==='function'){if(audio.outputElement){audio.outputElement.pause();audio.outputElement.srcObject=null}audio.analyser.disconnect();audio.analyser.connect(audio.ctx.destination);await audio.ctx.setSinkId(id);audioSink=id;notify('Audio output set: '+$('audioOutput').selectedOptions[0].textContent);return}if(!HTMLMediaElement.prototype.setSinkId)throw Error('This browser does not support selecting a specific audio output.');if(!audio.streamDest)audio.streamDest=audio.ctx.createMediaStreamDestination();if(!audio.outputElement){audio.outputElement=document.createElement('audio');audio.outputElement.autoplay=true;audio.outputElement.srcObject=audio.streamDest.stream}await audio.outputElement.setSinkId(id);audio.analyser.disconnect();audio.analyser.connect(audio.streamDest);await audio.outputElement.play();audioSink=id;notify('Audio output selected through MediaStream: '+$('audioOutput').selectedOptions[0].textContent)}catch(e){audio.analyser.disconnect();audio.analyser.connect(audio.ctx.destination);notify('Could not select audio output: '+e.message,true)}}
@@ -5989,15 +6004,14 @@ async function exportSongStereoWav(){
    sanitizeSampleMarkers(markerState);
    const offsetPercent=step.fx===9?clamp(Number(step.fxAmount??0),0,99)/100:0;
    const plan=samplePlaybackPlan(markerState,buffer.duration,offsetPercent);
-   source.buffer=buffer;
+   const offlinePingPong=plan.pingPong?pingPongAudioBuffer(buffer,plan.loopStart,plan.loopEnd):null;
+   source.buffer=offlinePingPong?offlinePingPong.buffer:buffer;
    if(drum)source.detune.value=drumSlotDetuneCents(item);
    else source.playbackRate.value=Math.pow(2,(note-(track.sampleRoot??48))/12);
    if(plan.loop){
     source.loop=true;
-    if(plan.pingPong){
-     const mirrored=pingPongAudioBuffer(buffer,plan.loopStart,plan.loopEnd);
-     source.buffer=mirrored.buffer;source.loopStart=mirrored.loopStart;source.loopEnd=mirrored.loopEnd;
-    }else{source.loopStart=plan.loopStart;source.loopEnd=plan.loopEnd}
+    if(offlinePingPong){source.loopStart=offlinePingPong.loopStart;source.loopEnd=offlinePingPong.loopEnd}
+    else{source.loopStart=plan.loopStart;source.loopEnd=plan.loopEnd}
    }
    const level=vel*.8*(drum?clamp(Number(item?.slotVolume??100),0,200)/100:1);
    const drumEnvelope=drum?drumSlotEnvelopePlan(item,level,time):null;
@@ -6259,11 +6273,25 @@ function bindings(){
  $('resetMixerBtn').onclick=()=>{state.tracks.forEach((t,i)=>{t.volume=bases[i].volume||78;t.pan=bases[i].pan;t.muted=false;t.solo=false});persist();applyTrackMix();renderAll()};
  $('midiOutput').onchange=selectMidiOutput;$('midiOutEnableBtn').onclick=()=>{if(!selectedOutput){notify('Select a MIDI output device first.',true);return}if(midiOutEnabled)midiAllNotesOff();midiOutEnabled=!midiOutEnabled;updateMidiOutputUI()};$('midiPanicBtn').onclick=()=>{midiAllNotesOff();notify('MIDI ALL NOTES OFF sent.')};
  $('connectMidiBtn').onclick=connectMidi;$('refreshMidiBtn').onclick=()=>{if(midiAccess)updateMidiPorts();else connectMidi()};$('midiInput').onchange=selectMidiInput;$('refreshAudioBtn').onclick=refreshOutputs;$('applyOutputBtn').onclick=applyOutput;$('chooseOutputBtn').onclick=chooseOutput;$('projectNameInput').oninput=()=>{state.projectName=$('projectNameInput').value.slice(0,80);persist()};
+ $('fileNewSong').onclick=()=>{$('fileMenu').open=false;newSong()};
+ $('fileImportSampleBank').onclick=()=>{$('fileMenu').open=false;$('importSampleBankBtn').click()};
+ $('fileExportSampleBank').onclick=()=>{$('fileMenu').open=false;$('exportSampleBankBtn').click()};
+ $('fileLoadDemo').onclick=()=>{$('fileMenu').open=false;$('loadDemoJsonBtn').click()};
  $('fileLoadSong').onclick=()=>{$('fileMenu').open=false;$('loadFile').click()};
  $('fileSaveSong').onclick=()=>{$('fileMenu').open=false;saveProject()};
  $('fileLoadSample').onclick=()=>{$('fileMenu').open=false;$('fileSampleInput').click()};
  $('fileSampleInput').onchange=async e=>{
   const file=e.target.files?.[0];e.target.value='';if(!file)return;
+  // In the Waveform Editor import into the visible sample/slot, not some
+  // unrelated previously-selected sequencer lane.
+  if(view==='sample'){
+   const target=selectedSampleEditorTrack,slot=selectedSampleEditorDrumSlot;
+   stopSampleEditorAudition();sampleWaveResetView();
+   if(slot!==null&&isDrum(target))await loadDrumSampleFile(target,slot,file);
+   else if(isSample(target))await loadSamplerFile(target,file);
+   else notify('Choose a SAMPLE track or DRUM slot before importing audio.',true);
+   renderSampleEditor();return;
+  }
   if(view==='drum'&&isDrum(drumEditorTrack)){
    await loadDrumSampleFile(drumEditorTrack,drumLastSlot(drumEditorTrack),file);return;
   }
@@ -6310,6 +6338,23 @@ function bindings(){
     if(view==='seq')focusSelectedPad(false);
   },true);
   document.addEventListener('pointercancel',()=>{pointerEditingSlider=false},true);
+  // Sample/Drum/Synth controls should not keep the typing focus after a value
+  // is committed. Editable text fields still behave as normal while typing.
+  document.addEventListener('change',e=>{
+   if(!['sample','drum','sound'].includes(view))return;
+   if(!e.target.closest?.('#view-'+view))return;
+   if(e.target.matches?.('input[type=number],input[type=range],input[type=checkbox],select'))e.target.blur();
+  },true);
+  let samplePointerControl=null;
+  document.addEventListener('pointerdown',e=>{
+   if(!['sample','drum'].includes(view)){samplePointerControl=null;return}
+   const control=e.target.closest?.('input,select,button');
+   samplePointerControl=control?.matches('input[type=range],input[type=number],input[type=checkbox],select')?control:null;
+  },true);
+  document.addEventListener('pointerup',()=>{
+   if(samplePointerControl){samplePointerControl.blur();samplePointerControl=null}
+  },true);
+  document.addEventListener('pointercancel',()=>{samplePointerControl=null},true);
   // After synth knob/slider mouse edits, return focus to the synth page (not the slider).
   let synthPointerControl=null;
   document.addEventListener('pointerdown',e=>{
@@ -6326,8 +6371,8 @@ function bindings(){
  document.addEventListener('keydown',e=>{
   const el=document.activeElement;
   const activeText=el&&(el.tagName==='TEXTAREA'||el.isContentEditable||el.tagName==='INPUT'&&!['range','checkbox','radio','button'].includes(el.type));
-  const synthKeyboardNote=view==='sound'&&!activeText&&!(e.ctrlKey||e.altKey||e.metaKey)&&noteKeyboard[e.key.toLowerCase()]!==undefined;
-  if(el&&(el.tagName==='INPUT'||el.tagName==='SELECT'||el.tagName==='TEXTAREA'||el.isContentEditable)&&!synthKeyboardNote)return;
+  const editorKeyboardNote=['sound','sample','drum'].includes(view)&&!activeText&&!(e.ctrlKey||e.altKey||e.metaKey)&&noteKeyboard[e.key.toLowerCase()]!==undefined;
+  if(el&&(el.tagName==='INPUT'||el.tagName==='SELECT'||el.tagName==='TEXTAREA'||el.isContentEditable)&&!editorKeyboardNote)return;
   // Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z undo or redo a project edit.
   // Respect native text editing (inputs, selects and contenteditable elements).
   if((e.ctrlKey||e.metaKey)&&!e.altKey){
@@ -6399,8 +6444,11 @@ function bindings(){
   }
   // EDIT uit: keyboard speelt live; een ontvangen keyup laat de voice los.
   if(keyboardDown.has(e.key.toLowerCase()))return;
-  keyboardDown.add(e.key.toLowerCase());keyboardAssignments.set(e.key.toLowerCase(),{track:state.selectedTrack,note});
-  liveNoteOn(state.selectedTrack,note,110,15);
+  const keyboardTrack=view==='sample'?selectedSampleEditorTrack:view==='drum'?drumEditorTrack:state.selectedTrack;
+  const keyboardSlot=view==='sample'&&sampleEditorIsDrum()?selectedSampleEditorDrumSlot:
+   view==='drum'&&isDrum(drumEditorTrack)?drumLastSlot(drumEditorTrack):null;
+  keyboardDown.add(e.key.toLowerCase());keyboardAssignments.set(e.key.toLowerCase(),{track:keyboardTrack,note});
+  liveNoteOn(keyboardTrack,note,110,15,keyboardSlot);
  });
  document.addEventListener('keyup',e=>{
   if(e.key==='Enter')stopEnterPreview();
