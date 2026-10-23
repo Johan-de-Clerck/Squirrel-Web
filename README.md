@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.79**  
+**Current web version: 0.1.80**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,15 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.80
+
+- **Independent waveforms for all four FM operators:** in **SYNTH → FM → OPERATORS: 4 OP**, each operator has its own **WAVEFORM** selector: **SINE**, **TRIANGLE**, **SAWTOOTH**, or **SQUARE**. Operators can use different waveform types in the same patch.
+- All four algorithms (STACK, PAIRS, FAN, ADDITIVE) now respect the selected waveforms, both for audible carrier operators and the operators modulating them.
+- **Live waveform editing:** changes to a waveform update active FM4 voices directly without stopping notes or altering other operators. The waveform preview reflects the actual selected shapes.
+- **Visual FM routing:** the 4-operator editor displays signal paths such as `OP4 → OP3 → OP2 → OP1 → OUT` for STACK, separate paths for PAIRS, individual incoming paths for FAN, and four parallel outputs for ADDITIVE. The routing diagram is labeled for screen readers.
+- Waveform selections are saved in projects and instrument patches. All old 4-operator patches default each operator to SINE; old 2-operator FM and VA sounds are unchanged. Invalid waveform names safely default to SINE.
+- Added `tests/fm-operator-waveforms.test.js` with 32 checks for live oscillator types, algorithms, routing diagrams, saves and backwards compatibility.
 
 ## What is new in 0.1.79
 
