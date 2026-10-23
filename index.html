@@ -825,7 +825,7 @@ input[type="password"],textarea,
 <button type="button" id="fileRenderSynth">RENDER SYNTH TO WAV</button>
 <button type="button" id="fileExportSong">EXPORT SONG TO WAV</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.93</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.94</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -4807,14 +4807,14 @@ async function exportSongStereoWav(){
   const list=activeExportSamples[i];
   for(const voice of list){
    if(voice.stopped||time<=voice.started)continue;
-   const release=voice.release;
-   const end=Math.max(voice.started+.004,time);
-   const stopAt=Math.min(duration-.002,end+release);
+   const release=Math.max(.003,Number(voice.release)||.065);
+   const end=Math.max(voice.started+.004,Math.min(time,duration-.008));
+   const stopAt=Math.max(end+.002,Math.min(duration-.002,end+release));
    const currentLevel=voice.drumEnvelope?drumSlotEnvelopeGainAt(voice.drumEnvelope,end):end<voice.started+.003?voice.level*Math.max(0,(end-voice.started)/.003):voice.level;
    voice.amp.gain.cancelScheduledValues(end);
    voice.amp.gain.setValueAtTime(currentLevel,end);
    voice.amp.gain.linearRampToValueAtTime(0,Math.max(end+.001,stopAt));
-   try{voice.source.stop(stopAt+.001)}catch(_){}
+   try{voice.source.stop(Math.min(duration-.001,stopAt+.001))}catch(_){}
    voice.stopped=true;
   }
   activeExportSamples[i]=[];
@@ -5001,7 +5001,7 @@ async function exportSongStereoWav(){
     if(!lane?.length)continue;
     const step=lane[stepIndex%trackLength(pattern,t)];
     if(!step)continue;
-    if(step.fx===12){stopExportSample(t,at);continue}
+    if(step.fx===12){stopExportSample(t,at);carriedAtBoundary[t]=false;continue}
     if(step.on){
      // An identical first-step note must not restart a sample carried from the preceding pattern.
      if(stepIndex===0&&carriedAtBoundary[t]&&(isSample(t)||isDrum(t))&&stepContinuesSample(step)){
@@ -5014,6 +5014,7 @@ async function exportSongStereoWav(){
       if(activeExportSamples[t].length&&!stepContinuesSample(step))stopExportSample(t,at);
      }
      addVoice(t,step,at,nextAt);
+     carriedAtBoundary[t]=false;
     }
    }
    cursor+=stepIndex%2===0?1+swingAmount:1-swingAmount;
