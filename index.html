@@ -813,10 +813,18 @@ input[type="password"],textarea,
 #view-mixer .mixer-strip .btn:disabled,.lane-toggle:disabled{opacity:1;cursor:default}
 #view-mixer .mixer-strip .btn.mute-on:hover,.lane-toggle.muted:hover{filter:brightness(1.08)}
 #view-mixer .mixer-strip .btn.solo-on:hover,.lane-toggle.solo:hover{filter:brightness(1.09)}
+.file-menubar{position:relative;z-index:60;background:#171c19;padding:5px 16px;border-bottom:1px solid #5b715e;font:12px Consolas,monospace}.file-menubar details{display:inline-block;position:relative}.file-menubar summary{cursor:pointer;padding:7px 14px;color:#b9e7c2}.file-menu-items{position:absolute;top:100%;left:0;min-width:255px;padding:6px;background:#222a25;border:1px solid #67836a;box-shadow:0 8px 20px #0008;display:flex;flex-direction:column}.file-menu-items button{color:#d7efdc;text-align:left;padding:10px;background:transparent;border:0;cursor:pointer}.file-menu-items button:hover{background:#38533d}
 </style>
 </head>
 <body>
 <div class="shell">
+<nav class="file-menubar" aria-label="File menu"><details id="fileMenu"><summary>FILE</summary><div class="file-menu-items">
+<button type="button" id="fileLoadSong">OPEN SONG (.JSON)</button>
+<button type="button" id="fileSaveSong">SAVE SONG (.JSON)</button>
+<button type="button" id="fileLoadSample">LOAD SAMPLE TO SELECTED TRACK</button>
+<button type="button" id="fileRenderSynth">RENDER SYNTH TO WAV</button>
+<button type="button" id="fileExportSong">EXPORT SONG TO WAV</button>
+</div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
   <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.81</span></div></header>
   <div class="app">
     <main class="workspace">
@@ -4670,6 +4678,52 @@ async function saveProject(){
  setTimeout(()=>URL.revokeObjectURL(url),800);
  notify('Project saved: '+a.download);
 }
+function downloadPCM16Wav(channels,sampleRate,name){
+ const length=channels[0].length,count=channels.length,bytes=44+length*count*2;
+ const buffer=new ArrayBuffer(bytes),view=new DataView(buffer);
+ const ascii=(pos,str)=>{for(let i=0;i<str.length;i++)view.setUint8(pos+i,str.charCodeAt(i))};
+ ascii(0,'RIFF');view.setUint32(4,bytes-8,true);ascii(8,'WAVE');ascii(12,'fmt ');
+ view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,count,true);
+ view.setUint32(24,sampleRate,true);view.setUint32(28,sampleRate*count*2,true);
+ view.setUint16(32,count*2,true);view.setUint16(34,16,true);ascii(36,'data');view.setUint32(40,bytes-44,true);
+ let pos=44;for(let i=0;i<length;i++)for(let c=0;c<count;c++){
+  const v=Math.max(-1,Math.min(1,channels[c][i]));view.setInt16(pos,v<0?v*32768:v*32767,true);pos+=2;
+ }
+ const url=URL.createObjectURL(new Blob([buffer],{type:'audio/wav'}));
+ const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);
+}
+async function renderSelectedSynthWav(){
+ const t=state.tracks[state.selectedTrack];
+ if(!isSynth(state.selectedTrack)){notify('Select a VA or FM synth track first.',true);return}
+ const noteText=(prompt('Root note (example C-3):','C-3')||'').trim().toUpperCase();
+ const match=/^([A-G])([#B]?)-?(\\d)$/.exec(noteText);
+ if(!match){notify('Invalid note. Use C-3, D#-3, etc.',true);return}
+ const semis={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+ const n=semis[match[1]]+(match[2]==='#'?1:match[2]==='B'?-1:0)+(Number(match[3])+1)*12;
+ const duration=Number(prompt('Hold note for how many seconds?','1.5'));
+ if(!Number.isFinite(duration)||duration<=0||duration>15)return;
+ const rate=44100,ctx=new OfflineAudioContext(1,Math.ceil((duration+Math.max(.1,t.sound.release||.3)+.1)*rate),rate);
+ const sound=t.sound,freq=440*Math.pow(2,(n-69)/12),mix=ctx.createGain();mix.connect(ctx.destination);
+ const peak=.45,attack=Math.max(.003,sound.attack||.01),decay=Math.max(.01,sound.decay||.2),sustain=Math.max(0,Math.min(1,sound.sustain??.6));
+ mix.gain.setValueAtTime(0,0);mix.gain.linearRampToValueAtTime(peak,attack);
+ mix.gain.linearRampToValueAtTime(peak*sustain,attack+decay);
+ mix.gain.setValueAtTime(peak*sustain,duration);mix.gain.linearRampToValueAtTime(0,duration+Math.max(.1,sound.release||.3));
+ const filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=sound.cutoff||4000;filter.Q.value=sound.resonance||.7;filter.connect(mix);
+ if(sound.engine==='fm'){
+  const carrier=ctx.createOscillator(),mod=ctx.createOscillator(),depth=ctx.createGain();
+  carrier.frequency.value=freq;mod.frequency.value=freq*(sound.fmRatio||2);
+  depth.gain.value=freq*(sound.fmIndex||3)*Math.max(0,Math.min(1,(sound.fmSustain??30)/100));
+  mod.connect(depth).connect(carrier.frequency);carrier.connect(filter);mod.start();carrier.start();mod.stop(duration+1);carrier.stop(duration+1);
+ }else{
+  for(const [enabled,wave,ratio,level] of [[sound.osc1On!==false,sound.wave1,1,sound.osc1Level??100],[sound.osc2On!==false,sound.wave2,Math.pow(2,(sound.detune||0)/1200),sound.osc2Level??100],[sound.subOn!==false,sound.subWave||'sine',.5,sound.subLevel??35]]){
+   if(!enabled)continue;const o=ctx.createOscillator(),g=ctx.createGain();o.type=wave==='pulse'?'square':wave;o.frequency.value=freq*ratio;g.gain.value=level/300;o.connect(g).connect(filter);o.start();o.stop(duration+1);
+  }
+  if(sound.noiseOn&&sound.noiseLevel>0){const buf=ctx.createBuffer(1,ctx.length,rate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const source=ctx.createBufferSource(),gain=ctx.createGain();source.buffer=buf;gain.gain.value=(sound.noiseLevel||0)/300;source.connect(gain).connect(filter);source.start()}
+ }
+ const rendered=await ctx.startRendering();
+ downloadPCM16Wav([rendered.getChannelData(0)],rate,'Squirrel_Synth_'+noteText+'.wav');
+ notify('Synth WAV rendered at '+noteText+'.');
+}
 function typeFXDigit(key){
  const digit=key.toUpperCase();if(!/^[0-9A-F]$/.test(digit))return false;
  if(fxDigitBuffer.length===0&&!FX_OPTIONS.some(x=>fxCode(x.id)===digit))return true;
@@ -4723,6 +4777,12 @@ function bindings(){
  $('resetMixerBtn').onclick=()=>{state.tracks.forEach((t,i)=>{t.volume=bases[i].volume||78;t.pan=bases[i].pan;t.muted=false;t.solo=false});persist();applyTrackMix();renderAll()};
  $('midiOutput').onchange=selectMidiOutput;$('midiOutEnableBtn').onclick=()=>{if(!selectedOutput){notify('Select a MIDI output device first.',true);return}if(midiOutEnabled)midiAllNotesOff();midiOutEnabled=!midiOutEnabled;updateMidiOutputUI()};$('midiPanicBtn').onclick=()=>{midiAllNotesOff();notify('MIDI ALL NOTES OFF sent.')};
  $('connectMidiBtn').onclick=connectMidi;$('refreshMidiBtn').onclick=()=>{if(midiAccess)updateMidiPorts();else connectMidi()};$('midiInput').onchange=selectMidiInput;$('refreshAudioBtn').onclick=refreshOutputs;$('applyOutputBtn').onclick=applyOutput;$('chooseOutputBtn').onclick=chooseOutput;$('projectNameInput').oninput=()=>{state.projectName=$('projectNameInput').value.slice(0,80);persist()};
+ $('fileLoadSong').onclick=()=>{$('fileMenu').open=false;$('loadFile').click()};
+ $('fileSaveSong').onclick=()=>{$('fileMenu').open=false;saveProject()};
+ $('fileLoadSample').onclick=()=>{$('fileMenu').open=false;$('fileSampleInput').click()};
+ $('fileSampleInput').onchange=async e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;if(!isSample(state.selectedTrack)){notify('Select a SAMPLE track first.',true);return}await loadSamplerFile(state.selectedTrack,file)};
+ $('fileRenderSynth').onclick=()=>{$('fileMenu').open=false;renderSelectedSynthWav().catch(e=>notify('Render failed: '+e.message,true))};
+ $('fileExportSong').onclick=()=>{$('fileMenu').open=false;notify('Song WAV export is not implemented yet.',true)};
  $('saveBtn').onclick=saveProject;$('loadBtn').onclick=()=>$('loadFile').click();
  $('loadFile').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
