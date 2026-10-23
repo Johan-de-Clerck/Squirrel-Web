@@ -6133,6 +6133,93 @@ async function saveRenderedSynthToLibrary(wav,expectedState,expectedGeneration){
   :'Saved in the current project, but browser storage failed. Use FILE → SAVE SONG to preserve it.',!stored);
  return index;
 }
+// v0.2.45: One selected pattern -> WAV file or any of the 15 library slots.
+// Never insert the bounced WAV back into the source pattern automatically.
+function syncPatternBounceOptions(){
+ const control=$('patternBounceDestination');
+ if(!control)return;
+ const chosen=control.value||'download';
+ control.replaceChildren(new Option('DOWNLOAD WAV FILE','download'));
+ for(let slot=0;slot<DRUM_LIBRARY_SIZE;slot++){
+  const item=drumLibraryItem(slot),used=!!item?.data;
+  const name=used?(item.name||'USED SAMPLE').slice(0,34):'EMPTY';
+  control.add(new Option('SLOT '+String(slot+1).padStart(2,'0')+' · '+name+(used?' · REPLACE':''),'slot:'+slot));
+ }
+ control.value=chosen;
+ if(control.selectedIndex<0)control.value='download';
+}
+async function saveBouncedPatternToLibrary(wav,slot,expectedState,expectedGeneration,previousData,patternLabel){
+ if(!Number.isInteger(slot)||slot<0||slot>=DRUM_LIBRARY_SIZE)throw Error('Invalid library slot.');
+ if(!wav||!(wav.buffer instanceof ArrayBuffer)||!wav.name)throw Error('Pattern bounce did not return a WAV.');
+ if(wav.buffer.byteLength>MAX_SAMPLE_BYTES)
+  throw Error('Bounced WAV exceeds the 16 MB sample limit. Choose 16-bit PCM or a shorter FX tail.');
+ await restoredDrumLibrary;
+ const checkSlot=()=>{
+  if(state!==expectedState||sampleSession!==expectedGeneration)
+   throw Error('The project changed while bouncing. Nothing was saved.');
+  if((drumLibraryItem(slot)?.data??null)!==(previousData??null))
+   throw Error('The selected sample slot changed while rendering. Nothing was overwritten.');
+ };
+ checkSlot();
+ const Offline=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+ if(!Offline)throw Error('Audio decoding is unavailable in this browser.');
+ const wavRate=new DataView(wav.buffer).getUint32(24,true);
+ if(![44100,48000].includes(wavRate))throw Error('Unsupported bounce WAV sample rate.');
+ const decoder=new Offline(1,1,wavRate);
+ const decoded=await decoder.decodeAudioData(wav.buffer.slice(0));
+ if(!decoded?.length)throw Error('Rendered pattern contains no audio samples.');
+ const data=await fileToDataURL(new Blob([wav.buffer],{type:'audio/wav'}));
+ checkSlot();
+ const item={name:('BOUNCE '+patternLabel+' · '+wavRate/1000+'k').slice(0,160),data};
+ state.drumLibrary[slot]=item;
+ drumLibraryBuffers.set(slot,decoded);
+ drumLibrarySelected=slot;
+ let stored=true;
+ try{await sampleDB('put',drumLibraryKey(slot),item)}
+ catch(e){stored=false;console.warn('Bounced pattern browser storage:',e)}
+ persist();renderAll();syncPatternBounceOptions();
+ notify(stored
+  ?'Pattern '+patternLabel+' bounced to sample slot '+String(slot+1).padStart(2,'0')+'/15.'
+  :'Bounce added to the song, but browser storage failed. Use FILE → SAVE SONG to keep it.',!stored);
+ return slot;
+}
+async function runPatternBounce(){
+ if(songExportBusy){notify('Another WAV export is already in progress.',true);return}
+ if(playing){notify('Stop playback before bouncing a pattern.',true);return}
+ const pattern=state.pattern,patternLabel=patternName(pattern);
+ const selection=$('patternBounceDestination')?.value||'download';
+ const matched=/^slot:(\\d{1,2})$/.exec(selection);
+ const toFile=selection==='download',slot=matched?Number(matched[1]):-1;
+ if(!toFile&&(!matched||slot<0||slot>=DRUM_LIBRARY_SIZE)){
+  notify('Choose DOWNLOAD WAV or a sample slot from 01 to 15.',true);return;
+ }
+ const requestedTail=Number($('patternBounceTail')?.value??0);
+ const tail=[0,3,6,10].includes(requestedTail)?requestedTail:0;
+ const settings={...songExportSettings(),source:'mix',tail};
+ const expectedState=state,expectedGeneration=sampleSession;
+ const button=$('fileBouncePattern'),oldLabel=button?.textContent;
+ songExportBusy=true;
+ if(button){button.disabled=true;button.textContent='↧ BOUNCING PATTERN…'}
+ songExportProgress('PREPARING PATTERN '+patternLabel,0);
+ try{
+  await restoredDrumLibrary;
+  if(expectedState!==state||expectedGeneration!==sampleSession)
+   throw Error('The project changed before the bounce started.');
+  const previousData=toFile?null:(drumLibraryItem(slot)?.data??null);
+  const previousName=toFile?'':drumLibraryItem(slot)?.name||'Existing sample';
+  if(previousData&&!confirm('Replace SLOT '+String(slot+1).padStart(2,'0')+' — '+previousName+'? This replaces its sound everywhere it is assigned.'))return;
+  await yieldSongExportUI();
+  const wav=await exportSongStereoWav({bouncePattern:pattern,settingsOverride:settings,collectWav:!toFile});
+  if(!toFile){
+   if(!wav)throw Error('No pattern WAV was produced.');
+   await saveBouncedPatternToLibrary(wav,slot,expectedState,expectedGeneration,previousData,patternLabel);
+  }
+ }catch(e){console.error('Pattern bounce:',e);notify('Pattern bounce failed: '+e.message,true)}
+ finally{
+  songExportBusy=false;songExportProgressDone();
+  if(button){button.disabled=false;button.textContent=oldLabel}
+ }
+}
 async function renderSelectedSynthWav(){
  if(songExportBusy){notify('Another audio export is already running.',true);return}
  if(playing){notify('Stop playback before rendering a synth sample.',true);return}
@@ -7268,6 +7355,9 @@ function bindings(){
  $('songExportDither').onchange=saveSongExportSettings;
  $('fileRenderSynth').onclick=()=>{$('fileMenu').open=false;renderSelectedSynthWav().catch(e=>notify('Render failed: '+e.message,true))};
  $('fileExportSong').onclick=()=>{$('fileMenu').open=false;runSongWavExport()};
+ $('fileBouncePattern').onclick=()=>{$('fileMenu').open=false;runPatternBounce()};
+ $('fileMenu').addEventListener('toggle',()=>{if($('fileMenu').open)syncPatternBounceOptions()});
+ syncPatternBounceOptions();
  $('saveBtn').onclick=saveProject;$('loadBtn').onclick=()=>$('loadFile').click();
  $('loadFile').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
