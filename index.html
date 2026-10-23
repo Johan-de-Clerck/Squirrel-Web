@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.20 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.21 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1043,6 +1043,12 @@ input[type="password"],textarea,
 #view-sample #sampleWaveFit{padding:6px 11px}
 @media(max-width:750px){#view-sample .sample-wave-time{flex-basis:100%;margin-left:0}}
 
+/* v0.2.21: mouse gestures for timeline navigation. */
+#view-sample #sampleWaveCanvas{cursor:crosshair}
+#view-sample #sampleWaveCanvas.wave-pan-dragging{cursor:grabbing}
+#view-sample .sample-wave-mouse-hint{font:10px Consolas,monospace;color:#bba284;white-space:nowrap}
+@media(max-width:820px){#view-sample .sample-wave-mouse-hint{flex-basis:100%}}
+
 /* v0.2.19: the per-step sample carry option is permanently visible on Step FX.
    Keep the same two-column position regardless of selected track or FX. */
 #view-seq .fx-controls{grid-template-columns:repeat(2,minmax(0,1fr));align-items:end;gap:8px 11px}
@@ -1101,8 +1107,9 @@ input[type="password"],textarea,
  <label class="sample-wave-zoom-label">ZOOM <select id="sampleWaveZoom" aria-label="Waveform zoom"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option><option value="16">16×</option></select></label>
  <label class="sample-wave-pan-label">POSITION <input id="sampleWavePan" type="range" min="0" max="1000" value="0" aria-label="Waveform horizontal position"></label>
  <button class="mini-btn" type="button" id="sampleWaveFit">FIT</button>
+ <span class="sample-wave-mouse-hint">WHEEL: ZOOM · MIDDLE-DRAG: PAN</span>
  <output id="sampleWaveRange" class="sample-wave-time" aria-live="off">FULL WAVEFORM</output>
-</div><div class="waveform-wrap"><canvas id="sampleWaveCanvas" width="1200" height="230" aria-label="Waveform with draggable START, END, LOOP START and LOOP END markers"></canvas><div class="sample-wave-legend"><span>START</span><span>LOOP START</span><span>LOOP END</span><span>END</span><span style="color:#b2f1ce">◆ PLAYHEAD</span></div></div><div id="sampleEditControls" class="sample-editor-controls"></div><input id="sampleEditorFileInput" type="file" accept=".wav,.wave,.mp3,.ogg,.aiff,.aif,audio/*" class="hidden"></section></div>
+</div><div class="waveform-wrap"><canvas id="sampleWaveCanvas" width="1200" height="230" aria-label="Waveform: mouse wheel zooms at cursor, middle-button drag pans, left-button drag moves START, END and LOOP markers"></canvas><div class="sample-wave-legend"><span>START</span><span>LOOP START</span><span>LOOP END</span><span>END</span><span style="color:#b2f1ce">◆ PLAYHEAD</span></div></div><div id="sampleEditControls" class="sample-editor-controls"></div><input id="sampleEditorFileInput" type="file" accept=".wav,.wave,.mp3,.ogg,.aiff,.aif,audio/*" class="hidden"></section></div>
       <div id="view-send" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Track effects · Delay / Reverb / Chorus / Distortion</h2><span class="pill">8 TRACKS</span></div><div class="sends-grid" id="sendsGrid"></div><div class="send-global" id="sendGlobal"></div></section></div>
       <div id="view-options" class="hidden"><section class="panel options-panel"><div class="panel-head"><h2 class="section-title">Pattern options</h2><span class="pill">MAX 32 STEPS</span></div><div id="optionsPatterns" class="options-patterns"></div>
         <div class="options-slots-head"><h3>TRACK INSTRUMENT TYPES</h3><span class="pill">ANY TRACK · ANY INSTRUMENT</span></div>
@@ -4712,6 +4719,17 @@ function syncSampleWaveToolbar(){
  if(zoom)zoom.value=String(sampleWaveZoom);
  if(pan){pan.value=String(Math.round(sampleWavePan*1000));pan.disabled=sampleWaveZoom===1}
 }
+// Anchor the pointed-to sample time under the cursor when changing zoom.
+function sampleWaveZoomAtPointer(nextZoom,clientX){
+ const canvas=$('sampleWaveCanvas'),rect=canvas.getBoundingClientRect();
+ const cursor=clamp((clientX-rect.left)/Math.max(1,rect.width),0,1);
+ const anchor=sampleWaveStart()+cursor*sampleWaveWindow();
+ sampleWaveZoom=clamp(nextZoom,1,16);
+ const span=sampleWaveWindow();
+ const start=clamp(anchor-cursor*span,0,1-span);
+ sampleWavePan=span>=1?0:start/(1-span);
+ syncSampleWaveToolbar();drawSampleWaveform();
+}
 function sampleWaveResetView(){sampleWaveZoom=1;sampleWavePan=0;syncSampleWaveToolbar();sampleWaveStaticCache=null}
 function drawSampleWaveform(){
  const canvas=$('sampleWaveCanvas');if(!canvas)return;
@@ -4980,15 +4998,62 @@ function bindSampleEditor(){
   }
  };
  $('sampleEditorPreview').onclick=toggleSampleEditorAudition;
- const canvas=$('sampleWaveCanvas');let dragging=null;
+ const canvas=$('sampleWaveCanvas');
+ let markerDrag=null,panDrag=null;
  const position=e=>sampleWaveFractionAtPointer(e);
- canvas.addEventListener('pointerdown',e=>{if(!isSample(selectedSampleEditorTrack)&&!sampleEditorIsDrum())return;const track=sampleEditorItem(),p=position(e),candidates=SAMPLE_MARKERS.filter(([key])=>track.sampleLoop||!key.startsWith('loop'));candidates.sort((a,b)=>Math.abs(track[a[0]]-p)-Math.abs(track[b[0]]-p));dragging=candidates[0][0];canvas.setPointerCapture(e.pointerId);sampleMarkerChanges(track,dragging,p);drawSampleWaveform()});
- canvas.addEventListener('pointermove',e=>{if(!dragging||(!isSample(selectedSampleEditorTrack)&&!sampleEditorIsDrum()))return;sampleMarkerChanges(sampleEditorItem(),dragging,position(e));drawSampleWaveform()});
- const end=()=>{
-  if(!dragging)return;
-  dragging=null;saveSampleEditorChanges();renderSampleEditor();
+ // Scroll only this canvas's timeline; preserve normal page scrolling elsewhere.
+ canvas.addEventListener('wheel',e=>{
+  if(!sampleEditorBuffer())return;
+  e.preventDefault();
+  const steps=[1,2,4,8,16];
+  const next=e.deltaY<0?steps.find(z=>z>sampleWaveZoom):
+   [...steps].reverse().find(z=>z<sampleWaveZoom);
+  if(next!==undefined)sampleWaveZoomAtPointer(next,e.clientX);
+ },{passive:false});
+ canvas.addEventListener('auxclick',e=>{if(e.button===1)e.preventDefault()});
+ canvas.addEventListener('pointerdown',e=>{
+  if(e.button===1){
+   // Middle-click is exclusively for moving the visible time window, not markers.
+   e.preventDefault();
+   if(!sampleEditorBuffer()||sampleWaveZoom<=1)return;
+   panDrag={id:e.pointerId,x:e.clientX,start:sampleWaveStart()};
+   canvas.classList.add('wave-pan-dragging');
+   canvas.setPointerCapture(e.pointerId);
+   return;
+  }
+  if(e.button!==0||(!isSample(selectedSampleEditorTrack)&&!sampleEditorIsDrum()))return;
+  const track=sampleEditorItem(),p=position(e);
+  const candidates=SAMPLE_MARKERS.filter(([key])=>track.sampleLoop||!key.startsWith('loop'));
+  candidates.sort((a,b)=>Math.abs(track[a[0]]-p)-Math.abs(track[b[0]]-p));
+  markerDrag={id:e.pointerId,key:candidates[0][0]};
+  canvas.setPointerCapture(e.pointerId);
+  sampleMarkerChanges(track,markerDrag.key,p);
+  drawSampleWaveform();
+ });
+ canvas.addEventListener('pointermove',e=>{
+  if(panDrag?.id===e.pointerId){
+   const width=Math.max(1,canvas.getBoundingClientRect().width);
+   const windowSize=sampleWaveWindow();
+   const newStart=clamp(panDrag.start-(e.clientX-panDrag.x)/width*windowSize,0,1-windowSize);
+   sampleWavePan=newStart/(1-windowSize);
+   syncSampleWaveToolbar();drawSampleWaveform();
+   return;
+  }
+  if(markerDrag?.id!==e.pointerId||(!isSample(selectedSampleEditorTrack)&&!sampleEditorIsDrum()))return;
+  sampleMarkerChanges(sampleEditorItem(),markerDrag.key,position(e));
+  drawSampleWaveform();
+ });
+ const end=e=>{
+  if(panDrag?.id===e.pointerId){
+   panDrag=null;canvas.classList.remove('wave-pan-dragging');
+   return;
+  }
+  if(markerDrag?.id!==e.pointerId)return;
+  markerDrag=null;saveSampleEditorChanges();renderSampleEditor();
  };
- canvas.addEventListener('pointerup',end);canvas.addEventListener('pointercancel',end);
+ canvas.addEventListener('pointerup',end);
+ canvas.addEventListener('pointercancel',end);
+ canvas.addEventListener('lostpointercapture',end);
 
 }
 function drawWave(){
