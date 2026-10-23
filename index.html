@@ -4725,6 +4725,102 @@ async function renderSelectedSynthWav(){
  downloadPCM16Wav([rendered.getChannelData(0),rendered.getChannelData(1)],rate,'Squirrel_Synth_'+noteText+'_STEREO.wav');
  notify('Stereo synth WAV rendered at '+noteText+'.');
 }
+
+async function exportSongStereoWav(){
+ if(playing){notify('Stop playback before exporting.',true);return}
+ const sequence=state.songModeEnabled&&state.songSequence.length?state.songSequence.slice():[state.pattern];
+ const stepSeconds=60/state.bpm/4;
+ const totalSteps=sequence.reduce((sum,p)=>sum+patternLength(p),0);
+ const duration=totalSteps*stepSeconds+3;
+ if(duration>360){notify('This export is limited to six minutes. Export a shorter arrangement.',true);return}
+ const rate=44100,ctx=new OfflineAudioContext(2,Math.ceil(duration*rate),rate);
+ const master=ctx.createGain();master.gain.value=clamp(Number(state.master??75),0,100)/100*.75;master.connect(ctx.destination);
+ const outputs=state.tracks.map(track=>{
+  const pan=ctx.createStereoPanner(),gain=ctx.createGain();
+  pan.pan.value=clamp(Number(track.pan??0),-100,100)/100;
+  gain.gain.value=clamp(Number(track.volume??78),0,100)/100;
+  gain.connect(pan).connect(master);return gain;
+ });
+ const anySolo=state.tracks.some(t=>t.solo);
+ const audible=i=>!state.tracks[i].mute&&(!anySolo||state.tracks[i].solo)&&state.tracks[i].midiOutEnabled!==true;
+ function addVoice(i,step,time){
+  const track=state.tracks[i],vel=clamp(Number(step.velocity??100),0,127)/127;
+  const note=Number(step.note??track.note??48);
+  if(!Number.isFinite(note))return;
+  const length=stepSeconds*Math.max(.1,Number(step.gate??90)/100);
+  if(isSample(i)||isDrum(i)){
+   const slot=clamp(Math.round(Number(step.sampleSlot??0)),0,4);
+   const buffer=isDrum(i)?drumSlotBuffer(i,slot):sampleBuffers.get(i);
+   if(!buffer)return;
+   const source=ctx.createBufferSource(),amp=ctx.createGain();source.buffer=buffer;
+   if(isSample(i))source.playbackRate.value=Math.pow(2,(note-(track.sampleRoot??48))/12);
+   amp.gain.value=vel*.8;source.connect(amp).connect(outputs[i]);
+   source.start(time);return;
+  }
+  if(!isSynth(i))return;
+  const sound=track.sound||{},freq=440*Math.pow(2,(note-69)/12);
+  const env=ctx.createGain(),filter=ctx.createBiquadFilter();
+  filter.type='lowpass';filter.frequency.value=clamp(Number(sound.cutoff??4000),80,18000);
+  filter.Q.value=clamp(Number(sound.resonance??.7),.1,18);
+  filter.connect(env).connect(outputs[i]);
+  const attack=Math.max(.003,Number(sound.attack??.01)),decay=Math.max(.01,Number(sound.decay??.2)),release=Math.max(.02,Number(sound.release??.2));
+  const sustain=clamp(Number(sound.sustain??.6),0,1),peak=vel*.35;
+  env.gain.setValueAtTime(0,time);
+  env.gain.linearRampToValueAtTime(peak,time+Math.min(attack,length*.45));
+  env.gain.linearRampToValueAtTime(peak*sustain,time+Math.min(length*.9,attack+decay));
+  env.gain.setValueAtTime(peak*sustain,time+length);
+  env.gain.linearRampToValueAtTime(0,time+length+release);
+  const end=time+length+release+.01;
+  if(sound.engine==='fm'){
+   const carrier=ctx.createOscillator(),mod=ctx.createOscillator(),depth=ctx.createGain();
+   carrier.frequency.value=freq;mod.frequency.value=freq*Number(sound.fmRatio||2);
+   depth.gain.value=freq*Number(sound.fmIndex||3);
+   mod.connect(depth).connect(carrier.frequency);carrier.connect(filter);
+   carrier.start(time);mod.start(time);carrier.stop(end);mod.stop(end);
+  }else{
+   const oscillators=[
+    [sound.osc1On!==false,sound.wave1||'sawtooth',1,sound.osc1Level??100],
+    [sound.osc2On!==false,sound.wave2||'triangle',Math.pow(2,Number(sound.detune||0)/1200),sound.osc2Level??100],
+    [sound.subOn!==false,sound.subWave||'sine',Math.pow(2,Number(sound.subOctave??-12)/12),sound.subLevel??35]
+   ];
+   for(const [enabled,wave,ratio,level] of oscillators){
+    if(!enabled||level<=0)continue;
+    const osc=ctx.createOscillator(),amp=ctx.createGain();
+    osc.type=wave==='pulse'?'square':wave;osc.frequency.value=freq*ratio;
+    amp.gain.value=clamp(Number(level),0,100)/300;
+    osc.connect(amp).connect(filter);osc.start(time);osc.stop(end);
+   }
+   if(sound.noiseOn&&sound.noiseLevel>0){
+    const size=Math.ceil((length+release+.05)*rate),buf=ctx.createBuffer(1,size,rate),data=buf.getChannelData(0);
+    for(let j=0;j<size;j++)data[j]=Math.random()*2-1;
+    const noise=ctx.createBufferSource(),tone=ctx.createBiquadFilter(),amp=ctx.createGain();
+    noise.buffer=buf;tone.type='lowpass';tone.frequency.value=200+clamp(Number(sound.noiseTone??70),0,100)/100*16000;
+    amp.gain.value=clamp(Number(sound.noiseLevel),0,100)/300;
+    noise.connect(tone).connect(amp).connect(filter);noise.start(time);
+   }
+  }
+ }
+ let cursor=0;
+ for(const pattern of sequence){
+  const count=patternLength(pattern);
+  for(let stepIndex=0;stepIndex<count;stepIndex++){
+   const swing=clamp(Number(state.swing??0),0,65)/100*.5;
+   const at=cursor*stepSeconds+Math.floor(stepIndex/2)*0;
+   for(let t=0;t<TRACK_COUNT;t++){
+    if(!audible(t))continue;
+    const lane=state.patterns[pattern]?.[t];
+    if(!lane?.length)continue;
+    const step=lane[stepIndex%trackLength(pattern,t)];
+    if(step?.on&&step.fx!==12)addVoice(t,step,at);
+   }
+   cursor+=stepIndex%2===0?1+swing:1-swing;
+  }
+ }
+ notify('Rendering stereo song WAV…');
+ const rendered=await ctx.startRendering();
+ downloadPCM16Wav([rendered.getChannelData(0),rendered.getChannelData(1)],rate,'Squirrel_Song_STEREO.wav');
+ notify('Stereo song WAV exported (basic mix).');
+}
 function typeFXDigit(key){
  const digit=key.toUpperCase();if(!/^[0-9A-F]$/.test(digit))return false;
  if(fxDigitBuffer.length===0&&!FX_OPTIONS.some(x=>fxCode(x.id)===digit))return true;
@@ -4783,7 +4879,7 @@ function bindings(){
  $('fileLoadSample').onclick=()=>{$('fileMenu').open=false;$('fileSampleInput').click()};
  $('fileSampleInput').onchange=async e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;if(!isSample(state.selectedTrack)){notify('Select a SAMPLE track first.',true);return}await loadSamplerFile(state.selectedTrack,file)};
  $('fileRenderSynth').onclick=()=>{$('fileMenu').open=false;renderSelectedSynthWav().catch(e=>notify('Render failed: '+e.message,true))};
- $('fileExportSong').onclick=()=>{$('fileMenu').open=false;notify('Song WAV export is not implemented yet.',true)};
+ $('fileExportSong').onclick=()=>{$('fileMenu').open=false;exportSongStereoWav().catch(e=>notify('Song export failed: '+e.message,true))};
  $('saveBtn').onclick=saveProject;$('loadBtn').onclick=()=>$('loadFile').click();
  $('loadFile').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
