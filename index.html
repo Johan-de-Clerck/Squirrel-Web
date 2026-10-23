@@ -825,7 +825,7 @@ input[type="password"],textarea,
 <button type="button" id="fileRenderSynth">RENDER SYNTH TO WAV</button>
 <button type="button" id="fileExportSong">EXPORT SONG TO WAV</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.83</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.84</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -4746,16 +4746,39 @@ async function exportSongStereoWav(){
  const reverb=ctx.createConvolver(),reverbReturn=ctx.createGain();
  reverb.buffer=makeReverbIR(ctx,clamp(Number(fx.reverbDecay??1.8),.5,4));
  reverbReturn.gain.value=.65;reverb.connect(reverbReturn).connect(master);
- const outputs=state.tracks.map(track=>{
-  const pan=ctx.createStereoPanner(),gain=ctx.createGain();
+ const chorusInput=ctx.createGain(),chorusLeft=ctx.createDelay(.1),chorusRight=ctx.createDelay(.1);
+ const chorusLPan=ctx.createStereoPanner(),chorusRPan=ctx.createStereoPanner(),chorusOsc=ctx.createOscillator();
+ const chorusDepthL=ctx.createGain(),chorusDepthR=ctx.createGain();
+ chorusLPan.pan.value=-.95;chorusRPan.pan.value=.95;
+ chorusLeft.delayTime.value=.02;chorusRight.delayTime.value=.02;
+ chorusOsc.type='sine';chorusOsc.frequency.value=clamp(Number(fx.chorusRate??.7),.1,5);
+ chorusDepthL.gain.value=clamp(Number(fx.chorusDepth??4),0,10)/1000;
+ chorusDepthR.gain.value=-chorusDepthL.gain.value;
+ chorusOsc.connect(chorusDepthL).connect(chorusLeft.delayTime);
+ chorusOsc.connect(chorusDepthR).connect(chorusRight.delayTime);
+ chorusInput.connect(chorusLeft).connect(chorusLPan).connect(master);
+ chorusInput.connect(chorusRight).connect(chorusRPan).connect(master);
+ chorusOsc.start(0);chorusOsc.stop(duration);
+ const curve=createDistortionCurve();
+ const outputs=state.tracks.map((track,i)=>{
+  const pan=ctx.createStereoPanner(),gain=ctx.createGain(),dry=ctx.createGain(),wet=ctx.createGain();
+  const pre=ctx.createGain(),shaper=ctx.createWaveShaper(),post=ctx.createGain();
+  const distortion=supportsDistortion(i)?clamp(Number(track.distortion??0),0,100)/100:0;
   pan.pan.value=clamp(Number(track.pan??0),-100,100)/100;
   gain.gain.value=Math.pow(clamp(Number(track.volume??78),0,100)/100,1.4);
-  gain.connect(pan).connect(master);
-  const delaySend=ctx.createGain(),reverbSend=ctx.createGain();
+  dry.gain.value=1-distortion;wet.gain.value=distortion;
+  pre.gain.value=1+distortion*11;post.gain.value=.8/(1+distortion*.35);
+  shaper.curve=curve;shaper.oversample='2x';
+  gain.connect(dry).connect(pan);
+  gain.connect(pre).connect(shaper).connect(post).connect(wet).connect(pan);
+  pan.connect(master);
+  const delaySend=ctx.createGain(),reverbSend=ctx.createGain(),chorusSend=ctx.createGain();
   delaySend.gain.value=clamp(Number(track.delaySend??0),0,100)/100*.7;
   reverbSend.gain.value=clamp(Number(track.reverbSend??0),0,100)/100*.85;
+  chorusSend.gain.value=clamp(Number(track.chorusSend??0),0,100)/100*.45;
   pan.connect(delaySend).connect(delayInput);
   pan.connect(reverbSend).connect(reverb);
+  pan.connect(chorusSend).connect(chorusInput);
   return gain;
  });
  const activeExportSamples=Array.from({length:TRACK_COUNT},()=>[]);
