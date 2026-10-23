@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.1.79 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.1.80 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -479,6 +479,8 @@
 @media(max-width:850px){.song-mode-grid{grid-template-columns:1fr}#view-send .send-title,#view-send .send-row{min-width:660px;gap:10px}#view-send .sends-grid{overflow-x:auto}#view-send .send-global{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:1100px) and (max-height:850px){#view-send .send-row{min-height:43px;padding:5px 11px}}
 
+/* 0.1.80: waveform controls for all four FM operators. */
+.fm-operator-card .field select{min-width:0;width:100%;background:#29221d;color:#d3efdc;border:1px solid #735b45;border-radius:5px;padding:6px}
 /* 0.1.79: four-operator FM algorithms and per-operator controls */
 .fm-mode-field,.fm-algorithm-field{grid-column:1/-1}
 .fm-mode-field select,.fm-algorithm-field select{background:#211a15;color:#caeddb;padding:7px;border:1px solid #8f795b;border-radius:6px;width:100%}
@@ -806,7 +808,7 @@ input[type="password"],textarea,
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.79</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.80</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -892,7 +894,7 @@ const bases=[
  {name:'EMPTY 8',type:'empty',channel:8,volume:0,pan:0,color:'#887b6d',note:48}
 ];
 function defaultSound(t){const patch= t.type==='chord'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:8,pulseWidth:50,cutoff:1500,resonance:0.9,attack:.09,decay:.42,sustain:.68,release:.7,chord:'minor'}:t.type==='synth'&&t.name==='BASS'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'square',detune:9,pulseWidth:43,cutoff:1350,resonance:1.8,attack:.009,decay:.22,sustain:.52,release:.19,chord:'major'}:{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:14,pulseWidth:50,cutoff:4200,resonance:.8,attack:.015,decay:.21,sustain:.65,release:.27,chord:'major'};
- return {...patch,engine:'va',fmRatio:2,fmIndex:3,fmAttack:.01,fmDecay:.3,fmSustain:30,fmMode:'two',fmAlgorithm:'stack',fmOp1Ratio:1,fmOp2Ratio:2,fmOp3Ratio:3,fmOp4Ratio:4,fmOp1Level:100,fmOp2Level:75,fmOp3Level:65,fmOp4Level:55}
+ return {...patch,engine:'va',fmRatio:2,fmIndex:3,fmAttack:.01,fmDecay:.3,fmSustain:30,fmMode:'two',fmAlgorithm:'stack',fmOp1Ratio:1,fmOp2Ratio:2,fmOp3Ratio:3,fmOp4Ratio:4,fmOp1Level:100,fmOp2Level:75,fmOp3Level:65,fmOp4Level:55,fmOp1Wave:'sine',fmOp2Wave:'sine',fmOp3Wave:'sine',fmOp4Wave:'sine'}
 }
 const LFO_TARGETS=[['off','OFF'],...bases.flatMap((_,i)=>['volume','cutoff','pan','pulseWidth'].map(k=>['track'+i+'-'+k,'TRACK '+(i+1)+' · '+k.toUpperCase()]))];
 const LFO_WAVES=['sine','triangle','square','sawtooth'];
@@ -2103,6 +2105,7 @@ function safeSoundPatch(mode,src){
   const key='fmOp'+i+suffix;
   if(src[key]!==undefined&&Number.isFinite(Number(src[key])))t[key]=clamp(Number(src[key]),min,max);
  }
+ for(let i=1;i<=4;i++)t['fmOp'+i+'Wave']=fmOperatorWave(src,i-1);
  return t;
 }
 function migrateModTarget(x){
@@ -2194,6 +2197,7 @@ s.drumSamples=Array.from({length:TRACK_COUNT},(_,t)=>Array.from({length:5},(_,sl
    const key='fmOp'+i+suffix;
    if(p[key]!==undefined&&Number.isFinite(Number(p[key])))target.sound[key]=clamp(Number(p[key]),min,max);
   }
+  for(let i=1;i<=4;i++)target.sound['fmOp'+i+'Wave']=fmOperatorWave(p,i-1);
   target.sound.engine=p.engine==='fm'?'fm':'va';
   for(const [k,a,b] of [['fmRatio',.25,16],['fmIndex',0,12],['fmAttack',.003,2],['fmDecay',.01,3],['fmSustain',0,100]])
    if(Number.isFinite(Number(p[k])))target.sound[k]=clamp(Number(p[k]),a,b);
@@ -2638,6 +2642,20 @@ function updateLiveOscillatorMix(trackIndex){
 }
 // Each edge [source, destination] modulates the destination oscillator's frequency.
 // All routing diagrams are acyclic; operators use their own Ratio and Level.
+const FM_OPERATOR_WAVES=Object.freeze(['sine','triangle','sawtooth','square']);
+function fmOperatorWave(sound,i){
+ const wave=sound?.['fmOp'+(i+1)+'Wave'];
+ return FM_OPERATOR_WAVES.includes(wave)?wave:'sine';
+}
+function fmWaveSample(wave,phase){
+ // The preview uses ideal waveforms; native OscillatorNode provides audio.
+ if(wave==='sine')return Math.sin(phase);
+ const cycle=((phase/(Math.PI*2))%1+1)%1;
+ if(wave==='triangle')return 1-4*Math.abs(cycle-.5);
+ if(wave==='sawtooth')return 2*cycle-1;
+ if(wave==='square')return cycle<.5?1:-1;
+ return Math.sin(phase);
+}
 const FM_ALGORITHMS=Object.freeze({
  stack:{name:'STACK · 4→3→2→1',edges:[[3,2],[2,1],[1,0]],carriers:[0]},
  pairs:{name:'PAIRS · (2→1) + (4→3)',edges:[[1,0],[3,2]],carriers:[0,2]},
@@ -2655,8 +2673,11 @@ function updateLiveFM(trackIndex){
   if(v.trackIndex!==trackIndex||v.released)continue;
    if(v.engine==='fm4'){
     const maxHz=audio.ctx.sampleRate?audio.ctx.sampleRate*.45:18000;
-    for(let i=0;i<4;i++)v.fmOperatorOscs[i].frequency.setTargetAtTime(
-     Math.min(maxHz,v.fmFundamental*clamp(Number(sound['fmOp'+(i+1)+'Ratio']??(i+1)),.25,16)),now,.015);
+    for(let i=0;i<4;i++){
+     v.fmOperatorOscs[i].frequency.setTargetAtTime(
+      Math.min(maxHz,v.fmFundamental*clamp(Number(sound['fmOp'+(i+1)+'Ratio']??(i+1)),.25,16)),now,.015);
+     v.fmOperatorOscs[i].type=fmOperatorWave(sound,i);
+    }
     for(const {from,gain} of v.fmModLinks){
      const level=clamp(Number(sound['fmOp'+(from+1)+'Level']??75),0,100)/100;
      const target=Math.min(maxHz,v.fmFundamental*clamp(Number(sound.fmIndex??3),0,12))*level*clamp(Number(sound.fmSustain??30),0,100)/100;
@@ -2682,7 +2703,7 @@ function fmFourSynthVoice(track,note,velocity,when,gate=null){
  const c=audio.ctx,s=track.sound,index=state.tracks.indexOf(track),f=hz(note);
  const algorithm=fmFourConfig(s),maxHz=c.sampleRate?c.sampleRate*.45:18000;
  const operators=Array.from({length:4},(_,i)=>{
-  const osc=c.createOscillator();osc.type='sine';
+  const osc=c.createOscillator();osc.type=fmOperatorWave(s,i);
   osc.frequency.setValueAtTime(Math.min(maxHz,f*clamp(Number(s['fmOp'+(i+1)+'Ratio']??(i+1)),.25,16)),when);
   return osc;
  });
@@ -3640,6 +3661,7 @@ function renderSound(){
     const config=fmFourConfig(s);
     const title=document.createElement('h4');title.textContent='OPERATOR '+i+(config.carriers.includes(i-1)?' · CARRIER':' · MODULATOR');
     op.append(title);
+    op.append(soundFieldControl(s,{k:'fmOp'+i+'Wave',label:'WAVEFORM',type:'select',options:FM_OPERATOR_WAVES}));
     op.append(soundFieldControl(s,{k:'fmOp'+i+'Ratio',label:'RATIO',min:.25,max:16,step:.25,unit:'×'}));
     op.append(soundFieldControl(s,{k:'fmOp'+i+'Level',label:'LEVEL',min:0,max:100,step:1,unit:'%'}));
     fmCard.append(op);
@@ -3822,7 +3844,7 @@ function drawWave(){
    let angle=phase*r;
    for(const from of sources[op]){
     const level=clamp(Number(sound['fmOp'+(from+1)+'Level']??75),0,100)/100;
-    angle+=index*level*Math.sin(phaseAt(from,phase));
+    angle+=index*level*fmWaveSample(fmOperatorWave(sound,from),phaseAt(from,phase));
    }
    return angle;
   };
@@ -3831,7 +3853,7 @@ function drawWave(){
    let y=Math.sin(phase+index*Math.sin(phase*ratio));
    if(sound.fmMode==='four')
     y=config.carriers.reduce((sum,op)=>sum+
-     Math.sin(phaseAt(op,phase))*clamp(Number(sound['fmOp'+(op+1)+'Level']??100),0,100)/100,0)/config.carriers.length;
+     fmWaveSample(fmOperatorWave(sound,op),phaseAt(op,phase))*clamp(Number(sound['fmOp'+(op+1)+'Level']??100),0,100)/100,0)/config.carriers.length;
    pts.push((i/170*760).toFixed(1)+','+(60-y*30).toFixed(1));
   }
   $('waveViz').innerHTML='<svg viewBox="0 0 760 120" preserveAspectRatio="none" role="img" aria-label="FM sound preview">'+
