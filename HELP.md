@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.2.09 — User Manual
+# Squirrel Studio Web 0.2.41 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -248,7 +248,7 @@ The FX row is separate from the note row. In FX-edit mode, **Backspace** clears 
 
 ## 8. Project saving and loading
 
-Open **MIDI / AUDIO → Save & load project**.
+Use the **FILE** menu for **NEW SONG**, **OPEN SONG (.JSON)** and **SAVE SONG (.JSON)**. The MIDI / AUDIO tab contains device settings.
 
 - **PROJECT NAME** is optional. With a name, **SAVE PROJECT (.JSON)** downloads `Your Name.json`; without one it uses a filename containing the app version, date and time.
 - **SAVE PROJECT** stores patterns, song arrangement, track lengths, patch parameters, loaded sample data, sample slots and preferred drum slots.
@@ -256,6 +256,12 @@ Open **MIDI / AUDIO → Save & load project**.
 - The app also maintains a locally stored working state in the browser; do not use browser storage as your only backup.
 
 Large sample-filled songs produce larger JSON files, because audio is embedded in the file.
+
+### Stereo song WAV and stem export
+
+Use **FILE → Render / Export** to select 44.1 or 48 kHz, 16/24-bit stereo PCM, and an FX tail of 3, 6 or 10 seconds. Choose **FULL MIX**, **SELECTED TRACK**, or **ALL AUDIO TRACKS · ZIP**. A ZIP contains timeline-aligned WAV stems, `STEMS_INFO.txt` and optionally a full-mix reference; MIDI-only tracks are not rendered. Peak Normalize targets −1 dBFS, and optional TPDF Dither is applied when saving PCM. Keep normalization off when relative stem levels should remain intact.
+
+The offline VA/FM renderer includes synth transposition, sub fine tuning, LFO-controlled pulse width and the FM2 modulation envelope. WAVs from the same stem ZIP use matching chance and generated-noise choices. Summed stems can still differ from the full reference because compression and shared effects are nonlinear.
 
 ## 9. Portable Sample Bank
 
