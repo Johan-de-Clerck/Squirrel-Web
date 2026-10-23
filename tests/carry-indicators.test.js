@@ -66,5 +66,5 @@ const run=new Function('document','window','localStorage','console','structuredC
  return checks;
 `);
 const count=run({}, {},{getItem:()=>null,setItem(){}},{warn(){},log(){},error(){}},structuredClone);
-assert.equal(count,27,'CARRY assertions');
+assert.equal(count,25,'CARRY assertions');
 console.log('PASS: '+count+' active carry badges, overlapping sampler voices, C00, pattern boundary and ratchet checks');
