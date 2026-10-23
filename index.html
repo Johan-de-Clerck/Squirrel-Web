@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.38 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.39 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1054,6 +1054,8 @@ input[type="password"],textarea,
 #view-sample .sample-wave-mouse-hint{font:10px Consolas,monospace;color:#bba284;white-space:nowrap}
 @media(max-width:820px){#view-sample .sample-wave-mouse-hint{flex-basis:100%}}
 
+/* v0.2.39: the extra stem reference is only relevant for ZIP mode. */
+.song-export-settings label.is-disabled{opacity:.5}
 /* v0.2.19: the per-step sample carry option is permanently visible on Step FX.
    Keep the same two-column position regardless of selected track or FX. */
 #view-seq .fx-controls{grid-template-columns:repeat(2,minmax(0,1fr));align-items:end;gap:8px 11px}
@@ -1141,6 +1143,7 @@ input[type="password"],textarea,
   <label for="songExportTail">FX TAIL<select id="songExportTail" aria-label="Time to keep delay and reverb after song"><option value="3">3 seconds</option><option value="6">6 seconds</option><option value="10">10 seconds</option></select></label>
   <label for="songExportNormalize" title="Peak-normalize the exported WAV to -1 dBFS without changing live playback">PEAK NORMALIZE <input id="songExportNormalize" type="checkbox" aria-label="Peak normalize stereo WAV to minus one decibel full scale"></label>
   <label for="songExportDither" title="Add triangular probability density dither at the final PCM quantization stage (1 LSB); useful for 16-bit mastering">TPDF DITHER <input id="songExportDither" type="checkbox" aria-label="Add TPDF dither to 16 or 24 bit PCM WAV"></label>
+  <label for="songExportIncludeMix" title="When exporting all tracks to ZIP, also render a full stereo mix as a reference">INCLUDE FULL MIX IN STEM ZIP <input id="songExportIncludeMix" type="checkbox" aria-label="Include an extra full mix reference WAV with stems"></label>
 </div>
 <div class="file-menu-heading">TEMPLATES</div>
 <button type="button" id="fileLoadDemo">↑ LOAD DEMO.JSON</button>
@@ -1150,7 +1153,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.38</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.39</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -6220,7 +6223,7 @@ async function zipStemExports(files){
   for(let at=0;at<raw.length;at+=131072){
    const end=Math.min(raw.length,at+131072);
    for(let b=at;b<end;b++)crc=ZIP_CRC_TABLE[(crc^raw[b])&255]^(crc>>>8);
-   if(at%1048576===0){songExportProgress('PACKING STEM '+(index+1)+'/'+files.length,85+14*(index+end/raw.length)/files.length);await yieldSongExportUI();}
+   if(at%1048576===0){songExportProgress('PACKING FILE '+(index+1)+'/'+files.length,85+14*(index+end/raw.length)/files.length);await yieldSongExportUI();}
   }
   crc=(crc^0xFFFFFFFF)>>>0;
   const local=new Uint8Array(30+name.length),lv=new DataView(local.buffer);
@@ -6245,6 +6248,43 @@ async function zipStemExports(files){
  if(size>ZIP_STEMS_MAX_BYTES)throw new Error('ZIP too large for a safe browser export.');
  return new Blob([...localParts,...centralParts,end],{type:'application/zip'});
 }
+// v0.2.39: include DAW import notes in each stem ZIP. This is metadata,
+// not another encoded audio file; all WAVs remain sample-aligned.
+function songStemManifest(trackIds,request,sequence,duration,includeMix){
+ const clean=s=>String(s??'').replace(/[\r\n\t]+/g,' ').trim();
+ const lines=[
+  'SQUIRREL STUDIO · STEM EXPORT',
+  'Version: 0.2.39',
+  'Project: '+clean(state.projectName||'Squirrel Song'),
+  'Tempo: '+Number(state.bpm).toFixed(1)+' BPM',
+  'Swing: '+clamp(Number(state.swing??0),0,65)+'%',
+  'Song mode: '+(state.songModeEnabled&&state.songSequence.length?'ON':'OFF'),
+  'Pattern sequence: '+sequence.map(p=>clean(patternName(p))).join(' / '),
+  'Sample rate: '+request.rate+' Hz',
+  'Bit depth: '+request.bitDepth+'-bit PCM',
+  'Channels: Stereo (2)',
+  'Export duration: '+duration.toFixed(3)+' seconds (includes '+request.tail+' s effect tail)',
+  'Peak normalize: '+(request.normalize?'ON':'OFF'),
+  'TPDF dither: '+(request.dither?'ON':'OFF'),
+  'Full mix reference included: '+(includeMix?'YES':'NO'),
+  '',
+  'AUDIO TRACKS (all start at 00:00:00; import on separate DAW tracks):'
+ ];
+ for(const id of trackIds){
+  const t=state.tracks[id];
+  lines.push('Track '+String(id+1).padStart(2,'0')+' — '+clean(t.name||'Track')+' ('+clean(t.type||'Audio')+')');
+ }
+ const skipped=state.tracks.map((t,i)=>t.midiOnly?String(i+1).padStart(2,'0'):null).filter(Boolean);
+ if(skipped.length)lines.push('Skipped MIDI-only tracks: '+skipped.join(', '));
+ lines.push('',
+  'Each track WAV contains its own FX sends and master processing.',
+  'Separate tracks may not sum exactly to the full mix because compression and shared FX are nonlinear.',
+  'Random Chance decisions can also vary between separately rendered stems and the full mix.',
+  'Set your DAW project tempo to the BPM above, then import all files at 00:00:00.',
+  '');
+ const bytes=new TextEncoder().encode(lines.join('\n'));
+ return {name:'STEMS_INFO.txt',buffer:bytes.buffer};
+}
 async function exportSongStemsZip(){
  if(playing){notify('Stop playback before exporting.',true);return}
  const request=songExportSettings();
@@ -6258,27 +6298,41 @@ async function exportSongStemsZip(){
  if(!trackIds.length)throw new Error('All tracks are MIDI OUT ONLY; nothing can be rendered to WAV.');
  // Don't allocate eight long OfflineAudioContexts just to discover that the
  // final ZIP would exceed browser memory limits.
- const expected=trackIds.length*(wavSongExportBytes(frames,request.bitDepth)+110);
+ const includeMix=request.includeMix===true;
+ const wavCount=trackIds.length+(includeMix?1:0);
+ const expected=wavCount*(wavSongExportBytes(frames,request.bitDepth)+110)+4096;
  if(expected>ZIP_STEMS_MAX_BYTES)
-  throw new Error('All stems would exceed the 450 MB ZIP safety limit. Choose a shorter song, 16-bit or 44.1 kHz.');
+  throw new Error('Stems + optional full mix exceed the 450 MB ZIP limit. Disable full mix, shorten song or use 16-bit / 44.1 kHz.');
  const files=[];
- songExportStemTotal=trackIds.length;
+ songExportStemTotal=wavCount;
  for(let i=0;i<trackIds.length;i++){
   songExportStemIndex=i;
   const trackId=trackIds[i];
-  songExportProgress('RENDERING TRACK '+(i+1)+'/'+trackIds.length+' · '+state.tracks[trackId].name,null);
+  songExportProgress('RENDERING '+state.tracks[trackId].name,null);
   await yieldSongExportUI();
-  const rendered=await exportSongStereoWav({forcedTrack:trackId,collectWav:true});
+  const rendered=await exportSongStereoWav({forcedTrack:trackId,collectWav:true,settingsOverride:request});
   if(!rendered)throw new Error('Track export interrupted.');
   files.push(rendered);
   songExportProgress('WAV READY',100);
   await yieldSongExportUI();
  }
+ if(includeMix){
+  songExportStemIndex=trackIds.length;
+  songExportProgress('RENDERING FULL MIX REFERENCE',null);
+  await yieldSongExportUI();
+  const mix=await exportSongStereoWav({collectWav:true,settingsOverride:request});
+  if(!mix)throw new Error('Full mix export interrupted.');
+  mix.name=mix.name.replace(/_STEREO/,'_FULL_MIX_STEREO');
+  files.push(mix);
+  songExportProgress('MIX READY',100);
+  await yieldSongExportUI();
+ }
+ files.push(songStemManifest(trackIds,request,sequence,duration,includeMix));
  songExportStemIndex=-1;songExportStemTotal=0;
  songExportProgress('PACKING ZIP',85);
  const blob=await zipStemExports(files);
  downloadSongBlob(blob,projectFileName(state.projectName||'Squirrel_Song').replace(/\.json$/i,'')+'_TRACK_STEMS.zip');
- notify('Exported '+files.length+' stereo WAV stems to ZIP ('+request.bitDepth+'-bit / '+(request.rate/1000).toFixed(1)+' kHz). MIDI-only tracks omitted. Individual stem FX/master compression may not sum exactly to the full mix.');
+ notify('Exported '+trackIds.length+' stereo WAV tracks'+(includeMix?' + full mix':'')+' and STEMS_INFO.txt ('+request.bitDepth+'-bit / '+(request.rate/1000).toFixed(1)+' kHz). MIDI-only tracks omitted.');
 }
 async function runSongWavExport(){
  if(songExportBusy){notify('A WAV export is already in progress.',true);return}
@@ -6324,7 +6378,8 @@ function songExportSettings(){
   bitDepth:SONG_EXPORT_BITS.includes(requestedBits)?requestedBits:16,
   source:SONG_EXPORT_SOURCES.includes($('songExportSource')?.value)?$('songExportSource').value:'mix',
   normalize:!!$('songExportNormalize')?.checked,
-  dither:!!$('songExportDither')?.checked};
+  dither:!!$('songExportDither')?.checked,
+  includeMix:!!$('songExportIncludeMix')?.checked};
 }
 function loadSongExportSettings(){
  let saved={};try{saved=JSON.parse(localStorage.getItem(SONG_EXPORT_PREFS_KEY)||'{}')||{}}catch(e){}
@@ -6336,6 +6391,13 @@ function loadSongExportSettings(){
  $('songExportSource').value=SONG_EXPORT_SOURCES.includes(saved.source)?saved.source:'mix';
  $('songExportNormalize').checked=saved.normalize===true;
  $('songExportDither').checked=saved.dither===true;
+ $('songExportIncludeMix').checked=saved.includeMix===true;
+ updateSongStemOptions();
+}
+function updateSongStemOptions(){
+ const onlyStems=$('songExportSource').value==='stems';
+ $('songExportIncludeMix').disabled=!onlyStems;
+ $('songExportIncludeMix').closest('label').classList.toggle('is-disabled',!onlyStems);
 }
 function saveSongExportSettings(){
  try{localStorage.setItem(SONG_EXPORT_PREFS_KEY,JSON.stringify(songExportSettings()))}catch(e){console.warn('Song export preference storage failed:',e)}
@@ -6346,11 +6408,11 @@ function songExportWavName(bitDepth=16,source='mix',trackIndex=state.selectedTra
  const trackName=source==='selected'&&track?'_TRACK'+String(trackIndex+1).padStart(2,'0')+'_'+projectFileName(track.name||'Track').replace(/\.json$/i,'').replace(/\s+/g,'_'):'';
  return base+trackName+'_STEREO'+(bitDepth===24?'_24BIT':'')+'.wav';
 }
-async function exportSongStereoWav({forcedTrack=null,collectWav=false}={}){
+async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOverride=null}={}){
  if(playing){notify('Stop playback before exporting.',true);return}
  // Snapshot export settings and the selected track at the moment Export starts.
  // A user switching tabs or tracks during sample restoration cannot retarget it.
- const exportRequest=songExportSettings();
+ const exportRequest=settingsOverride?{...settingsOverride}:songExportSettings();
  if(forcedTrack!==null)exportRequest.source='selected';
  const requestedTrack=forcedTrack===null?state.selectedTrack:forcedTrack;
  // Export must include saved samples even when the audio engine was never enabled.
@@ -6984,7 +7046,8 @@ function bindings(){
  loadSongExportSettings();
  $('songExportRate').onchange=saveSongExportSettings;
  $('songExportBits').onchange=saveSongExportSettings;
- $('songExportSource').onchange=saveSongExportSettings;
+ $('songExportSource').onchange=()=>{updateSongStemOptions();saveSongExportSettings()};
+ $('songExportIncludeMix').onchange=saveSongExportSettings;
  $('songExportTail').onchange=saveSongExportSettings;
  $('songExportNormalize').onchange=saveSongExportSettings;
  $('songExportDither').onchange=saveSongExportSettings;
