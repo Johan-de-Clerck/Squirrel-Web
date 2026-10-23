@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.2.43 — User Manual
+# Squirrel Studio Web 0.2.44 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -264,6 +264,16 @@ Select a **LEAD, BASS or CHORD** track with an internal synthesizer (not MIDI OU
 Since version **0.2.43**, this action renders a single note using the **same offline voice and mixer as song export**, including FM2/FM4 operator algorithms, VA oscillators, sub/noise, pulse-width modulation, assigned LFOs, synth/track filter envelopes, stereo pan, distortion, delay, reverb, chorus and master processing. It does not play the pattern, change the selected track, or add notes to your project. For CHORD tracks it samples a **single root-note voice**, not the entire chord.
 
 The synth sample follows the File menu's WAV rate (44.1/48 kHz), PCM bit depth (16/24-bit), effect tail (3/6/10 seconds), normalize and dither selections; the **EXPORT SOURCE** selector does not affect this command. FX are printed into the audio, so loading this WAV back into a sample instrument with additional effects may double the effects.
+
+### Save a rendered synth directly into the 15-sample pool (0.2.44)
+
+The **FILE → RENDER / EXPORT** menu now has a **SYNTH SAMPLE DESTINATION** selector with three choices:
+
+- **DOWNLOAD WAV** — the previous behavior, without changing samples or assignments.
+- **SAVE TO 15-SAMPLE LIBRARY (FIRST FREE)** — renders the same WAV and stores it in the first empty entry of the shared drum/sample library, without requiring manual import.
+- **DOWNLOAD WAV + SAVE TO LIBRARY** — downloads and stores the same rendered file.
+
+Once saved, go to **DRUM SAMPLES** and choose the library entry for one of a drum track's five slots. The new sample does not automatically replace a drum track's existing assignment. Existing library entries are protected from overwriting; if all 15 entries are used, clear an unused one first. The library is retained in complete song JSON and sample-bank exports; when local browser storage fails, save a full song JSON to keep your work. Sample playback uses the exact WAV's sampling rate and PCM audio, including any export normalization/dither. Built-in FX and their effect tails are already included in the sample. The chosen destination is remembered locally.
 
 ### Stereo song WAV and stem export
 
