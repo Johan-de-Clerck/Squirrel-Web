@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.28 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.29 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -520,14 +520,15 @@
 .lane-carry[hidden],.mixer-carry[hidden]{display:none!important}
 .mixer-carry{margin:9px auto;text-align:center}
 @media(max-width:750px){.lane-carry{font-size:9px;padding:2px 3px}}
-/* 0.1.77: per-step CONTINUE checkbox on sample and drum lanes */
+/* v0.2.29: carry is configured in Step FX only. The tiny checked box is a visual
+   indicator, never an empty clickable checkbox in each sequencer cell. */
 .seq-step-cell{position:relative;min-width:0;width:100%;display:block}
 .seq-step-cell>.pad{display:block;width:100%;margin:0!important}
-.seq-step-cell>.step-continue-check{appearance:none;position:absolute;top:1px;right:1px;width:12px;height:12px;min-width:12px;min-height:12px;margin:0;border:1px solid #9b8466;border-radius:3px;background:#281f19;cursor:pointer;z-index:3;touch-action:manipulation}
-.seq-step-cell>.step-continue-check:checked{background:#47a86f;border-color:#c4f0ce}
-.seq-step-cell>.step-continue-check:checked:after{content:'✓';position:absolute;left:1px;top:-3px;font:800 12px Arial,sans-serif;color:#0d321d}
-.seq-step-cell>.step-continue-check:focus-visible{outline:2px solid #f6d4a2;outline-offset:1px}
-.seq-step-cell>.step-continue-check:disabled{opacity:.32;cursor:not-allowed}
+.seq-step-cell>.step-continue-indicator{pointer-events:none;position:absolute;right:2px;top:2px;
+ width:11px;height:11px;border:1px solid #bbebca;border-radius:3px;
+ background:#397b50;box-shadow:0 0 0 1px #172c1d8a;z-index:3}
+.seq-step-cell>.step-continue-indicator::after{content:'✓';position:absolute;left:1px;top:-3px;
+ font:800 11px Arial,sans-serif;color:#f0fff1}
 .seq-step-cell>.pad.continues-sample{border-color:#69b489}
 .step-continue-field{min-width:200px}
 .step-continue-control{display:flex;align-items:center;gap:10px;min-height:35px;padding:7px 9px;border:1px solid #5e8267;border-radius:6px;background:#203528;color:#b8edc4;font:700 11px Consolas,monospace}
@@ -1122,7 +1123,7 @@ input[type="password"],textarea,
 <button type="button" id="fileLoadDemo">↑ LOAD DEMO.JSON</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.28</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.29</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -4183,7 +4184,7 @@ function renderGrid(){syncTrackNoteColorPicker();
    if(state.selectedTrack===track&&state.selectedStep===i)pad.setAttribute('aria-current','location');
    const drumSlot=isDrum(track)&&!t.midiOnly?clamp(Number(step.sampleSlot)||0,0,4):null;
    const sampleLabel=drumSlot===null?'':(' · S'+(drumSlot+1)+' '+drumName(track,drumSlot));
-   pad.setAttribute('aria-label',t.name+' step '+(i+1)+(kindOf(t)==='chord'?' '+chordMode(step.chordMode).label:'')+sampleLabel+(stepCanContinue(track)&&stepContinuesSample(step)?' · CONTINUE ON':'')+(inactive?' inactive':step.on?' on':' off'));
+   pad.setAttribute('aria-label',t.name+' step '+(i+1)+(kindOf(t)==='chord'?' '+chordMode(step.chordMode).label:'')+sampleLabel+(stepCanContinue(track)&&step.fx!==12&&stepContinuesSample(step)?' · CONTINUE ON':'')+(inactive?' inactive':step.on?' on':' off'));
    if(drumSlot!==null)pad.title='S'+(drumSlot+1)+' · '+drumName(track,drumSlot)+' (Shift+click to choose next sample)';
    const label=document.createElement('span');label.className='note-label';
    label.textContent=step.on?(t.midiOnly?noteName(step.note):isDrum(track)?(hasDrumSamples(track)?'S'+((step.sampleSlot||0)+1):'●'):noteName(step.note)):'';
@@ -4201,21 +4202,16 @@ function renderGrid(){syncTrackNoteColorPicker();
    });
    const cell=document.createElement('div');cell.className='seq-step-cell';
    cell.appendChild(pad);
-   if(stepCanContinue(track)){
-    const checkbox=document.createElement('input');checkbox.type='checkbox';
-    checkbox.className='step-continue-check';checkbox.checked=stepContinuesSample(step);
-    checkbox.disabled=inactive||step.fx===12;
-    checkbox.title='Continue this sample/drum into the next pattern without D00';
-    checkbox.setAttribute('aria-label',t.name+' step '+(i+1)+' continue sample into next pattern');
-    checkbox.onpointerdown=e=>e.stopPropagation();
-    checkbox.onclick=e=>e.stopPropagation();
-    checkbox.onchange=()=>{
-     if(!setStepContinue(track,i,checkbox.checked))return;
-     clearStepRange();state.selectedTrack=track;state.selectedStep=i;fxEditMode=false;
-     persist();renderGrid();renderStepEditor();renderFXEditor();
-    };
-    cell.appendChild(checkbox);
-    pad.classList.toggle('continues-sample',stepContinuesSample(step));
+   // No empty checkbox on steps: only show a small checked indicator if carry
+   // has actually been enabled through Step FX (or legacy D00 song data).
+   const showCarry=!inactive&&stepCanContinue(track)&&step.fx!==12&&stepContinuesSample(step);
+   if(showCarry){
+    const indicator=document.createElement('span');
+    indicator.className='step-continue-indicator';
+    indicator.setAttribute('aria-hidden','true');
+    indicator.title='Continue into next pattern (change in Step FX)';
+    cell.appendChild(indicator);
+    pad.classList.add('continues-sample');
    }
    row.appendChild(cell);
   }
@@ -6535,7 +6531,7 @@ function bindings(){
  $('redoStepBtn').onclick=redoEdit;
  $('auditionStepBtn').onclick=()=>playPreview(state.selectedTrack,selectedStep().note,selectedStep().velocity,selectedStep());
  $('stepChordMode').onchange=()=>{if(kindOf(state.tracks[state.selectedTrack])!=='chord')return;const step=selectedStep();step.chordMode=chordMode($('stepChordMode').value).id;persist();renderGrid();renderFXEditor();focusSelectedPad(false)};
- $('stepFx').onchange=()=>{const step=selectedStep(),prev=step.fx;step.fx=Number($('stepFx').value);if(step.fx===12){step.fxAmount=0;step.on=false;}else if(step.fx===13){step.fxAmount=0;}else if(step.fx===9&&prev!==9)step.fxAmount=0;else if(step.fx===4&&prev!==4)step.fxAmount=0x47;else if([10,11].includes(step.fx)&&![10,11].includes(prev))step.fxAmount=0x02;else if([1,2].includes(step.fx)&&![1,2].includes(prev))step.fxAmount=0x02;persist();renderAll();focusSelectedPad(false)};
+ $('stepFx').onchange=()=>{const step=selectedStep(),prev=step.fx;step.fx=Number($('stepFx').value);if(step.fx===12){step.fxAmount=0;step.on=false;step.continueSample=false;}else if(step.fx===13){step.fxAmount=0;}else if(step.fx===9&&prev!==9)step.fxAmount=0;else if(step.fx===4&&prev!==4)step.fxAmount=0x47;else if([10,11].includes(step.fx)&&![10,11].includes(prev))step.fxAmount=0x02;else if([1,2].includes(step.fx)&&![1,2].includes(prev))step.fxAmount=0x02;persist();renderAll();focusSelectedPad(false)};
  $('fxAmount').oninput=()=>{const st=selectedStep();st.fxAmount=Number($('fxAmount').value);const label=fxAmountText(st.fx,st.fxAmount);$('fxAmountOut').textContent=st.fx===9?label+'%':label;$('fxHex').value=label;$('fxStatus').textContent=fxCode(st.fx)+label;persist();renderGrid()};
  $('fxHex').oninput=()=>{const raw=$('fxHex').value.trim(),st=selectedStep(),offset=st.fx===9;
   if(!(offset?/^[0-9]{1,2}$/.test(raw):/^[0-9a-f]{1,2}$/i.test(raw)))return;
