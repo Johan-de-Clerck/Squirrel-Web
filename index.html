@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.29 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.30 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1123,7 +1123,7 @@ input[type="password"],textarea,
 <button type="button" id="fileLoadDemo">↑ LOAD DEMO.JSON</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.29</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.30</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1402,12 +1402,30 @@ function updateCarryIndicators(){
  }
 }
 
-function markSampleContinuation(t,voice){
- // Sampler voices expose their AudioBufferSourceNode as oscs[0];
- // drum voices expose it as src. Never assume both voice types
- // have the same shape when arming D00 across pattern boundaries.
+function markSampleContinuation(t,voice,when=audio?.ctx?.currentTime??0){
+ // The sample must still exist when a later empty D00 row arms carry.
+ // In particular, a looping drum slot may already have a future gate fade
+ // and source.stop scheduled. Extend that gate before it fires, otherwise
+ // D00 appears checked but the audio stops early at the previous gate.
  const source=voice?.src||(voice?.sampleVoice?voice?.oscs?.[0]:null);
  if(!voice||voice.released||!source||!(voice.sampleVoice||voice.drum))return false;
+ if(voice.drum&&source.loop&&Number.isFinite(voice.gateOff)){
+  // A voice that has already passed its gate cannot be resurrected.
+  if(when>=voice.gateOff)return false;
+  const gain=voice.modGain?.gain;
+  try{
+   if(gain){
+    gain.cancelScheduledValues(when);
+    gain.setValueAtTime(1,when);
+   }
+   // Calling stop again on an active AudioBufferSource replaces its earlier
+   // stop schedule. Keep a bounded fallback until C00/new note/STOP releases it.
+   const cap=when+3600;
+   const stopAt=Math.min(Number.isFinite(voice.drumEnvelopeStop)?voice.drumEnvelopeStop:cap,cap);
+   source.stop(stopAt);
+   voice.gateOff=null;
+  }catch(e){console.warn('Continue drum loop:',e);return false}
+ }
  voice.carryAcrossPatterns=true;
  continuedSampleVoices[t].add(voice);
  return true;
@@ -2097,7 +2115,8 @@ function drumSampleVoice(t,slot,velocity,when,offsetPercent=0,gate=null){
  const drumRelease=clamp(Number(item.slotRelease??18)||0,0,2000)/1000;
  const samplePlayback=trackSamplePlayback(t,slot,src,plan,buffer.duration,when,1,baseDetune);
  const voice={pitchParams:[src.detune],baseDetune,modGain,drum:true,
-  drumRelease,released:false,trackIndex:t,sampleSlot:slot,filter,src,startTime:when,gateOff:null,samplePlayback};
+  drumRelease,released:false,trackIndex:t,sampleSlot:slot,filter,src,startTime:when,
+  gateOff:null,drumEnvelopeStop:envelope.decayEnd===null?Infinity:envelope.decayEnd+.01,samplePlayback};
  scheduledVoices.add(voice);
  const groupEntry={src,gain,envelope,level:peak};
  if(group){
@@ -3859,7 +3878,7 @@ function scheduleStep(idx,when){
    // including drum voices whose FX runtime was reset at a pattern boundary.
    for(const v of [...scheduledVoices])
     if(v.trackIndex===t&&(v.sampleVoice||v.drum)&&!v.released)
-     markSampleContinuation(t,v);
+     markSampleContinuation(t,v,when);
   }
   const startsNote=step.on&&step.fx!==12&&Math.random()*100<step.chance;
   if(startsNote){
@@ -3884,7 +3903,7 @@ function scheduleStep(idx,when){
     const voices=playTrack(t,step.note,step.velocity,hitTime,carry&&hit===hits-1?null:hitHold?null:gateDuration,0,step.chordMode,step.sampleSlot||0,sampleOffsetFraction(step.fx,step.fxAmount))||[];
     // Only the final ratchet hit carries into a subsequent pattern.
     // Earlier hits retain their gate and must not become indefinite voices.
-    if(carry&&hit===hits-1)for(const voice of voices)markSampleContinuation(t,voice);
+    if(carry&&hit===hits-1)for(const voice of voices)markSampleContinuation(t,voice,hitTime);
     midiPlayStep(t,step.note,step.velocity,hitTime,hitHold,gateDuration,step.chordMode);
     rt.voices.push(...voices);
    }
