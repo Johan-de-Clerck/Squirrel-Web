@@ -22,7 +22,7 @@ const run=new Function('window','document','localStorage','console','structuredC
  document.createElement=tag=>{
   const buttons=Array.from({length:2},()=>({classList:css(),disabled:false,title:'',attributes:{},setAttribute(k,v){this.attributes[k]=v}}));
   const inputs=Array.from({length:2},()=>({value:'',oninput:null}));
-  return {className:'',innerHTML:'',classList:css(),querySelectorAll(sel){return sel==='button'?buttons:sel==='input'?inputs:[]},querySelector(){return {textContent:''}},append(){},children:[],buttons,inputs};
+  return {className:'',innerHTML:'',dataset:{},classList:css(),appendChild(){},setAttribute(){},querySelectorAll(sel){return sel==='button'?buttons:sel==='input'?inputs:[]},querySelector(){return {textContent:''}},append(){},children:[],buttons,inputs};
  };
  const muteButton=i=>strips[i].buttons[0],soloButton=i=>strips[i].buttons[1];
  const red=i=>muteButton(i).classList.contains('mute-on');
