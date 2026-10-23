@@ -1219,7 +1219,8 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-// Squirrel Studio Web 0.2.10 — compact reference UI, Song Mode, eight-channel chorus, drum/sampler distortion.
+const SQUIRREL_VERSION='0.2.43';
+// Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 const NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -6032,7 +6033,7 @@ function projectFileName(name,now=new Date()){
  if(safe)return safe+'.json';
  const pad=n=>String(n).padStart(2,'0');
  const stamp=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'_'+pad(now.getHours())+'-'+pad(now.getMinutes())+'-'+pad(now.getSeconds());
- return 'SquirrelStudio_0.1.59_'+stamp+'.json';
+ return 'SquirrelStudio_'+SQUIRREL_VERSION+'_'+stamp+'.json';
 }
 async function saveProject(){
  // Samples restore asynchronously from IndexedDB after the page opens.
@@ -6048,23 +6049,6 @@ async function saveProject(){
  const a=document.createElement('a');a.href=url;a.download=projectFileName(state.projectName,now);a.click();
  setTimeout(()=>URL.revokeObjectURL(url),800);
  notify('Project saved: '+a.download);
-}
-// PCM conversion accepts a precomputed gain to avoid allocating full-size
-// temporary Float32Array copies of long multitrack offline renders.
-function downloadPCM16Wav(channels,sampleRate,name,gain=1){
- const length=channels[0].length,count=channels.length,bytes=44+length*count*2;
- const buffer=new ArrayBuffer(bytes),view=new DataView(buffer);
- const ascii=(pos,str)=>{for(let i=0;i<str.length;i++)view.setUint8(pos+i,str.charCodeAt(i))};
- ascii(0,'RIFF');view.setUint32(4,bytes-8,true);ascii(8,'WAVE');ascii(12,'fmt ');
- view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,count,true);
- view.setUint32(24,sampleRate,true);view.setUint32(28,sampleRate*count*2,true);
- view.setUint16(32,count*2,true);view.setUint16(34,16,true);ascii(36,'data');view.setUint32(40,bytes-44,true);
- let pos=44;for(let i=0;i<length;i++)for(let c=0;c<count;c++){
-  const source=channels[c][i];const v=Math.max(-1,Math.min(1,Number.isFinite(source)?source*gain:0));
-  view.setInt16(pos,v<0?v*32768:v*32767,true);pos+=2;
- }
- const url=URL.createObjectURL(new Blob([buffer],{type:'audio/wav'}));
- const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);
 }
 // v0.2.43: Render synth samples through the same audio engine as song WAVs.
 function parseSynthSampleNote(raw){
@@ -6087,7 +6071,7 @@ async function renderSelectedSynthWav(){
  if(!root){notify('Invalid note. Use C-3, D#-3, Bb2, etc.',true);return}
  const timeText=prompt('Hold note for how many seconds? (0.05 to 15)','1.5');
  if(timeText===null)return;
- const holdSeconds=Number(timeText);
+ const holdSeconds=Number(String(timeText).trim().replace(',','.'));
  if(!Number.isFinite(holdSeconds)||holdSeconds<.05||holdSeconds>15){
   notify('Note duration must be between 0.05 and 15 seconds.',true);return;
  }
@@ -6283,7 +6267,7 @@ function songStemManifest(trackIds,request,sequence,duration,includeMix){
  const clean=s=>String(s??'').replace(/[\r\n\t]+/g,' ').trim();
  const lines=[
   'SQUIRREL STUDIO · STEM EXPORT',
-  'Version: 0.2.43',
+  'Version: '+SQUIRREL_VERSION,
   'Project: '+clean(state.projectName||'Squirrel Song'),
   'Tempo: '+Number(state.bpm).toFixed(1)+' BPM',
   'Swing: '+clamp(Number(state.swing??0),0,65)+'%',
