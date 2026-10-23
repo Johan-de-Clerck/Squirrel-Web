@@ -903,7 +903,7 @@ const bases=[
  {name:'EMPTY 8',type:'empty',channel:8,volume:0,pan:0,color:'#887b6d',note:48}
 ];
 function defaultSound(t){const patch= t.type==='chord'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:8,pulseWidth:50,cutoff:1500,resonance:0.9,attack:.09,decay:.42,sustain:.68,release:.7,chord:'minor'}:t.type==='synth'&&t.name==='BASS'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'square',detune:9,pulseWidth:43,cutoff:1350,resonance:1.8,attack:.009,decay:.22,sustain:.52,release:.19,chord:'major'}:{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:14,pulseWidth:50,cutoff:4200,resonance:.8,attack:.015,decay:.21,sustain:.65,release:.27,chord:'major'};
- return {...patch,engine:'va',fmRatio:2,fmIndex:3,fmAttack:.01,fmDecay:.3,fmSustain:30,fmMode:'two',fmAlgorithm:'stack',fmOp1Ratio:1,fmOp2Ratio:2,fmOp3Ratio:3,fmOp4Ratio:4,fmOp1Level:100,fmOp2Level:75,fmOp3Level:65,fmOp4Level:55,fmOp1Fine:0,fmOp2Fine:0,fmOp3Fine:0,fmOp4Fine:0,fmOp1Wave:'sine',fmOp2Wave:'sine',fmOp3Wave:'sine',fmOp4Wave:'sine'}
+ return {...patch,engine:'va',fmRatio:2,fmIndex:3,fmAttack:.01,fmDecay:.3,fmSustain:30,fmMode:'two',fmAlgorithm:'stack',fmOp1Ratio:1,fmOp2Ratio:2,fmOp3Ratio:3,fmOp4Ratio:4,fmOp1Level:100,fmOp2Level:75,fmOp3Level:65,fmOp4Level:55,fmOp1Fine:0,fmOp2Fine:0,fmOp3Fine:0,fmOp4Fine:0,fmOp1Wave:'sine',fmOp2Wave:'sine',fmOp3Wave:'sine',fmOp4Wave:'sine',...Object.fromEntries(Array.from({length:4},(_,i)=>[['fmOp'+(i+1)+'Attack',.01],['fmOp'+(i+1)+'Decay',.3],['fmOp'+(i+1)+'Sustain',70],['fmOp'+(i+1)+'Release',.35]]).flat())}
 }
 const LFO_TARGETS=[['off','OFF'],...bases.flatMap((_,i)=>['volume','cutoff','pan','pulseWidth'].map(k=>['track'+i+'-'+k,'TRACK '+(i+1)+' · '+k.toUpperCase()]))];
 const LFO_WAVES=['sine','triangle','square','sawtooth'];
@@ -2116,7 +2116,13 @@ function safeSoundPatch(mode,src){
   const key='fmOp'+i+suffix;
   if(src[key]!==undefined&&Number.isFinite(Number(src[key])))t[key]=clamp(Number(src[key]),min,max);
  }
- for(let i=1;i<=4;i++)t['fmOp'+i+'Wave']=fmOperatorWave(src,i-1);
+ for(let i=1;i<=4;i++){
+  t['fmOp'+i+'Wave']=fmOperatorWave(src,i-1);
+  for(const [suffix,min,max] of [['Attack',0,5],['Decay',.01,5],['Sustain',0,100],['Release',.01,8]]){
+   const key='fmOp'+i+suffix;
+   if(Number.isFinite(Number(src[key])))t[key]=clamp(Number(src[key]),min,max);
+  }
+ }
  return t;
 }
 function migrateModTarget(x){
@@ -2752,6 +2758,8 @@ function fmFourSynthVoice(track,note,velocity,when,gate=null){
   return osc;
  });
  const modLinks=[],fmDepths=[],carrierGains=[];
+ const opEnv=(i)=>({attack:Math.max(.003,Number(s['fmOp'+(i+1)+'Attack']??.01)),decay:Math.max(.01,Number(s['fmOp'+(i+1)+'Decay']??.3)),sustain:clamp(Number(s['fmOp'+(i+1)+'Sustain']??70),0,100)/100,release:Math.max(.01,Number(s['fmOp'+(i+1)+'Release']??.35))});
+ const scheduleOp=(param,peak,i)=>{const e=opEnv(i);param.setValueAtTime(0,when);param.linearRampToValueAtTime(peak,when+e.attack);param.linearRampToValueAtTime(peak*e.sustain,when+e.attack+e.decay)};
  const attack=Math.max(.003,Number(s.fmAttack??.01));
  const decay=Math.max(.01,Number(s.fmDecay??.3));
  const sustain=clamp(Number(s.fmSustain??30),0,100)/100;
@@ -2759,9 +2767,7 @@ function fmFourSynthVoice(track,note,velocity,when,gate=null){
  for(const [from,to] of algorithm.edges){
   const amount=c.createGain(),level=clamp(Number(s['fmOp'+(from+1)+'Level']??75),0,100)/100;
   const peak=Math.min(maxHz,f*indexDepth)*level;
-  amount.gain.setValueAtTime(0,when);
-  amount.gain.linearRampToValueAtTime(peak,when+attack);
-  amount.gain.linearRampToValueAtTime(peak*sustain,when+attack+decay);
+  scheduleOp(amount.gain,peak,from);
   operators[from].connect(amount).connect(operators[to].frequency);
   modLinks.push({from,to,gain:amount});fmDepths.push(amount);
  }
@@ -2771,7 +2777,7 @@ function fmFourSynthVoice(track,note,velocity,when,gate=null){
  audio.cutoffBuses[index].connect(filter.frequency);
  for(const op of algorithm.carriers){
   const gain=c.createGain(),level=clamp(Number(s['fmOp'+(op+1)+'Level']??100),0,100)/100;
-  gain.gain.value=.65/algorithm.carriers.length*level;
+  scheduleOp(gain.gain,.65/algorithm.carriers.length*level,op);
   operators[op].connect(gain).connect(filter);
   carrierGains.push({index:op,gain});
  }
@@ -2781,7 +2787,7 @@ function fmFourSynthVoice(track,note,velocity,when,gate=null){
  const v={engine:'fm4',fmAlgorithm:s.fmAlgorithm,trackIndex:index,released:false,
   env:out,oscs:operators,pitchParams:operators.map(op=>op.detune),pitchOffsets:operators.map((_,i)=>clamp(Number(s['fmOp'+(i+1)+'Fine']??0),-100,100)),modGain,
   release:Math.max(.02,s.release),filter,filterEnvelopes,
-  fmFundamental:f,fmOperatorOscs:operators,fmModLinks:modLinks,fmDepths,fmCarrierGains:carrierGains,
+  fmFundamental:f,fmOperatorOscs:operators,fmModLinks:modLinks,fmDepths,fmCarrierGains:carrierGains,fmOperatorReleases:Array.from({length:4},(_,i)=>opEnv(i).release),
   ampEnvelope:{start:when,peak:Math.max(.0002,velocity/127*.5),
    attack:Math.max(.003,s.attack),decay:Math.max(.01,s.decay),sustain:s.sustain}};
  operators.forEach(osc=>osc.start(when));
@@ -3709,6 +3715,8 @@ function renderSound(){
     op.append(soundFieldControl(s,{k:'fmOp'+i+'Ratio',label:'RATIO',min:.25,max:16,step:.25,unit:'×'}));
     op.append(soundFieldControl(s,{k:'fmOp'+i+'Fine',label:'FINE TUNE',min:-100,max:100,step:1,unit:' ct'}));
     op.append(soundFieldControl(s,{k:'fmOp'+i+'Level',label:'LEVEL',min:0,max:100,step:1,unit:'%'}));
+    for(const [suffix,label,min,max,step,unit] of [['Attack','ATTACK',0,5,.01,' s'],['Decay','DECAY',.01,5,.01,' s'],['Sustain','SUSTAIN',0,100,1,'%'],['Release','RELEASE',.01,8,.01,' s']])
+     op.append(soundFieldControl(s,{k:'fmOp'+i+suffix,label,min,max,step,unit}));
     fmCard.append(op);
    }
   }else fmCard.append(soundFieldControl(s,{k:'fmRatio',label:'OP2 RATIO',min:.25,max:16,step:.25,unit:'×'}));
