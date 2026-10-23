@@ -1,6 +1,12 @@
-# Squirrel Studio Web 0.1.81 — User Manual
+# Squirrel Studio Web 0.2.07 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.07 — Live CARRY indicators
+
+On the **SEQUENCER** or **MIXER** page, sample and drum tracks can display a small green **CARRY N** indicator, where N is the number of currently playing sample voices that have **CONTINUE** enabled. It is a live status indicator: it does **not** change any checkbox, D00 command, note or audio. An audio voice begins counting when its playback start time has arrived, not merely when the sequencer scheduler queues it ahead of time. Multiple continuing voices on the same track show **CARRY 2**, **CARRY 3** and so on.
+
+Use the per-step **CONTINUE** checkbox (or legacy **D00**) to let the sample pass a pattern boundary, and use **C00 NOTE OFF** in a later step to start the release of all still-carried voices on that track. Once C00 releases the voices, the badge disappears. Stopping transport clears it as well. The indicator only appears when a track actually has carried voices; normal sample playback without CONTINUE does not show it. These badges are not saved to projects.
 
 ### New in 0.1.81 — Fine tune per FM operator
 
