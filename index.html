@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.22 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.23 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -818,6 +818,10 @@ input[type="password"],textarea,
 /* 0.1.59: reserve space for decimal BPM such as 120.3 without clipping. */
 #bpmInput{width:78px;min-width:78px;font-variant-numeric:tabular-nums}
 /* Green SOLO, red MUTE. Auto-mutes reflect solo state without altering stored mute flags. */
+/* v0.2.23: live mixer feedback and per-track monitor. */
+#view-mixer .small-label output{float:right;color:#e6c89d;font:700 11px Consolas,monospace}
+#view-mixer .mixer-preview{margin:7px 0 4px;padding:5px 8px;white-space:nowrap}
+#view-mixer .mixer-strip input[type=range]{touch-action:manipulation}
 #view-mixer .mixer-strip .btn.mute-on,.lane-toggle.muted{
  background:linear-gradient(180deg,#a44a43,#742d2b);border-color:#ed9789;color:#fff0ee;
  box-shadow:inset 0 1px 0 #ffd2bd28;
@@ -1098,7 +1102,7 @@ input[type="password"],textarea,
 <div class="file-menu-heading">TEMPLATES</div>
 <button type="button" id="fileLoadDemo">↑ LOAD DEMO.JSON</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.22</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.23</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -5133,6 +5137,52 @@ function renderMixerIfChanged(){
  if(!root)return;
  if(mixerRenderSignature()!==lastMixerRenderSignature||root.childElementCount===0)renderMixer();
 }
+// v0.2.23: one mixer control path for VA, FM, drums, sample voices and MIDI-only output.
+function mixerPanLabel(value){
+ const pan=clamp(Math.round(Number(value)||0),-100,100);
+ return pan===0?'C':pan<0?'L '+Math.abs(pan):'R '+pan;
+}
+function mixerMidiValue(kind,value){
+ if(kind==='pan')return clamp(Math.round((clamp(Number(value),-100,100)+100)*127/200),0,127);
+ return clamp(Math.round(clamp(Number(value),0,100)*127/100),0,127);
+}
+function sendMidiMixerControl(index,kind){
+ const tr=state.tracks[index];
+ // MIDI ONLY never enters the Web Audio signal path, so use MIDI CC7/CC10.
+ if(!tr?.midiOnly||!midiOutEnabled||!selectedOutput||selectedOutput.state!=='connected')return;
+ const channel=midiOutputChannel(index);
+ midiSend([0xb0|channel,kind==='pan'?10:7,mixerMidiValue(kind,tr[kind])]);
+}
+function syncMidiMixerChannel(index){
+ sendMidiMixerControl(index,'volume');sendMidiMixerControl(index,'pan');
+}
+function setMixerControl(index,kind,value){
+ const track=state.tracks[index];if(!track||!['pan','volume'].includes(kind))return;
+ track[kind]=kind==='pan'?clamp(Math.round(Number(value)||0),-100,100):clamp(Math.round(Number(value)||0),0,100);
+ if(audio){
+  const now=audio.ctx.currentTime;
+  const param=kind==='pan'?audio.trackPans[index].pan:audio.trackGains[index].gain;
+  // Only update this channel. Previously moving one fader recalculated every
+  // track, re-sent all native patches and all LFO routes on each mouse event.
+  const target=kind==='pan'?track.pan/100:(isTrackEffectivelyMuted(index)||track.midiOnly?0:Math.pow(track.volume/100,1.4));
+  param.cancelScheduledValues(now);
+  param.setTargetAtTime(target,now,.010);
+  if(kind==='pan')applyLFOs();
+ }
+ nativeUpdateVAMix(index);
+ sendMidiMixerControl(index,kind);
+ persist();
+}
+async function previewMixerTrack(index){
+ if(!await initAudio())return;
+ const track=state.tracks[index];
+ if(isTrackEffectivelyMuted(index))return;
+ const note=isDrum(index)?36:isSample(index)?track.sampleRoot??48:track.note??60;
+ const slot=isDrum(index)?drumLastSlot(index):0;
+ if(track.midiOnly){
+  midiPlayStep(index,note,110,audio.ctx.currentTime+.01,false,1.0);
+ }else playTrack(index,note,110,audio.ctx.currentTime+.01,1.0,0,null,slot);
+}
 function renderMixer(){
  const el=$('mixerStrips');el.replaceChildren();
  state.tracks.forEach((t,i)=>{
@@ -5147,16 +5197,17 @@ function renderMixer(){
   }else{
    d.innerHTML='<h3>'+String(i+1).padStart(2,'0')+' '+t.name+'</h3>'+
     '<div class="meter"><div class="meter-fill" data-track="'+i+'" role="progressbar" aria-label="Audio level '+t.name+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div>'+
-    '<div class="small-label">VOL</div>'+
-    '<input class="vertical-fader" type="range" min="0" max="100" value="'+t.volume+'" aria-label="Volume '+t.name+'">'+
-    '<output>'+t.volume+'%</output>'+
-    '<div class="small-label" style="margin-top:12px">PAN</div>'+
-    '<input class="vertical-fader" type="range" min="-100" max="100" value="'+t.pan+'" aria-label="Pan '+t.name+'">'+
+    '<div class="small-label">VOL <output class="mixer-vol-value">'+t.volume+'%</output></div>'+ 
+    '<input class="vertical-fader mixer-volume" type="range" min="0" max="100" step="1" value="'+t.volume+'" aria-label="Volume '+t.name+'">'+
+    '<div class="small-label" style="margin-top:12px">PAN <output class="mixer-pan-value">'+mixerPanLabel(t.pan)+'</output></div>'+ 
+    '<input class="vertical-fader mixer-pan" type="range" min="-100" max="100" step="1" value="'+t.pan+'" aria-label="Pan '+t.name+'">'+
+    '<button class="mini-btn mixer-preview" type="button">♪ TEST</button>'+ 
     '<div><button class="btn mixer-mute" type="button">MUTE</button> '+
     '<button class="btn mixer-solo" type="button">SOLO</button></div>';
-   const ranges=d.querySelectorAll('input');
-   ranges[0].oninput=()=>{t.volume=Number(ranges[0].value);d.querySelector('output').textContent=t.volume+'%';applyTrackMix();persist()};
-   ranges[1].oninput=()=>{t.pan=Number(ranges[1].value);applyTrackMix();persist()};
+   const volume=d.querySelector('.mixer-volume'),pan=d.querySelector('.mixer-pan');
+   volume.oninput=()=>{setMixerControl(i,'volume',volume.value);d.querySelector('.mixer-vol-value').textContent=t.volume+'%'};
+   pan.oninput=()=>{setMixerControl(i,'pan',pan.value);d.querySelector('.mixer-pan-value').textContent=mixerPanLabel(t.pan)};
+   d.querySelector('.mixer-preview').onclick=()=>previewMixerTrack(i);
   }
   if(stepCanContinue(i)){
    const indicator=document.createElement('span');indicator.className='mixer-carry';
@@ -5164,7 +5215,7 @@ function renderMixer(){
    indicator.setAttribute('aria-live','off');
    d.appendChild(indicator);
   }
-  const [mute,solo]=d.querySelectorAll('button');
+  const mute=d.querySelector('.mixer-mute'),solo=d.querySelector('.mixer-solo');
   const effectiveMute=isTrackEffectivelyMuted(i);
   const autoMute=soloTrackIndex()>=0&&!t.solo;
   mute.classList.toggle('mute-on',effectiveMute);
@@ -5479,7 +5530,7 @@ function setTrackMidiMode(index,enabled){
  // MIDI-only mode replaces the sound engine, but does not delete its patch or samples.
  if(audio)applyTrackMix();
  persist();renderAll();
- if(enabled&&!midiOutEnabled)notify('MIDI-only: select a MIDI output and press MIDI OUT ON in MIDI & AUDIO.');
+ if(enabled){syncMidiMixerChannel(index);if(!midiOutEnabled)notify('MIDI-only: select a MIDI output and press MIDI OUT ON in MIDI & AUDIO.');}
 }
 function setTrackMidiChannel(index,channel){
  const track=state.tracks[index];
@@ -5488,6 +5539,7 @@ function setTrackMidiChannel(index,channel){
  if(playing)stopTransport();
  midiOffTrack(index);
  track.midiChannel=next;
+ syncMidiMixerChannel(index);
  persist();renderAll();
 }
 function renderMidiTrackOptions(){
@@ -5618,6 +5670,7 @@ function selectMidiOutput(){
  selectedOutput=midiAccess?.outputs.get($('midiOutput').value)||null;
  if(!selectedOutput)midiOutEnabled=false;
  updateMidiOutputUI();
+ if(midiOutEnabled)state.tracks.forEach((track,i)=>{if(track.midiOnly)syncMidiMixerChannel(i)});
 }
 function populateMidiOutputPorts(){
  const select=$('midiOutput'),old=select.value;
@@ -6270,8 +6323,8 @@ function bindings(){
  $('clearStepFx').onclick=()=>{selectedStep().fx=0;persist();renderAll();focusSelectedPad(false)};
  $('clearTrackFx').onclick=()=>{state.patterns[state.pattern][state.selectedTrack].forEach(step=>step.fx=0);persist();renderAll();focusSelectedPad(false)};
  $('soundAuditionBtn').onclick=()=>{const i=state.selectedTrack,t=state.tracks[i];playPreview(i,isSample(i)?t.sampleRoot:t.note)};
- $('resetMixerBtn').onclick=()=>{state.tracks.forEach((t,i)=>{t.volume=bases[i].volume||78;t.pan=bases[i].pan;t.muted=false;t.solo=false});persist();applyTrackMix();renderAll()};
- $('midiOutput').onchange=selectMidiOutput;$('midiOutEnableBtn').onclick=()=>{if(!selectedOutput){notify('Select a MIDI output device first.',true);return}if(midiOutEnabled)midiAllNotesOff();midiOutEnabled=!midiOutEnabled;updateMidiOutputUI()};$('midiPanicBtn').onclick=()=>{midiAllNotesOff();notify('MIDI ALL NOTES OFF sent.')};
+ $('resetMixerBtn').onclick=()=>{state.tracks.forEach((t,i)=>{t.volume=bases[i].volume||78;t.pan=bases[i].pan;t.muted=false;t.solo=false});persist();applyTrackMix();state.tracks.forEach((track,i)=>{if(track.midiOnly)syncMidiMixerChannel(i)});renderAll()};
+ $('midiOutput').onchange=selectMidiOutput;$('midiOutEnableBtn').onclick=()=>{if(!selectedOutput){notify('Select a MIDI output device first.',true);return}if(midiOutEnabled)midiAllNotesOff();midiOutEnabled=!midiOutEnabled;updateMidiOutputUI();if(midiOutEnabled)state.tracks.forEach((track,i)=>{if(track.midiOnly)syncMidiMixerChannel(i)})};$('midiPanicBtn').onclick=()=>{midiAllNotesOff();notify('MIDI ALL NOTES OFF sent.')};
  $('connectMidiBtn').onclick=connectMidi;$('refreshMidiBtn').onclick=()=>{if(midiAccess)updateMidiPorts();else connectMidi()};$('midiInput').onchange=selectMidiInput;$('refreshAudioBtn').onclick=refreshOutputs;$('applyOutputBtn').onclick=applyOutput;$('chooseOutputBtn').onclick=chooseOutput;$('projectNameInput').oninput=()=>{state.projectName=$('projectNameInput').value.slice(0,80);persist()};
  $('fileNewSong').onclick=()=>{$('fileMenu').open=false;newSong()};
  $('fileImportSampleBank').onclick=()=>{$('fileMenu').open=false;$('importSampleBankBtn').click()};
