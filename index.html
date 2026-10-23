@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.32 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.33 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1093,6 +1093,10 @@ input[type="password"],textarea,
 .mixer-channel-actions .mini-btn{padding:5px 7px;font-size:10px;white-space:nowrap}
 .mixer-preview.mixer-preview-on{background:#574335!important;border-color:#b99472!important;color:#f5ddbd!important}
 
+/* v0.2.33: export-quality controls remain inside the original, separate FILE menu. */
+.file-menubar .song-export-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:4px 5px 8px}
+.file-menubar .song-export-settings label{display:flex;flex-direction:column;gap:5px;color:#cdae89;font:700 10px Consolas,monospace;min-width:0}
+.file-menubar .song-export-settings select{width:100%;background:#211914;border:1px solid #775641;border-radius:5px;color:#e9d0ae;padding:8px 5px;font:700 11px Consolas,monospace}
 /* v0.2.26 - track-specific colors apply ONLY to active note steps. */
 .transport-track-color{display:flex;align-items:center;gap:7px;margin:auto;white-space:nowrap}
 .transport-track-color select{color:#f5dcbd;background:#392d23;border:1px solid #826045;border-radius:6px;padding:7px;font-size:11px;font-weight:700}
@@ -1119,11 +1123,15 @@ input[type="password"],textarea,
 <div class="file-menu-heading">RENDER / EXPORT</div>
 <button type="button" id="fileRenderSynth">♫ RENDER VA/FM SYNTH TO WAV</button>
 <button type="button" id="fileExportSong">♫ EXPORT SONG TO STEREO WAV</button>
+<div class="song-export-settings" aria-label="Song WAV export settings">
+  <label for="songExportRate">SAMPLE RATE<select id="songExportRate" aria-label="Song WAV export sample rate"><option value="48000">48,000 Hz</option><option value="44100">44,100 Hz</option></select></label>
+  <label for="songExportTail">FX TAIL<select id="songExportTail" aria-label="Time to keep delay and reverb after song"><option value="3">3 seconds</option><option value="6">6 seconds</option><option value="10">10 seconds</option></select></label>
+</div>
 <div class="file-menu-heading">TEMPLATES</div>
 <button type="button" id="fileLoadDemo">↑ LOAD DEMO.JSON</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.32</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.33</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -6067,6 +6075,27 @@ async function renderSelectedSynthWav(){
  notify('Stereo synth WAV rendered at '+noteText+'.');
 }
 
+// Rendering preferences are independent from the project song JSON.
+const SONG_EXPORT_PREFS_KEY='squirrel-song-wav-export-v1';
+const SONG_EXPORT_RATES=[44100,48000],SONG_EXPORT_TAILS=[3,6,10];
+function songExportSettings(){
+ const requestedRate=Number($('songExportRate')?.value),requestedTail=Number($('songExportTail')?.value);
+ return {rate:SONG_EXPORT_RATES.includes(requestedRate)?requestedRate:48000,
+  tail:SONG_EXPORT_TAILS.includes(requestedTail)?requestedTail:6};
+}
+function loadSongExportSettings(){
+ let saved={};try{saved=JSON.parse(localStorage.getItem(SONG_EXPORT_PREFS_KEY)||'{}')||{}}catch(e){}
+ const rate=SONG_EXPORT_RATES.includes(Number(saved.rate))?Number(saved.rate):48000;
+ const tail=SONG_EXPORT_TAILS.includes(Number(saved.tail))?Number(saved.tail):6;
+ $('songExportRate').value=String(rate);$('songExportTail').value=String(tail);
+}
+function saveSongExportSettings(){
+ try{localStorage.setItem(SONG_EXPORT_PREFS_KEY,JSON.stringify(songExportSettings()))}catch(e){console.warn('Song export preference storage failed:',e)}
+}
+function songExportWavName(){
+ const base=projectFileName(state.projectName||'Squirrel_Song').replace(/\.json$/i,'');
+ return base+'_STEREO.wav';
+}
 async function exportSongStereoWav(){
  if(playing){notify('Stop playback before exporting.',true);return}
  // Export must include saved samples even when the audio engine was never enabled.
@@ -6094,9 +6123,10 @@ async function exportSongStereoWav(){
   const count=patternLength(p);
   return sum+count+(count%2?swingAmount:0);
  },0);
- const duration=totalSwingSteps*stepSeconds+3;
- if(duration>360){notify('This export is limited to six minutes. Export a shorter arrangement.',true);return}
- const rate=44100,ctx=new OfflineAudioContext(2,Math.ceil(duration*rate),rate);
+ const {rate,tail}=songExportSettings();
+ const duration=totalSwingSteps*stepSeconds+tail;
+ if(duration>360){notify('Song + FX tail exceeds six minutes. Choose a shorter tail or song.',true);return}
+ const ctx=new OfflineAudioContext(2,Math.ceil(duration*rate),rate);
  const compressor=ctx.createDynamicsCompressor(),master=ctx.createGain();
  compressor.threshold.value=-16;compressor.knee.value=12;compressor.ratio.value=3;
  compressor.attack.value=.004;compressor.release.value=.17;
@@ -6543,8 +6573,8 @@ async function exportSongStereoWav(){
  for(let t=0;t<TRACK_COUNT;t++)if(isSample(t)||isDrum(t))stopExportSample(t,songEnd);
  notify('Rendering stereo song WAV…');
  const rendered=await ctx.startRendering();
- downloadPCM16Wav([rendered.getChannelData(0),rendered.getChannelData(1)],rate,'Squirrel_Song_STEREO.wav');
- notify('Stereo WAV exported with synth note-offs, chords, ratchets, chance and track FX.');
+ downloadPCM16Wav([rendered.getChannelData(0),rendered.getChannelData(1)],rate,songExportWavName());
+ notify('Stereo WAV exported at '+(rate/1000).toFixed(1)+' kHz with '+tail+'s FX tail.');
 }
 function typeFXDigit(key){
  const digit=key.toUpperCase();if(!/^[0-9A-F]$/.test(digit))return false;
@@ -6669,6 +6699,9 @@ function bindings(){
   }
   notify('Choose a DRUM or SAMPLE track before loading audio.',true);
  };
+ loadSongExportSettings();
+ $('songExportRate').onchange=saveSongExportSettings;
+ $('songExportTail').onchange=saveSongExportSettings;
  $('fileRenderSynth').onclick=()=>{$('fileMenu').open=false;renderSelectedSynthWav().catch(e=>notify('Render failed: '+e.message,true))};
  $('fileExportSong').onclick=()=>{$('fileMenu').open=false;exportSongStereoWav().catch(e=>notify('Song export failed: '+e.message,true))};
  $('saveBtn').onclick=saveProject;$('loadBtn').onclick=()=>$('loadFile').click();
