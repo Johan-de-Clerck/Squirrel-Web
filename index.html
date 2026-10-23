@@ -825,7 +825,7 @@ input[type="password"],textarea,
 <button type="button" id="fileRenderSynth">RENDER SYNTH TO WAV</button>
 <button type="button" id="fileExportSong">EXPORT SONG TO WAV</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.81</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.82</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -4828,12 +4828,29 @@ async function exportSongStereoWav(){
     [sound.osc2On!==false,sound.wave2||'triangle',Math.pow(2,Number(sound.detune||0)/1200),sound.osc2Level??100],
     [sound.subOn!==false,sound.subWave||'sine',Math.pow(2,Number(sound.subOctave??-12)/12),sound.subLevel??35]
    ];
-   for(const [enabled,wave,ratio,level] of oscillators){
+   for(const [index,[enabled,wave,ratio,level]] of oscillators.entries()){
     if(!enabled||level<=0)continue;
     const osc=ctx.createOscillator(),amp=ctx.createGain();
-    osc.type=wave==='pulse'?'square':wave;osc.frequency.value=freq*ratio;
+    const frequency=freq*ratio;
+    osc.type=wave==='pulse'?'sawtooth':wave;osc.frequency.value=frequency;
     amp.gain.value=clamp(Number(level),0,100)/300;
-    osc.connect(amp).connect(filter);osc.start(time);osc.stop(end);
+    osc.connect(amp);
+    if(wave==='pulse'){
+     const oscIndex=index+1;
+     const duty=clamp(Number(sound['pulseWidth'+oscIndex]??sound.pulseWidth??50),5,95)/100;
+     const delay=ctx.createDelay(.25),inverse=ctx.createGain();
+     inverse.gain.value=-1;
+     delay.delayTime.setValueAtTime(duty/frequency,time);
+     osc.connect(delay).connect(inverse).connect(amp);
+     const pwmDepth=clamp(Number(sound['pwmDepth'+oscIndex]??100),0,100)/100;
+     if(pwmDepth>0){
+      const lfo=ctx.createOscillator(),depth=ctx.createGain();
+      lfo.type='sine';lfo.frequency.value=clamp(Number(sound.pwmRate??sound.lfoRate??2),.05,30);
+      depth.gain.value=Math.max(0,Math.min(duty-.05,.95-duty))/frequency*pwmDepth;
+      lfo.connect(depth).connect(delay.delayTime);lfo.start(time);lfo.stop(end);
+     }
+    }
+    amp.connect(filter);osc.start(time);osc.stop(end);
    }
    if(sound.noiseOn&&sound.noiseLevel>0){
     const size=Math.ceil((length+release+.05)*rate),buf=ctx.createBuffer(1,size,rate),data=buf.getChannelData(0);
