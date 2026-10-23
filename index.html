@@ -6188,7 +6188,7 @@ async function runPatternBounce(){
  if(playing){notify('Stop playback before bouncing a pattern.',true);return}
  const pattern=state.pattern,patternLabel=patternName(pattern);
  const selection=$('patternBounceDestination')?.value||'download';
- const matched=/^slot:(\\d{1,2})$/.exec(selection);
+ const matched=/^slot:(\d{1,2})$/.exec(selection);
  const toFile=selection==='download',slot=matched?Number(matched[1]):-1;
  if(!toFile&&(!matched||slot<0||slot>=DRUM_LIBRARY_SIZE)){
   notify('Choose DOWNLOAD WAV or a sample slot from 01 to 15.',true);return;
