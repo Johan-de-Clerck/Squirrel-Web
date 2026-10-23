@@ -2,7 +2,7 @@
   <img src="squirrel-icon.webp" alt="Squirrel Studio icon" width="112">
   <h1>Squirrel Studio</h1>
   <p><strong>A browser-based groovebox, synthesizer, sampler and tracker-style step sequencer.</strong></p>
-  <p><strong>Current version: 0.2.44</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
+  <p><strong>Current version: 0.2.45</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
 </div>
 
 Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrangement into a compact, eight-track music workstation. The web version runs in a modern desktop browser using the Web Audio API.
@@ -19,7 +19,7 @@ Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrange
 | **Song Mode** | Arrange named patterns into a sequence. Selected sample and drum steps can continue across pattern boundaries, and C00 triggers release. |
 | **Mixer and FX** | Stereo volume and pan, mute/solo, per-track audition, distortion, delay, reverb and chorus sends. |
 | **MIDI** | MIDI input and per-track MIDI output options, including MIDI-only tracks. Availability depends on browser and hardware support. |
-| **Files and export** | Save/load songs as JSON, import audio and sample banks, render one VA/FM synth note to WAV or directly into the shared 15-sample library, using the same engine as the song export, export a 16/24-bit stereo song WAV, or export individual track stems to ZIP (with optional full-mix reference and metadata). |
+| **Files and export** | Save/load songs as JSON, render synth notes to WAV/library, **bounce the selected pattern to a WAV or any of 15 library slots** (muted tracks excluded), export 16/24-bit stereo song WAVs, and export track stems to ZIP. |
 
 ## Getting started
 
@@ -48,6 +48,8 @@ Open **FILE → Render / Export** to choose **44.1 or 48 kHz**, **16-bit or 24-b
 
 **Save directly to the 15-sample library (0.2.44):** in **FILE → RENDER / EXPORT**, choose **SYNTH SAMPLE DESTINATION** before rendering: **DOWNLOAD WAV**, **SAVE TO 15-SAMPLE LIBRARY (FIRST FREE)**, or **DOWNLOAD WAV + SAVE TO LIBRARY**. Saving to the library picks the first empty slot and never overwrites an existing sample. Open **DRUM SAMPLES** to assign the new library sound to one of a drum track's five slots. The stored WAV is also included in complete song JSON and sample-bank exports. When all 15 slots are occupied, clear one before saving. Your destination preference is remembered by the browser. WAV effects are baked in, and the cached sample preserves the export sample rate.
 
+**Bounce Pattern to Sample (0.2.45):** in the FILE menu choose **BOUNCE SELECTED PATTERN TO SAMPLE**. Set **BOUNCE DESTINATION** to **DOWNLOAD WAV FILE** or one of the fifteen numbered library slots. The currently selected pattern is rendered once, even if Song Mode is enabled. **Muted tracks and MIDI-only tracks are excluded**; active Solo buttons further restrict the bounced mix. Choose **EXACT PATTERN · LOOP** for the exact step duration, or add a 3/6/10-second effect tail. The bounce uses the same stereo engine, track FX, master effects, sample rate, bit depth, normalization and dither as song export. For a populated slot, confirm replacement before rendering; this changes its sound everywhere that library slot is assigned, so make a project backup first. A bounced sample is not automatically assigned to a track. Each slot has a **16 MB maximum**; choose 16-bit / 44.1 kHz or remove the tail for longer bounces.
+
 **Peak Normalize** is optional and off by default. When enabled, it adjusts each exported WAV to a peak of **−1 dBFS** without changing live playback. **TPDF Dither** is available for 16/24-bit PCM. Exports warn when an unnormalized WAV exceeds 0 dBFS. Disable normalization for stems if preserving relative track levels matters.
 
 The offline synth renderer follows VA/FM transposition, VA sub-oscillator fine tuning, LFO-routed PWM, FM2 modulation envelopes, and **four-operator FM carrier/modulator envelopes**. Synth cutoff/resonance and patch filter envelopes are also scheduled in the song WAV render, including accurate release on short notes. Stems and the optional full-mix reference share chance and generated-noise decisions, but nonlinear compression and shared effects can prevent an exact sum.
@@ -60,7 +62,7 @@ This is intentionally a **high-level release history**. Small bug fixes, interna
 
 | Release | Major changes |
 | --- | --- |
-| **0.2.x — Song production & export** | Compact Synth and Drum editors; expanded stereo mixer; enhanced waveform editor; cross-pattern sample continuation; Song Mode; more faithful stereo WAV rendering with export-quality controls. |
+| **0.2.x — Song production & export** | Compact Synth and Drum editors; expanded stereo mixer; enhanced waveform editor; Song Mode and cross-pattern continuation; stereo WAV/stem export; **VA/FM synth rendering and muted-aware pattern bounce directly to the 15-sample library**. |
 | **0.1.7x–0.1.8x — Advanced synthesis & sampling** | VA and FM engines, four-operator FM algorithms, PWM/LFO routing, shared drum sample library, per-slot filters and envelopes, sample looping and Step FX. |
 | **0.1.x — Foundation** | Eight-track web groovebox, tracker-style sequencer, instrument tracks, MIDI integration, basic FX and pattern workflow. |
 
