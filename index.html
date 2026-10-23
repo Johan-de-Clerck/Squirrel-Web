@@ -4701,7 +4701,7 @@ async function renderSelectedSynthWav(){
  const semis={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
  const n=semis[match[1]]+(match[2]==='#'?1:match[2]==='B'?-1:0)+(Number(match[3])+1)*12;
  const duration=Number(prompt('Hold note for how many seconds?','1.5'));
- if(!Number.isFinite(duration)||duration<=0||duration>15)return;
+ if(!Number.isFinite(duration)||duration<=0||duration>15){notify('Duration must be between 0 and 15 seconds.',true);return}
  const rate=44100,ctx=new OfflineAudioContext(2,Math.ceil((duration+Math.max(.1,t.sound.release||.3)+.1)*rate),rate);
  const sound=t.sound,freq=440*Math.pow(2,(n-69)/12),mix=ctx.createGain();
  const stereo=ctx.createStereoPanner();stereo.pan.value=Math.max(-1,Math.min(1,(t.pan||0)/100));mix.connect(stereo).connect(ctx.destination);
@@ -4719,7 +4719,7 @@ async function renderSelectedSynthWav(){
   for(const [enabled,wave,ratio,level] of [[sound.osc1On!==false,sound.wave1,1,sound.osc1Level??100],[sound.osc2On!==false,sound.wave2,Math.pow(2,(sound.detune||0)/1200),sound.osc2Level??100],[sound.subOn!==false,sound.subWave||'sine',.5,sound.subLevel??35]]){
    if(!enabled)continue;const o=ctx.createOscillator(),g=ctx.createGain();o.type=wave==='pulse'?'square':wave;o.frequency.value=freq*ratio;g.gain.value=level/300;o.connect(g).connect(filter);o.start();o.stop(duration+1);
   }
-  if(sound.noiseOn&&sound.noiseLevel>0){const buf=ctx.createBuffer(1,ctx.length,rate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const source=ctx.createBufferSource(),gain=ctx.createGain();source.buffer=buf;gain.gain.value=(sound.noiseLevel||0)/300;source.connect(gain).connect(filter);source.start()}
+  if(sound.noiseOn&&sound.noiseLevel>0){const buf=ctx.createBuffer(1,ctx.length,rate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const source=ctx.createBufferSource(),gain=ctx.createGain(),tone=ctx.createBiquadFilter();source.buffer=buf;gain.gain.value=(sound.noiseLevel||0)/300;tone.type='lowpass';tone.frequency.value=200+clamp(Number(sound.noiseTone??70),0,100)/100*16000;source.connect(tone).connect(gain).connect(filter);source.start()}
  }
  const rendered=await ctx.startRendering();
  downloadPCM16Wav([rendered.getChannelData(0),rendered.getChannelData(1)],rate,'Squirrel_Synth_'+noteText+'_STEREO.wav');
