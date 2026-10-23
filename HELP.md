@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.2.41 — User Manual
+# Squirrel Studio Web 0.2.42 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -261,7 +261,7 @@ Large sample-filled songs produce larger JSON files, because audio is embedded i
 
 Use **FILE → Render / Export** to select 44.1 or 48 kHz, 16/24-bit stereo PCM, and an FX tail of 3, 6 or 10 seconds. Choose **FULL MIX**, **SELECTED TRACK**, or **ALL AUDIO TRACKS · ZIP**. A ZIP contains timeline-aligned WAV stems, `STEMS_INFO.txt` and optionally a full-mix reference; MIDI-only tracks are not rendered. Peak Normalize targets −1 dBFS, and optional TPDF Dither is applied when saving PCM. Keep normalization off when relative stem levels should remain intact.
 
-The offline VA/FM renderer includes synth transposition, sub fine tuning, LFO-controlled pulse width and the FM2 modulation envelope. WAVs from the same stem ZIP use matching chance and generated-noise choices. Summed stems can still differ from the full reference because compression and shared effects are nonlinear.
+The offline VA/FM renderer includes synth transposition, sub fine tuning, LFO-controlled pulse width, the FM2 modulation envelope, and all FM4 operator carriers/modulators with their own ADSR. It renders per-track cutoff/resonance envelopes and per-patch synth filter envelopes. Short notes release from their current envelope value, rather than jumping to sustain. Disabling a synth's filter envelope prevents new live and offline notes from receiving its modulation. WAVs from the same stem ZIP use matching chance and generated-noise choices. Summed stems can still differ from the full reference because compression and shared effects are nonlinear.
 
 ## 9. Portable Sample Bank
 
