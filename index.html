@@ -825,7 +825,7 @@ input[type="password"],textarea,
 <button type="button" id="fileRenderSynth">RENDER SYNTH TO WAV</button>
 <button type="button" id="fileExportSong">EXPORT SONG TO WAV</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.82</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.83</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -4736,11 +4736,27 @@ async function exportSongStereoWav(){
  if(duration>360){notify('This export is limited to six minutes. Export a shorter arrangement.',true);return}
  const rate=44100,ctx=new OfflineAudioContext(2,Math.ceil(duration*rate),rate);
  const master=ctx.createGain();master.gain.value=clamp(Number(state.master??75),0,100)/100*.75;master.connect(ctx.destination);
+ const fx=state.sendFX||{};
+ const delayInput=ctx.createGain(),delay=ctx.createDelay(2),feedback=ctx.createGain(),delayReturn=ctx.createGain();
+ delay.delayTime.value=clamp(Number(fx.delayTime??.3),.07,1.2);
+ feedback.gain.value=clamp(Number(fx.feedback??30),0,85)/100;
+ delayReturn.gain.value=.65;
+ delayInput.connect(delay);delay.connect(feedback).connect(delay);
+ delay.connect(delayReturn).connect(master);
+ const reverb=ctx.createConvolver(),reverbReturn=ctx.createGain();
+ reverb.buffer=makeReverbIR(ctx,clamp(Number(fx.reverbDecay??1.8),.5,4));
+ reverbReturn.gain.value=.65;reverb.connect(reverbReturn).connect(master);
  const outputs=state.tracks.map(track=>{
   const pan=ctx.createStereoPanner(),gain=ctx.createGain();
   pan.pan.value=clamp(Number(track.pan??0),-100,100)/100;
-  gain.gain.value=clamp(Number(track.volume??78),0,100)/100;
-  gain.connect(pan).connect(master);return gain;
+  gain.gain.value=Math.pow(clamp(Number(track.volume??78),0,100)/100,1.4);
+  gain.connect(pan).connect(master);
+  const delaySend=ctx.createGain(),reverbSend=ctx.createGain();
+  delaySend.gain.value=clamp(Number(track.delaySend??0),0,100)/100*.7;
+  reverbSend.gain.value=clamp(Number(track.reverbSend??0),0,100)/100*.85;
+  pan.connect(delaySend).connect(delayInput);
+  pan.connect(reverbSend).connect(reverb);
+  return gain;
  });
  const activeExportSamples=Array.from({length:TRACK_COUNT},()=>[]);
  const stopExportSample=(i,time)=>{
