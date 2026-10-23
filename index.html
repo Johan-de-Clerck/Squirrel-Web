@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.42 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.43 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -6066,40 +6066,45 @@ function downloadPCM16Wav(channels,sampleRate,name,gain=1){
  const url=URL.createObjectURL(new Blob([buffer],{type:'audio/wav'}));
  const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);
 }
-async function renderSelectedSynthWav(){
- const t=state.tracks[state.selectedTrack];
- if(!isSynth(state.selectedTrack)){notify('Select a VA or FM synth track first.',true);return}
- const noteText=(prompt('Root note (example C-3):','C-3')||'').trim().toUpperCase();
- const match=/^([A-G])([#B]?)-?(\d)$/.exec(noteText);
- if(!match){notify('Invalid note. Use C-3, D#-3, etc.',true);return}
+// v0.2.43: Render synth samples through the same audio engine as song WAVs.
+function parseSynthSampleNote(raw){
+ const m=/^([A-G])([#B]?)-?(\d)$/.exec(String(raw).trim().toUpperCase());
+ if(!m)return null;
  const semis={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
- const n=semis[match[1]]+(match[2]==='#'?1:match[2]==='B'?-1:0)+(Number(match[3])+1)*12;
- const duration=Number(prompt('Hold note for how many seconds?','1.5'));
- if(!Number.isFinite(duration)||duration<=0||duration>15){notify('Duration must be between 0 and 15 seconds.',true);return}
- const rate=44100,ctx=new OfflineAudioContext(2,Math.ceil((duration+Math.max(.1,t.sound.release||.3)+.1)*rate),rate);
- const sound=t.sound,freq=440*Math.pow(2,(n-69)/12),mix=ctx.createGain();
- const stereo=ctx.createStereoPanner();stereo.pan.value=Math.max(-1,Math.min(1,(t.pan||0)/100));mix.connect(stereo).connect(ctx.destination);
- const peak=.45,attack=Math.max(.003,sound.attack||.01),decay=Math.max(.01,sound.decay||.2),sustain=Math.max(0,Math.min(1,sound.sustain??.6));
- mix.gain.setValueAtTime(0,0);mix.gain.linearRampToValueAtTime(peak,attack);
- mix.gain.linearRampToValueAtTime(peak*sustain,attack+decay);
- mix.gain.setValueAtTime(peak*sustain,duration);mix.gain.linearRampToValueAtTime(0,duration+Math.max(.1,sound.release||.3));
- const filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=sound.cutoff||4000;filter.Q.value=sound.resonance||.7;filter.connect(mix);
- if(sound.engine==='fm'){
-  const carrier=ctx.createOscillator(),mod=ctx.createOscillator(),depth=ctx.createGain();
-  carrier.frequency.value=freq;mod.frequency.value=freq*(sound.fmRatio||2);
-  depth.gain.value=freq*(sound.fmIndex||3)*Math.max(0,Math.min(1,(sound.fmSustain??30)/100));
-  mod.connect(depth).connect(carrier.frequency);carrier.connect(filter);mod.start();carrier.start();mod.stop(duration+1);carrier.stop(duration+1);
- }else{
-  for(const [enabled,wave,ratio,level] of [[sound.osc1On!==false,sound.wave1,1,sound.osc1Level??100],[sound.osc2On!==false,sound.wave2,Math.pow(2,(sound.detune||0)/1200),sound.osc2Level??100],[sound.subOn!==false,sound.subWave||'sine',.5,sound.subLevel??35]]){
-   if(!enabled)continue;const o=ctx.createOscillator(),g=ctx.createGain();o.type=wave==='pulse'?'square':wave;o.frequency.value=freq*ratio;g.gain.value=level/300;o.connect(g).connect(filter);o.start();o.stop(duration+1);
-  }
-  if(sound.noiseOn&&sound.noiseLevel>0){const buf=ctx.createBuffer(1,ctx.length,rate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const source=ctx.createBufferSource(),gain=ctx.createGain(),tone=ctx.createBiquadFilter();source.buffer=buf;gain.gain.value=(sound.noiseLevel||0)/300;tone.type='lowpass';tone.frequency.value=200+clamp(Number(sound.noiseTone??70),0,100)/100*16000;source.connect(tone).connect(gain).connect(filter);source.start()}
- }
- const rendered=await ctx.startRendering();
- downloadPCM16Wav([rendered.getChannelData(0),rendered.getChannelData(1)],rate,'Squirrel_Synth_'+noteText+'_STEREO.wav');
- notify('Stereo synth WAV rendered at '+noteText+'.');
+ const midi=semis[m[1]]+(m[2]==='#'?1:m[2]==='B'?-1:0)+(Number(m[3])+1)*12;
+ if(midi<0||midi>127)return null;
+ return {midi,label:m[1]+(m[2]==='B'?'b':m[2])+'-'+m[3]};
 }
-
+async function renderSelectedSynthWav(){
+ if(songExportBusy){notify('Another audio export is already running.',true);return}
+ if(playing){notify('Stop playback before rendering a synth sample.',true);return}
+ const trackIndex=state.selectedTrack,track=state.tracks[trackIndex];
+ if(!isSynth(trackIndex)){notify('Select a VA or FM synth track first.',true);return}
+ if(track.midiOnly){notify('MIDI OUT ONLY tracks cannot render internal audio.',true);return}
+ const input=prompt('Root note (for example C-3 or D#-3):','C-3');
+ if(input===null)return;
+ const root=parseSynthSampleNote(input);
+ if(!root){notify('Invalid note. Use C-3, D#-3, Bb2, etc.',true);return}
+ const timeText=prompt('Hold note for how many seconds? (0.05 to 15)','1.5');
+ if(timeText===null)return;
+ const holdSeconds=Number(timeText);
+ if(!Number.isFinite(holdSeconds)||holdSeconds<.05||holdSeconds>15){
+  notify('Note duration must be between 0.05 and 15 seconds.',true);return;
+ }
+ const settings={...songExportSettings(),source:'selected'};
+ songExportBusy=true;
+ const button=$('fileRenderSynth'),caption=button?.textContent;
+ if(button){button.disabled=true;button.textContent='♫ RENDERING SYNTH…'}
+ songExportProgress('PREPARING SYNTH SAMPLE',0);
+ try{
+  await yieldSongExportUI();
+  await exportSongStereoWav({previewSynth:{trackIndex,note:root.midi,noteText:root.label,holdSeconds},settingsOverride:settings});
+ }catch(e){console.error('Synth WAV export:',e);notify('Synth render failed: '+e.message,true)}
+ finally{
+  songExportBusy=false;songExportProgressDone();
+  if(button){button.disabled=false;button.textContent=caption}
+ }
+}
 // v0.2.35: keep the main thread responsive during long WAV conversions.
 // The audio renderer itself provides no reliable percentage through Web Audio;
 // we show an indeterminate bar until its Promise resolves.
@@ -6278,7 +6283,7 @@ function songStemManifest(trackIds,request,sequence,duration,includeMix){
  const clean=s=>String(s??'').replace(/[\r\n\t]+/g,' ').trim();
  const lines=[
   'SQUIRREL STUDIO · STEM EXPORT',
-  'Version: 0.2.42',
+  'Version: 0.2.43',
   'Project: '+clean(state.projectName||'Squirrel Song'),
   'Tempo: '+Number(state.bpm).toFixed(1)+' BPM',
   'Swing: '+clamp(Number(state.swing??0),0,65)+'%',
@@ -6436,7 +6441,7 @@ function songExportWavName(bitDepth=16,source='mix',trackIndex=state.selectedTra
  const trackName=source==='selected'&&track?'_TRACK'+String(trackIndex+1).padStart(2,'0')+'_'+projectFileName(track.name||'Track').replace(/\.json$/i,'').replace(/\s+/g,'_'):'';
  return base+trackName+'_STEREO'+(bitDepth===24?'_24BIT':'')+'.wav';
 }
-async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOverride=null}={}){
+async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOverride=null,previewSynth=null}={}){
  if(playing){notify('Stop playback before exporting.',true);return}
  // Snapshot export settings and the selected track at the moment Export starts.
  // A user switching tabs or tracks during sample restoration cannot retarget it.
@@ -6444,7 +6449,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  const exportSeed=Number.isInteger(exportRequest.exportSeed)?exportRequest.exportSeed>>>0:
   (Math.random()*4294967296)>>>0;
  if(forcedTrack!==null)exportRequest.source='selected';
- const requestedTrack=forcedTrack===null?state.selectedTrack:forcedTrack;
+ const requestedTrack=previewSynth?previewSynth.trackIndex:(forcedTrack===null?state.selectedTrack:forcedTrack);
  // Export must include saved samples even when the audio engine was never enabled.
  songExportProgress('RESTORING SAVED SAMPLES',null);
  await Promise.all([restoredSamples,restoredDrumSamples,restoredDrumLibrary]);
@@ -6464,7 +6469,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  }
  songExportProgress('DECODING SAMPLES',null);
  await Promise.all(decodeTasks);
- const sequence=state.songModeEnabled&&state.songSequence.length?state.songSequence.slice():[state.pattern];
+ const sequence=previewSynth?[]:(state.songModeEnabled&&state.songSequence.length?state.songSequence.slice():[state.pattern]);
  const stepSeconds=60/state.bpm/4;
  const swingAmount=clamp(Number(state.swing??0),0,65)/100*.5;
  const totalSteps=sequence.reduce((sum,p)=>sum+patternLength(p),0);
@@ -6475,11 +6480,18 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  const {rate,tail,normalize,bitDepth,source,dither}=exportRequest;
  // Capture this choice before scheduling. Changing the Sequencer selection
  // while an export is underway must not change which track gets rendered.
- const exportTrack=source==='selected'?requestedTrack:-1;
+ const exportTrack=previewSynth?requestedTrack:(source==='selected'?requestedTrack:-1);
  if(exportTrack>=0&&state.tracks[exportTrack]?.midiOnly){
   notify('MIDI OUT ONLY tracks generate no internal audio. Select an audio track for WAV export.',true);return;
  }
- const duration=totalSwingSteps*stepSeconds+tail;
+ const previewSound=previewSynth?state.tracks[requestedTrack]?.sound||{}:null;
+ const operatorTail=previewSound?.engine==='fm'&&previewSound.fmMode==='four'
+  ?Math.max(0,...Array.from({length:4},(_,op)=>Number(previewSound['fmOp'+(op+1)+'Release']??0))):0;
+ const releaseTail=previewSynth?Math.max(.02,Number(previewSound.release??.2)||.2,operatorTail,
+  Number(previewSound.filterEnvelope?.release??0)||0):0;
+ const duration=previewSynth
+  ?previewSynth.holdSeconds+Math.max(tail,releaseTail+.2)
+  :totalSwingSteps*stepSeconds+tail;
  if(duration>360){notify('Song + FX tail exceeds six minutes. Choose a shorter tail or song.',true);return}
  // The PCM WAV plus stereo Web Audio buffers may consume hundreds of MB for
  // a long song. Warn early instead of allocating a truncated or invalid file.
@@ -6911,6 +6923,12 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  };
  let cursor=0,rowIndex=0;
  const carriedAtBoundary=Array(TRACK_COUNT).fill(false);
+ // The preview bypasses the pattern timeline and schedules exactly one synth
+ // through the shared VA/FM4/FM2/FX/ADSR offline voice.
+ if(previewSynth){
+  addVoice(requestedTrack,{note:previewSynth.note,velocity:127,gate:100},0,
+   previewSynth.holdSeconds,previewSynth.note,127,true);
+ }
  // Each voice owns its carry flag, allowing independent overlapping drum slots.
  for(const [patternPosition,pattern] of sequence.entries()){
   const count=patternLength(pattern);
@@ -7003,13 +7021,16 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  const channels=[rendered.getChannelData(0),rendered.getChannelData(1)];
  const analysis=await wavPeakAnalysisAsync(channels);
  const gain=wavExportGain(analysis,normalize);
- const wav=await downloadSongPCMWav(channels,rate,songExportWavName(bitDepth,source,exportTrack),gain,bitDepth,dither,collectWav);
+ const wavName=previewSynth
+  ?'Squirrel_Synth_'+previewSynth.noteText.replace(/[^A-Za-z0-9#-]/g,'')+'_STEREO'+(bitDepth===24?'_24BIT':'')+'.wav'
+  :songExportWavName(bitDepth,source,exportTrack);
+ const wav=await downloadSongPCMWav(channels,rate,wavName,gain,bitDepth,dither,collectWav);
  if(collectWav)return wav;
  const originalPeak=Number.isFinite(wavDbFS(analysis.peak))?wavDbFS(analysis.peak).toFixed(1)+' dBFS':'silence';
  const finalPeak=Number.isFinite(wavDbFS(analysis.peak*gain))?wavDbFS(analysis.peak*gain).toFixed(1)+' dBFS':'silence';
  const clipped=!normalize&&analysis.peak>1?' · PEAK OVER 0 dBFS (clipped to PCM'+bitDepth+')':'';
  const invalid=analysis.nonFinite?' · '+analysis.nonFinite+' invalid samples replaced with silence':'';
- const mode=exportTrack>=0?'TRACK '+(exportTrack+1)+' SOLO':'FULL MIX';
+ const mode=previewSynth?'SYNTH '+previewSynth.noteText+' · TRACK '+(requestedTrack+1):exportTrack>=0?'TRACK '+(exportTrack+1)+' SOLO':'FULL MIX';
  const midiOmitted=exportTrack<0&&state.tracks.some(t=>t.midiOnly)?' · MIDI-only tracks are not rendered':'';
  notify(mode+' · Stereo '+bitDepth+'-bit WAV exported: '+(rate/1000).toFixed(1)+' kHz · '+tail+'s tail · peak '+originalPeak+(normalize?' → '+finalPeak+' normalized':'')+(dither?' · TPDF dither':'')+clipped+invalid+midiOmitted,!!clipped||!!analysis.nonFinite);
 }
