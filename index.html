@@ -902,7 +902,7 @@ const bases=[
  {name:'EMPTY 7',type:'empty',channel:7,volume:0,pan:0,color:'#887b6d',note:48},
  {name:'EMPTY 8',type:'empty',channel:8,volume:0,pan:0,color:'#887b6d',note:48}
 ];
-function defaultSound(t){const patch= t.type==='chord'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:8,pulseWidth:50,pulseWidth1:50,pulseWidth2:50,cutoff:1500,resonance:0.9,attack:.09,decay:.42,sustain:.68,release:.7,chord:'minor'}:t.type==='synth'&&t.name==='BASS'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'square',detune:9,pulseWidth:43,pulseWidth1:43,pulseWidth2:43,cutoff:1350,resonance:1.8,attack:.009,decay:.22,sustain:.52,release:.19,chord:'major'}:{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:14,pulseWidth:50,pulseWidth1:50,pulseWidth2:50,cutoff:4200,resonance:.8,attack:.015,decay:.21,sustain:.65,release:.27,chord:'major'};
+function defaultSound(t){const patch= t.type==='chord'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:8,pulseWidth:50,pulseWidth1:50,pulseWidth2:50,pwmDepth1:100,pwmDepth2:100,cutoff:1500,resonance:0.9,attack:.09,decay:.42,sustain:.68,release:.7,chord:'minor'}:t.type==='synth'&&t.name==='BASS'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'square',detune:9,pulseWidth:43,pulseWidth1:43,pulseWidth2:43,pwmDepth1:100,pwmDepth2:100,cutoff:1350,resonance:1.8,attack:.009,decay:.22,sustain:.52,release:.19,chord:'major'}:{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:14,pulseWidth:50,pulseWidth1:50,pulseWidth2:50,pwmDepth1:100,pwmDepth2:100,cutoff:4200,resonance:.8,attack:.015,decay:.21,sustain:.65,release:.27,chord:'major'};
  return {...patch,engine:'va',fmRatio:2,fmIndex:3,fmAttack:.01,fmDecay:.3,fmSustain:30,fmMode:'two',fmAlgorithm:'stack',fmOp1Ratio:1,fmOp2Ratio:2,fmOp3Ratio:3,fmOp4Ratio:4,fmOp1Level:100,fmOp2Level:75,fmOp3Level:65,fmOp4Level:55,fmOp1Fine:0,fmOp2Fine:0,fmOp3Fine:0,fmOp4Fine:0,fmOp1Wave:'sine',fmOp2Wave:'sine',fmOp3Wave:'sine',fmOp4Wave:'sine',...Object.fromEntries(Array.from({length:4},(_,i)=>[['fmOp'+(i+1)+'Attack',.01],['fmOp'+(i+1)+'Decay',.3],['fmOp'+(i+1)+'Sustain',70],['fmOp'+(i+1)+'Release',.35]]).flat())}
 }
 const LFO_TARGETS=[['off','OFF'],...bases.flatMap((_,i)=>['volume','cutoff','pan','pulseWidth'].map(k=>['track'+i+'-'+k,'TRACK '+(i+1)+' · '+k.toUpperCase()]))];
@@ -2646,7 +2646,7 @@ function updateLivePulseWidth(trackIndex){
    const width=part.delay.delayTime,amplitude=part.depthGain.gain;
    const duty=clamp(Number(sound['pulseWidth'+part.oscIndex]??sound.pulseWidth??50),5,95)/100;
    const base=duty/part.frequency;
-   const depth=Math.max(0,Math.min(duty-.05,.95-duty))/part.frequency;
+   const depth=Math.max(0,Math.min(duty-.05,.95-duty))/part.frequency*clamp(Number(sound['pwmDepth'+part.oscIndex]??100),0,100)/100;
    if(typeof width.setTargetAtTime==='function')width.setTargetAtTime(base,now,.012);
    else width.setValueAtTime(base,now);
    if(typeof amplitude.setTargetAtTime==='function')amplitude.setTargetAtTime(depth,now,.012);
@@ -2902,7 +2902,7 @@ function synthVoice(track,note,velocity,when,gate=null){
   const duty=clamp(Number(s['pulseWidth'+oscIndex]??s.pulseWidth??50),5,95)/100;
   inverse.gain.value=-1;
   delay.delayTime.setValueAtTime(duty/frequency,when);
-  depthGain.gain.value=Math.max(0,Math.min(duty-.05,.95-duty))/frequency;
+  depthGain.gain.value=Math.max(0,Math.min(duty-.05,.95-duty))/frequency*clamp(Number(s['pwmDepth'+oscIndex]??100),0,100)/100;
   osc.connect(gain);osc.connect(delay).connect(inverse).connect(gain);
   if(audio.pwmBuses?.[trackIndex])audio.pwmBuses[trackIndex].connect(pwmSmoother).connect(depthGain).connect(delay.delayTime);
   pwmParts.push({delay,inverse,depthGain,pwmSmoother,frequency,oscIndex});
@@ -3585,7 +3585,9 @@ function renderFXEditor(){
 const oscillatorFields=[
  {k:'wave1',label:'WAVE',type:'select',options:['sawtooth','square','pulse','triangle','sine']},
  {k:'pulseWidth1',label:'OSC 1 PULSE WIDTH',min:5,max:95,step:1,unit:'%'},
+ {k:'pwmDepth1',label:'OSC 1 PWM DEPTH',min:0,max:100,step:1,unit:'%'},
  {k:'pulseWidth2',label:'OSC 2 PULSE WIDTH',min:5,max:95,step:1,unit:'%'},
+ {k:'pwmDepth2',label:'OSC 2 PWM DEPTH',min:0,max:100,step:1,unit:'%'},
  {k:'osc1Level',label:'LEVEL',min:0,max:100,step:1,unit:'%'},
  {k:'wave2',label:'WAVE',type:'select',options:['sawtooth','square','pulse','triangle','sine']},
  {k:'detune',label:'DETUNE',min:-50,max:50,step:1,unit:' cent'},
@@ -3631,7 +3633,7 @@ function soundFieldControl(s,f){
   s[f.k]=f.type==='select'&&f.k!=='subOctave'?ctrl.value:Number(ctrl.value);
   show();persist();
   if(f.k==='cutoff')updateLiveCutoff(state.selectedTrack);
-   if(f.k==='pulseWidth'||f.k==='pulseWidth1'||f.k==='pulseWidth2')updateLivePulseWidth(state.selectedTrack);
+   if(f.k==='pulseWidth'||f.k==='pulseWidth1'||f.k==='pulseWidth2'||f.k==='pwmDepth1'||f.k==='pwmDepth2')updateLivePulseWidth(state.selectedTrack);
    if(f.k==='fmRatio'||f.k==='fmIndex'||f.k==='fmSustain'||f.k.startsWith('fmOp'))updateLiveFM(state.selectedTrack);
   if(['osc1Level','osc2Level','subLevel'].includes(f.k))updateLiveOscillatorMix(state.selectedTrack);
   drawWave();
