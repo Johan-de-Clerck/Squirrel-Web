@@ -2896,14 +2896,15 @@ function synthVoice(track,note,velocity,when,gate=null){
  const pwmParts=[];
  const routeOsc=(osc,wave,gain,frequency)=>{
   if(wave!=='pulse'){osc.connect(gain);return}
-  const delay=c.createDelay(.25),inverse=c.createGain(),depthGain=c.createGain();
+  const delay=c.createDelay(.25),inverse=c.createGain(),depthGain=c.createGain(),pwmSmoother=c.createBiquadFilter();
+  pwmSmoother.type='lowpass';pwmSmoother.frequency.value=75;pwmSmoother.Q.value=.5;
   const duty=clamp(Number(s.pulseWidth??50),5,95)/100;
   inverse.gain.value=-1;
   delay.delayTime.setValueAtTime(duty/frequency,when);
   depthGain.gain.value=Math.max(0,Math.min(duty-.05,.95-duty))/frequency;
   osc.connect(gain);osc.connect(delay).connect(inverse).connect(gain);
-  if(audio.pwmBuses?.[trackIndex])audio.pwmBuses[trackIndex].connect(depthGain).connect(delay.delayTime);
-  pwmParts.push({delay,inverse,depthGain,frequency});
+  if(audio.pwmBuses?.[trackIndex])audio.pwmBuses[trackIndex].connect(pwmSmoother).connect(depthGain).connect(delay.delayTime);
+  pwmParts.push({delay,inverse,depthGain,pwmSmoother,frequency});
  };
  routeOsc(osc1,s.wave1,g1,f);
  routeOsc(osc2,s.wave2,g2,f*Math.pow(2,s.detune/1200));
@@ -2922,8 +2923,8 @@ function synthVoice(track,note,velocity,when,gate=null){
   try{
    osc1.disconnect();osc2.disconnect();subOsc.disconnect();g1.disconnect();g2.disconnect();subGain.disconnect();
    for(const part of pwmParts){
-    try{audio.pwmBuses?.[trackIndex]?.disconnect(part.depthGain)}catch(_){}
-    part.delay.disconnect();part.inverse.disconnect();part.depthGain.disconnect();
+    try{audio.pwmBuses?.[trackIndex]?.disconnect(part.pwmSmoother)}catch(_){}
+    part.pwmSmoother.disconnect();part.depthGain.disconnect();part.delay.disconnect();part.inverse.disconnect();part.depthGain.disconnect();
    }
    audio.cutoffBuses[trackIndex].disconnect(filt.frequency);
    filterEnvelopes.forEach(e=>{try{e.source.stop();e.source.disconnect()}catch(_){}});
