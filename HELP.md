@@ -1,6 +1,12 @@
-# Squirrel Studio Web 0.1.80 — User Manual
+# Squirrel Studio Web 0.1.81 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.1.81 — Fine tune per FM operator
+
+Select **SYNTH → FM → OPERATORS: 4 OP**. Each OP1–OP4 panel now includes a **FINE TUNE** slider (−100 to +100 cents) alongside WAVEFORM, RATIO and LEVEL. **0 ct** is in tune; positive settings sharpen the operator and negative settings flatten it. This is independent for each operator, so the two audible carriers in PAIRS can be slightly detuned to create beating, while modulator fine tuning shifts the sideband structure of STACK and FAN.
+
+Fine tuning can be changed during playback. It also works with the sequencer's pitch slides and vibrato without replacing the operator's tuning. Saved project files and instrument patches retain the values. Older songs default to **0 ct** on every operator.
 
 ### New in 0.1.80 — Operator waveforms and routing
 
