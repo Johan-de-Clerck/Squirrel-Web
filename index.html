@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.34 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.35 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1093,6 +1093,16 @@ input[type="password"],textarea,
 .mixer-channel-actions .mini-btn{padding:5px 7px;font-size:10px;white-space:nowrap}
 .mixer-preview.mixer-preview-on{background:#574335!important;border-color:#b99472!important;color:#f5ddbd!important}
 
+/* 0.2.35 · Long WAV renders show honest stage-based feedback.
+   Rendering is indeterminate; only sample analysis/PCM packing have percentages. */
+.song-export-progress[hidden]{display:none!important}
+.song-export-progress{position:fixed;bottom:18px;right:20px;width:min(420px,calc(100vw - 40px));z-index:210;
+ background:#2b221b;border:1px solid #95704a;border-radius:9px;padding:13px 15px;
+ box-shadow:0 6px 26px #000a;pointer-events:none;color:#f1d3af;font:700 11px Consolas,monospace}
+.song-export-progress-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.song-export-progress output{font-variant-numeric:tabular-nums;color:#f7c58e;white-space:nowrap}
+.song-export-progress progress{width:100%;height:8px;accent-color:#e0a56c}
+.file-menubar #fileExportSong:disabled{opacity:.45;cursor:wait}
 /* v0.2.33: export-quality controls remain inside the original, separate FILE menu. */
 .file-menubar .song-export-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:4px 5px 8px}
 .file-menubar .song-export-settings label{display:flex;flex-direction:column;gap:5px;color:#cdae89;font:700 10px Consolas,monospace;min-width:0}
@@ -1131,8 +1141,12 @@ input[type="password"],textarea,
 <div class="file-menu-heading">TEMPLATES</div>
 <button type="button" id="fileLoadDemo">↑ LOAD DEMO.JSON</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
+<div id="songExportProgress" class="song-export-progress" role="status" aria-live="polite" aria-atomic="true" hidden>
+ <div class="song-export-progress-row"><strong id="songExportStage">PREPARING EXPORT</strong><output id="songExportPercent">…</output></div>
+ <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
+</div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.34</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.35</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -6079,6 +6093,81 @@ async function renderSelectedSynthWav(){
  notify('Stereo synth WAV rendered at '+noteText+'.');
 }
 
+// v0.2.35: keep the main thread responsive during long WAV conversions.
+// The audio renderer itself provides no reliable percentage through Web Audio;
+// we show an indeterminate bar until its Promise resolves.
+let songExportBusy=false;
+function songExportProgress(stage,percent=null){
+ const panel=$('songExportProgress'),bar=$('songExportBar');
+ panel.hidden=false;
+ $('songExportStage').textContent=stage;
+ if(percent===null){bar.removeAttribute('value');$('songExportPercent').textContent='…';}
+ else{const pct=clamp(Math.round(percent),0,100);bar.value=pct;$('songExportPercent').textContent=pct+'%';}
+}
+function songExportProgressDone(){
+ $('songExportProgress').hidden=true;
+ $('songExportBar').removeAttribute('value');
+}
+function yieldSongExportUI(){return new Promise(resolve=>setTimeout(resolve,0))}
+async function wavPeakAnalysisAsync(channels){
+ const length=channels[0].length;
+ let peak=0,nonFinite=0;
+ const blockSize=131072;
+ for(let start=0;start<length;start+=blockSize){
+  const end=Math.min(length,start+blockSize);
+  for(const channel of channels)for(let i=start;i<end;i++){
+   const value=channel[i];
+   if(!Number.isFinite(value)){nonFinite++;continue}
+   if(Math.abs(value)>peak)peak=Math.abs(value);
+  }
+  songExportProgress('ANALYZING AUDIO',25+25*end/length);
+  await yieldSongExportUI();
+ }
+ return {peak,nonFinite};
+}
+async function downloadSongPCM16Wav(channels,sampleRate,name,gain){
+ const frames=channels[0].length,count=channels.length;
+ if(count!==2||channels[1].length!==frames)throw new Error('Expected two equal stereo channels.');
+ const bytes=44+frames*count*2;
+ if(bytes>0xFFFFFFFF||bytes>512*1024*1024)throw new Error('WAV exceeds the safe browser export size.');
+ const buffer=new ArrayBuffer(bytes),view=new DataView(buffer);
+ const ascii=(at,str)=>{for(let i=0;i<str.length;i++)view.setUint8(at+i,str.charCodeAt(i))};
+ ascii(0,'RIFF');view.setUint32(4,bytes-8,true);ascii(8,'WAVE');ascii(12,'fmt ');
+ view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,count,true);
+ view.setUint32(24,sampleRate,true);view.setUint32(28,sampleRate*count*2,true);
+ view.setUint16(32,count*2,true);view.setUint16(34,16,true);
+ ascii(36,'data');view.setUint32(40,bytes-44,true);
+ const blockSize=131072;
+ for(let start=0;start<frames;start+=blockSize){
+  const end=Math.min(frames,start+blockSize);
+  for(let i=start;i<end;i++)for(let c=0;c<count;c++){
+   const value=channels[c][i];
+   const normalized=Math.max(-1,Math.min(1,Number.isFinite(value)?value*gain:0));
+   view.setInt16(44+(i*count+c)*2,normalized<0?normalized*32768:normalized*32767,true);
+  }
+  songExportProgress('ENCODING 16-BIT STEREO WAV',50+50*end/frames);
+  await yieldSongExportUI();
+ }
+ const url=URL.createObjectURL(new Blob([buffer],{type:'audio/wav'}));
+ const link=document.createElement('a');link.href=url;link.download=name;
+ link.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+async function runSongWavExport(){
+ if(songExportBusy){notify('A WAV export is already in progress.',true);return}
+ songExportBusy=true;
+ const button=$('fileExportSong');button.disabled=true;
+ const buttonText=button.textContent;button.textContent='♫ EXPORT IN PROGRESS…';
+ songExportProgress('PREPARING SONG',0);
+ try{
+  await yieldSongExportUI();
+  await exportSongStereoWav();
+ }catch(e){console.error(e);notify('Song export failed: '+e.message,true)}
+ finally{
+  songExportBusy=false;
+  button.disabled=false;button.textContent=buttonText;
+  songExportProgressDone();
+ }
+}
 // Peak analysis is independent of normalization; it reports excessive peaks
 // even if the user prefers to export at the original mixer level.
 function wavPeakAnalysis(channels){
@@ -6121,6 +6210,7 @@ function songExportWavName(){
 async function exportSongStereoWav(){
  if(playing){notify('Stop playback before exporting.',true);return}
  // Export must include saved samples even when the audio engine was never enabled.
+ songExportProgress('RESTORING SAVED SAMPLES',null);
  await Promise.all([restoredSamples,restoredDrumSamples,restoredDrumLibrary]);
  const decodeTasks=[];
  for(let t=0;t<TRACK_COUNT;t++){
@@ -6136,6 +6226,7 @@ async function exportSongStereoWav(){
     decodeTasks.push(ensureEditorSampleBuffer('export-drum:'+t+':'+slot,item.data,drumSampleBuffers,drumSlotKey(t,slot)));
   }
  }
+ songExportProgress('DECODING SAMPLES',null);
  await Promise.all(decodeTasks);
  const sequence=state.songModeEnabled&&state.songSequence.length?state.songSequence.slice():[state.pattern];
  const stepSeconds=60/state.bpm/4;
@@ -6148,7 +6239,12 @@ async function exportSongStereoWav(){
  const {rate,tail,normalize}=songExportSettings();
  const duration=totalSwingSteps*stepSeconds+tail;
  if(duration>360){notify('Song + FX tail exceeds six minutes. Choose a shorter tail or song.',true);return}
- const ctx=new OfflineAudioContext(2,Math.ceil(duration*rate),rate);
+ // The PCM WAV plus stereo Web Audio buffers may consume hundreds of MB for
+ // a long song. Warn early instead of allocating a truncated or invalid file.
+ const frames=Math.ceil(duration*rate);
+ if(!Number.isSafeInteger(frames)||44+frames*4>0xFFFFFFFF)throw new Error('Song exceeds the maximum WAV file size.');
+ songExportProgress('SCHEDULING '+(duration).toFixed(1)+'s AUDIO',null);
+ const ctx=new OfflineAudioContext(2,frames,rate);
  const compressor=ctx.createDynamicsCompressor(),master=ctx.createGain();
  compressor.threshold.value=-16;compressor.knee.value=12;compressor.ratio.value=3;
  compressor.attack.value=.004;compressor.release.value=.17;
@@ -6593,12 +6689,13 @@ async function exportSongStereoWav(){
  const songEnd=endOfNotes;
  for(let t=0;t<TRACK_COUNT;t++)if(isDrum(t))expireExportDrumGates(t,songEnd);
  for(let t=0;t<TRACK_COUNT;t++)if(isSample(t)||isDrum(t))stopExportSample(t,songEnd);
- notify('Rendering stereo song WAV…');
+ songExportProgress('RENDERING AUDIO · '+duration.toFixed(1)+'s',null);
+ await yieldSongExportUI();
  const rendered=await ctx.startRendering();
  const channels=[rendered.getChannelData(0),rendered.getChannelData(1)];
- const analysis=wavPeakAnalysis(channels);
+ const analysis=await wavPeakAnalysisAsync(channels);
  const gain=wavExportGain(analysis,normalize);
- downloadPCM16Wav(channels,rate,songExportWavName(),gain);
+ await downloadSongPCM16Wav(channels,rate,songExportWavName(),gain);
  const originalPeak=Number.isFinite(wavDbFS(analysis.peak))?wavDbFS(analysis.peak).toFixed(1)+' dBFS':'silence';
  const finalPeak=Number.isFinite(wavDbFS(analysis.peak*gain))?wavDbFS(analysis.peak*gain).toFixed(1)+' dBFS':'silence';
  const clipped=!normalize&&analysis.peak>1?' · PEAK OVER 0 dBFS (clipped to PCM16)':'';
@@ -6733,7 +6830,7 @@ function bindings(){
  $('songExportTail').onchange=saveSongExportSettings;
  $('songExportNormalize').onchange=saveSongExportSettings;
  $('fileRenderSynth').onclick=()=>{$('fileMenu').open=false;renderSelectedSynthWav().catch(e=>notify('Render failed: '+e.message,true))};
- $('fileExportSong').onclick=()=>{$('fileMenu').open=false;exportSongStereoWav().catch(e=>notify('Song export failed: '+e.message,true))};
+ $('fileExportSong').onclick=()=>{$('fileMenu').open=false;runSongWavExport()};
  $('saveBtn').onclick=saveProject;$('loadBtn').onclick=()=>$('loadFile').click();
  $('loadFile').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
