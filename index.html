@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.25 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.27 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1092,14 +1092,15 @@ input[type="password"],textarea,
 .mixer-channel-actions .mini-btn{padding:5px 7px;font-size:10px;white-space:nowrap}
 .mixer-preview.mixer-preview-on{background:#574335!important;border-color:#b99472!important;color:#f5ddbd!important}
 
-/* v0.2.25: centered track-specific note-step color selector. */
-#view-seq .panel-head .sequencer-color-picker{display:flex;align-items:center;justify-content:center;gap:8px;flex:1 1 160px;min-width:135px;white-space:nowrap}
-#view-seq .sequencer-color-picker select{min-width:108px;width:114px;padding:6px 9px;border:1px solid #8f6850;border-radius:6px;background:#30251f;color:#f3d7b4;font:700 11px Consolas,monospace;cursor:pointer}
-#view-seq .sequencer-color-picker select:focus-visible{outline:2px solid #f5d3a0;outline-offset:2px}
-#view-seq .pad.on[data-step-color]{background:linear-gradient(150deg,var(--step-top),var(--step-bottom));border-color:var(--step-border);box-shadow:inset 0 -3px 0 #0003,0 2px 3px #0005;color:var(--step-text)}
-#view-seq .pad.on[data-step-color] .note-label{color:var(--step-text)}
-#view-seq .pad.on[data-step-color] .mini-bar{background:var(--step-text);opacity:.65}
-@media(max-width:1200px){#view-seq .panel-head .sequencer-color-picker{order:3;flex:0 1 auto;margin:0 auto}#view-seq .panel-head .panel-controls{flex:1 1 auto;justify-content:flex-end}}
+/* v0.2.26 - track-specific colors apply ONLY to active note steps. */
+.transport-track-color{display:flex;align-items:center;gap:7px;margin:auto;white-space:nowrap}
+.transport-track-color select{color:#f5dcbd;background:#392d23;border:1px solid #826045;border-radius:6px;padding:7px;font-size:11px;font-weight:700}
+.pad.on.track-colored{background:linear-gradient(145deg,var(--note-light),var(--note-dark));border-color:var(--note-light);box-shadow:inset 0 -3px 0 #0004,0 2px 3px #0005}
+.pad.on.track-colored.low{filter:saturate(.7) brightness(.84)}
+.pad.on.track-colored.high{filter:brightness(1.12)}
+.pad.on.track-colored .note-label{color:var(--note-ink,#221916)}
+.pad.on.track-colored .mini-bar{background:#211a1a88}
+@media(max-width:1100px){.transport-track-color{margin:0}}
 </style>
 </head>
 <body>
@@ -1121,13 +1122,13 @@ input[type="password"],textarea,
 <button type="button" id="fileLoadDemo">↑ LOAD DEMO.JSON</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.25</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.27</span></div></header>
   <div class="app">
     <main class="workspace">
-      <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
+      <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
       <nav class="tabs" aria-label="Workspace"><button class="tab active" data-view="seq">▦ SEQUENCER</button><button class="tab" data-view="song">▤ SONG MODE</button><button class="tab" data-view="sound">◈ SYNTH</button><button class="tab" data-view="mixer">▥ MIXER</button><button class="tab" data-view="mod">◌ LFO / ENVELOPES</button><button class="tab" data-view="drum">♬ DRUM SAMPLES</button><button class="tab" data-view="sample">♫ SAMPLE EDITOR</button><button class="tab" data-view="send">◉ SEND FX</button><button class="tab" data-view="options">⚙ OPTIONS</button><button class="tab" data-view="setup">◈ MIDI / AUDIO</button></nav>
       <div id="view-seq">
-        <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step sequencer</h2></div><label class="sequencer-color-picker" for="trackStepColor"><span class="small-label">TRACK STEP COLOR</span><select id="trackStepColor" aria-label="Color of note steps on selected track"><option value="red">RED</option><option value="orange">ORANGE</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></label><div class="panel-controls"><label class="pattern-selector"><span class="small-label">PATTERN</span><select id="patternGroup" aria-label="Pattern group A through D"></select><select id="patternSelect" aria-label="Pattern 1 through 8"></select></label><label class="pattern-rename"><span class="small-label">NAME</span><input id="patternNameInput" type="text" maxlength="24" spellcheck="false" autocomplete="off" aria-label="Pattern name" placeholder="Pattern name"></label><button class="mini-btn" id="copyPatternBtn">COPY</button><button class="mini-btn" id="pastePatternBtn">PASTE</button></div></div>
+        <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step sequencer</h2></div><div class="panel-controls"><label class="pattern-selector"><span class="small-label">PATTERN</span><select id="patternGroup" aria-label="Pattern group A through D"></select><select id="patternSelect" aria-label="Pattern 1 through 8"></select></label><label class="pattern-rename"><span class="small-label">NAME</span><input id="patternNameInput" type="text" maxlength="24" spellcheck="false" autocomplete="off" aria-label="Pattern name" placeholder="Pattern name"></label><button class="mini-btn" id="copyPatternBtn">COPY</button><button class="mini-btn" id="pastePatternBtn">PASTE</button></div></div>
           <div class="grid-scroll"><div class="grid-board" id="gridBoard"></div></div>
           
         </section>
@@ -1751,25 +1752,7 @@ function resetDrumSlotEnvelope(track,slot){
  item.slotAttack=2;item.slotDecay=0;item.slotRelease=18;
  persist();renderDrumSamples();
 }
-// User-selectable note colors are per track, not per pattern or individual step.
-const STEP_TRACK_COLORS={
- red:{top:'#e26b65',bottom:'#87332e',border:'#ef8a7c',text:'#fff1eb'},
- orange:{top:'#e4ad73',bottom:'#99633d',border:'#f3bb82',text:'#3b2415'},
- yellow:{top:'#f4d778',bottom:'#b58d37',border:'#fff0a9',text:'#392b15'},
- green:{top:'#83c898',bottom:'#387e5e',border:'#b0ecc3',text:'#142f20'},
- blue:{top:'#80aaf2',bottom:'#3b61a0',border:'#accbff',text:'#101f38'},
- magenta:{top:'#e092d7',bottom:'#93408b',border:'#f4b5e8',text:'#371331'},
- cyan:{top:'#86dde2',bottom:'#37828d',border:'#b2f4f3',text:'#12353a'},
- gray:{top:'#bec5cc',bottom:'#747d89',border:'#e4e8ec',text:'#20242c'}
-};
-function validTrackStepColor(value){return Object.hasOwn(STEP_TRACK_COLORS,value)?value:'orange'}
-function syncTrackStepColor(){
- const el=$('trackStepColor');if(!el)return;
- const color=validTrackStepColor(state.tracks[state.selectedTrack]?.stepColor);
- el.value=color;el.style.borderColor=STEP_TRACK_COLORS[color].border;
- el.title='Track '+(state.selectedTrack+1)+' · '+(state.tracks[state.selectedTrack]?.name||'')+' · Note color: '+color.toUpperCase();
-}
-function fresh(withDemo=true){const tracks=bases.map((b,i)=>({...b,trackKind:i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample',drumType:['kick','snare','hat'][i%3],name:kindName(i,i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample'),volume:i>=6?78:b.volume,muted:false,solo:false,slotKind:i>=6?'sampler':'empty',sound:defaultSound(b),kindPatches:{},midiOnly:false,midiChannel:clamp(b.channel-1,0,15),stepColor:'orange',sampleName:'',sampleRoot:48,sampleData:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,sampleCutoff:12000,sampleResonance:.7,sampleRelease:65,chorusSend:0,distortion:0}));const patterns=Array.from({length:PATTERN_COUNT},()=>tracks.map((_,t)=>Array.from({length:MAX_STEPS},()=>makeStep(t))));
+function fresh(withDemo=true){const tracks=bases.map((b,i)=>({...b,trackKind:i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample',drumType:['kick','snare','hat'][i%3],name:kindName(i,i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample'),volume:i>=6?78:b.volume,muted:false,solo:false,slotKind:i>=6?'sampler':'empty',sound:defaultSound(b),kindPatches:{},midiOnly:false,midiChannel:clamp(b.channel-1,0,15),sampleName:'',sampleRoot:48,sampleData:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,sampleCutoff:12000,sampleResonance:.7,sampleRelease:65,chorusSend:0,distortion:0}));const patterns=Array.from({length:PATTERN_COUNT},()=>tracks.map((_,t)=>Array.from({length:MAX_STEPS},()=>makeStep(t))));
  const set=(t,ns,note=null,vel=null)=>{for(const s of ns){const p=patterns[0][t][s];p.on=true;if(note!==null)p.note=note;if(vel!==null)p.velocity=vel;}};
  if(withDemo){set(0,[0,4,8,12]);set(1,[4,12]);set(2,[2,6,10,14],90);set(2,[0,4,8,12],75);set(3,[0,3,6,8,11,14]);[36,36,39,43,36,41,39].forEach((n,i)=>{const idx=[0,3,6,8,11,14,15][i];patterns[0][3][idx].on=true;patterns[0][3][idx].note=n;});
  set(4,[2,7,10,15]);patterns[0][3][3].fx=1;patterns[0][3][3].fxAmount=5;patterns[0][3][4].fx=1;patterns[0][3][4].fxAmount=0;patterns[0][3][11].fx=2;patterns[0][3][11].fxAmount=5;patterns[0][3][12].fx=2;patterns[0][3][12].fxAmount=0;patterns[0][4][10].fx=3;[60,62,67,64].forEach((n,i)=>patterns[0][4][[2,7,10,15][i]].note=n);set(5,[0,8]);patterns[0][5][0].note=48;patterns[0][5][8].note=53;}
@@ -2720,7 +2703,7 @@ s.drumSamples=Array.from({length:TRACK_COUNT},(_,t)=>Array.from({length:5},(_,sl
   return normalized;
  }));
  s.projectName=typeof data.projectName==='string'?data.projectName.slice(0,80):'';s.patternNames=Array.from({length:PATTERN_COUNT},(_,i)=>typeof data.patternNames?.[i]==='string'?(data.patternNames[i].trim().replace(/\s+/g,' ').slice(0,24)||defaultPatternName(i)):defaultPatternName(i));s.songSequence=Array.isArray(data.songSequence)?data.songSequence.slice(0,256).filter(n=>Number.isInteger(n)&&n>=0&&n<PATTERN_COUNT):[];s.songModeEnabled=!!data.songModeEnabled&&s.songSequence.length>0;s.bpm=normalizeBpm(data.bpm);s.swing=clamp(Number(data.swing)||0,0,65);s.master=clamp(Number(data.master)??75,0,100);s.keyboardOctave=clamp(Math.round(Number(data.keyboardOctave??3)),1,6);s.editMode=!!data.editMode;s.pattern=clamp(Number(data.pattern)||0,0,PATTERN_COUNT-1);s.selectedTrack=clamp(Number(data.selectedTrack)||3,0,TRACK_COUNT-1);s.trackLengths=Array.from({length:PATTERN_COUNT},(_,b)=>Array.from({length:TRACK_COUNT},(_,t)=>{const value=data.trackLengths?.[b]?.[t]??data.patternLengths?.[b]??(data.version>=14?32:16);return clamp(Math.round(Number(value)||32),1,MAX_STEPS)}));s.patternLengths=s.trackLengths.map(row=>Math.max(...row));s.selectedStep=clamp(Number(data.selectedStep)||0,0,s.trackLengths[s.pattern][s.selectedTrack]-1);
- for(let t=0;t<TRACK_COUNT;t++){const src=data.tracks[t];if(!src||typeof src!=='object')continue;const target=s.tracks[t];target.volume=clamp(Number(src.volume??target.volume),0,100);target.pan=clamp(Number(src.pan??target.pan),-100,100);target.muted=!!src.muted;target.solo=!!src.solo;target.stepColor=validTrackStepColor(src.stepColor);target.midiOnly=!!src.midiOnly;target.midiChannel=clamp(Math.round(Number(src.midiChannel??(t%16))||0),0,15);
+ for(let t=0;t<TRACK_COUNT;t++){const src=data.tracks[t];if(!src||typeof src!=='object')continue;const target=s.tracks[t];target.stepColor=['red','orange','yellow','green','blue','magenta','cyan','gray'].includes(src.stepColor)?src.stepColor:'orange';target.volume=clamp(Number(src.volume??target.volume),0,100);target.pan=clamp(Number(src.pan??target.pan),-100,100);target.muted=!!src.muted;target.solo=!!src.solo;target.midiOnly=!!src.midiOnly;target.midiChannel=clamp(Math.round(Number(src.midiChannel??(t%16))||0),0,15);
  const kind=kindAllowed(src.trackKind)?src.trackKind:(src.type==='chord'?'chord':['kick','snare','hat'].includes(src.type)?'drum':src.slotKind==='sampler'||src.type==='empty'?'sample':t===3?'bass':'lead');
   target.trackKind=kind;target.type=kind==='drum'?'kick':kind==='chord'?'chord':kind==='sample'?'empty':'synth';
   target.slotKind=kind==='sample'?'sampler':'empty';
@@ -4133,7 +4116,20 @@ function attachStepRangeSelection(){
   highlightStepRange();
  });
 }
-function renderGrid(){
+const TRACK_NOTE_COLORS={
+ red:['#ff9c95','#b63d40','#2b0b0b'],orange:['#ffcb86','#bc7239','#392215'],yellow:['#ffea97','#c69f3c','#322a10'],
+ green:['#a5e6a1','#3b9865','#143120'],blue:['#99c6ff','#4777c5','#0e2341'],magenta:['#f6a5eb','#ac51b1','#300e30'],
+ cyan:['#9feaf0','#38a4ac','#103339'],gray:['#d3d0ce','#777778','#202020']
+};
+function selectedTrackNoteColor(){return TRACK_NOTE_COLORS[state.tracks[state.selectedTrack]?.stepColor]?state.tracks[state.selectedTrack].stepColor:'orange'}
+function syncTrackNoteColorPicker(){const picker=$('trackStepColor');if(picker)picker.value=selectedTrackNoteColor()}
+$('trackStepColor').addEventListener('change',e=>setSelectedTrackNoteColor(e.target.value));
+function setSelectedTrackNoteColor(color){
+ if(!TRACK_NOTE_COLORS[color])return;
+ state.tracks[state.selectedTrack].stepColor=color;
+ persist();renderGrid();syncTrackNoteColorPicker();
+}
+function renderGrid(){syncTrackNoteColorPicker();
  const board=$('gridBoard');board.replaceChildren();
  const length=patternLength();
  const head=document.createElement('div');head.className='grid-head';
@@ -4175,6 +4171,11 @@ function renderGrid(){
    const step=state.patterns[state.pattern][track][i],inactive=i>=trackLength(state.pattern,track);
    const pad=document.createElement('button');pad.type='button';
    pad.className='pad'+(step.on?' on':'')+(step.on&&step.velocity<75?' low':'')+(step.on&&step.velocity>115?' high':'')+(state.selectedTrack===track&&state.selectedStep===i?' selected':'')+(rangeContains(track,i)?' range-selected':'')+(lastVisualStep>=0&&i===lastVisualStep%trackLength(state.pattern,track)?' playhead':'')+(i%4===0?' beat-start':'')+(inactive?' inactive-step':'');
+   if(step.on){
+    const colors=TRACK_NOTE_COLORS[t.stepColor]||TRACK_NOTE_COLORS.orange;
+    pad.classList.add('track-colored');
+    pad.style.setProperty('--note-light',colors[0]);pad.style.setProperty('--note-dark',colors[1]);pad.style.setProperty('--note-ink',colors[2]);
+   }
    pad.dataset.track=String(track);pad.dataset.step=String(i);pad.disabled=inactive;
    if(isDrum(track)&&!t.midiOnly)pad.classList.add('drum-step');
    pad.tabIndex=(state.selectedTrack===track&&state.selectedStep===i)?0:-1;
@@ -4187,15 +4188,7 @@ function renderGrid(){
    const label=document.createElement('span');label.className='note-label';
    label.textContent=step.on?(t.midiOnly?noteName(step.note):isDrum(track)?(hasDrumSamples(track)?'S'+((step.sampleSlot||0)+1):'●'):noteName(step.note)):'';
    pad.appendChild(label);
-   if(step.on){
-    const shade=validTrackStepColor(t.stepColor),palette=STEP_TRACK_COLORS[shade];
-    pad.dataset.stepColor=shade;
-    pad.style.setProperty('--step-top',palette.top);
-    pad.style.setProperty('--step-bottom',palette.bottom);
-    pad.style.setProperty('--step-border',palette.border);
-    pad.style.setProperty('--step-text',palette.text);
-    const bar=document.createElement('i');bar.className='mini-bar';bar.style.width=(step.velocity/127*65)+'%';pad.appendChild(bar);
-   }
+   if(step.on){const bar=document.createElement('i');bar.className='mini-bar';bar.style.width=(step.velocity/127*65)+'%';pad.appendChild(bar)}
    pad.addEventListener('click',e=>{
     if(inactive||ignoreNextPadClick)return;
     clearStepRange();fxEditMode=false;fxDigitBuffer='';
@@ -5730,7 +5723,7 @@ function updatePatternPicker(){
  }
  picker.value=String(state.pattern%PATTERNS_PER_GROUP);
 }
-function renderAll(){renderGrid();syncTrackStepColor();renderStepEditor();renderFXEditor();if(view==='song')renderSongMode();if(view==='drum')renderDrumSamples();if(view==='sound')renderSound();renderMixerIfChanged();if(view==='mod'){renderLFO();renderEnvelopes()}if(view==='sample')renderSampleEditor();if(view==='send')renderSendFX();if(view==='options')renderOptions();$('autoDemoJson').checked=autoDemoOnStart;$('bpmInput').value=state.bpm.toFixed(1);$('octaveInput').value=String(state.keyboardOctave);$('editModeBtn').textContent=state.editMode?'✎ EDIT ON':'✎ EDIT OFF';$('editModeBtn').classList.toggle('active',state.editMode);$('editModeBtn').setAttribute('aria-pressed',String(state.editMode));$('swingInput').value=state.swing;$('swingOut').textContent=state.swing+'%';$('masterInput').value=state.master;$('masterOut').textContent=state.master+'%';updatePatternPicker();$('patternNameInput').value=patternName(state.pattern);$('projectNameInput').value=state.projectName||'';$('pasteStepBtn').disabled=!stepClipboard;$('pasteStepBtn').textContent=stepClipboard?.kind==='range'?'PASTE RANGE':'PASTE STEP';$('copyStepBtn').textContent=rangeCells().length>1?'COPY RANGE':'COPY STEP';updateUndoButtons()}
+function renderAll(){renderGrid();renderStepEditor();renderFXEditor();if(view==='song')renderSongMode();if(view==='drum')renderDrumSamples();if(view==='sound')renderSound();renderMixerIfChanged();if(view==='mod'){renderLFO();renderEnvelopes()}if(view==='sample')renderSampleEditor();if(view==='send')renderSendFX();if(view==='options')renderOptions();$('autoDemoJson').checked=autoDemoOnStart;$('bpmInput').value=state.bpm.toFixed(1);$('octaveInput').value=String(state.keyboardOctave);$('editModeBtn').textContent=state.editMode?'✎ EDIT ON':'✎ EDIT OFF';$('editModeBtn').classList.toggle('active',state.editMode);$('editModeBtn').setAttribute('aria-pressed',String(state.editMode));$('swingInput').value=state.swing;$('swingOut').textContent=state.swing+'%';$('masterInput').value=state.master;$('masterOut').textContent=state.master+'%';updatePatternPicker();$('patternNameInput').value=patternName(state.pattern);$('projectNameInput').value=state.projectName||'';$('pasteStepBtn').disabled=!stepClipboard;$('pasteStepBtn').textContent=stepClipboard?.kind==='range'?'PASTE RANGE':'PASTE STEP';$('copyStepBtn').textContent=rangeCells().length>1?'COPY RANGE':'COPY STEP';updateUndoButtons()}
 function switchView(to){if($('fileMenu'))$('fileMenu').open=false;if(view==='mixer'&&to!=='mixer')stopAllMixerPreviews();if(view==='sample'&&to!=='sample')stopSampleEditorAudition();if(to!==view){stopEnterPreview();stopAllEditNotePreviews()}if(to==='sound'&&!isSynth(state.selectedTrack)){const synths=availableSynthTracks();if(synths.length){state.selectedTrack=synths.includes(lastSynthTrack)?lastSynthTrack:synths[0];state.selectedStep=Math.min(state.selectedStep,trackLength()-1)}}if(to!=='seq'){fxEditMode=false;fxDigitBuffer=''}if(to==='drum'&&isDrum(state.selectedTrack))drumEditorTrack=state.selectedTrack;if(to==='sample'&&isSample(state.selectedTrack)){selectedSampleEditorTrack=state.selectedTrack;selectedSampleEditorDrumSlot=null}view=to;for(const id of ['seq','song','drum','sound','mixer','mod','sample','send','options','setup'])$('view-'+id).classList.toggle('hidden',id!==to);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===to));if(to==='song')renderSongMode();if(to==='drum')renderDrumSamples();if(to==='sound')renderSound();if(to==='mixer')renderMixerIfChanged();if(to==='mod'){renderLFO();renderEnvelopes()}if(to==='sample')renderSampleEditor();if(to==='send')renderSendFX();if(to==='options')renderOptions()}
 function installNotes(){const group=$('patternGroup');for(let g=0;g<4;g++)group.add(new Option(PATTERN_GROUPS[g],String(g)));updatePatternPicker();const el=$('stepNote');for(let n=24;n<=95;n++){const o=document.createElement('option');o.value=n;o.textContent=noteName(n);el.appendChild(o)}const preview=$('previewKeys');for(let i=0;i<12;i++){const btn=document.createElement('button');btn.className='key'+(NAMES[i].includes('#')?' black':'');btn.textContent=noteName(60+i);btn.onpointerdown=e=>{e.preventDefault();playPreview(state.selectedTrack,60+i)};preview.appendChild(btn)}}
 // Web MIDI output: timestamped messages follow the Web Audio scheduler.
@@ -6189,7 +6182,7 @@ async function exportSongStereoWav(){
   const track=state.tracks[i];
   const type=['kick','snare','hat'].includes(track.drumType)?track.drumType:'kick';
   const vol=clamp(Number(step.velocity??100)/127,0,1);
-  const ratio=1;
+  const ratio=Math.pow(2,clamp(Number(step.pitch??0),-48,48)/12);
   const output=outputs[i];
   if(type==='kick'){
    const osc=ctx.createOscillator(),gain=ctx.createGain();
@@ -6204,8 +6197,8 @@ async function exportSongStereoWav(){
    osc.start(time);osc.stop(time+.42);
   }else{
    const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();
-   src.buffer=noiseBuffer;filter.type='highpass';
-   filter.frequency.setValueAtTime(type==='hat'?6200:1300,time);
+   src.buffer=noiseBuffer;src.playbackRate.value=ratio;filter.type='highpass';
+   filter.frequency.setValueAtTime(clamp((type==='hat'?6200:1300)*ratio,200,15000),time);
    gain.gain.setValueAtTime(.0001,time);
    gain.gain.exponentialRampToValueAtTime(Math.max(.0002,(type==='hat'?.37:.6)*vol),time+.004);
    gain.gain.exponentialRampToValueAtTime(.0001,time+(type==='hat'?.11:.20));
@@ -6213,7 +6206,7 @@ async function exportSongStereoWav(){
    src.start(time);src.stop(time+(type==='hat'?.13:.23));
    if(type==='snare'){
     const osc=ctx.createOscillator(),tone=ctx.createGain();
-    osc.type='triangle';osc.frequency.setValueAtTime(175,time);
+    osc.type='triangle';osc.frequency.setValueAtTime(175*ratio,time);
     tone.gain.setValueAtTime(.18*vol,time);
     tone.gain.exponentialRampToValueAtTime(.0001,time+.13);
     osc.connect(tone).connect(output);
@@ -6461,6 +6454,26 @@ function typeFXDigit(key){
  if(finished){fxDigitBuffer='';if(state.selectedStep<trackLength()-1)state.selectedStep++}
  persist();renderAll();focusSelectedPad(false);return true;
 }
+// v0.2.27: the button and Escape share one reliable edit-mode handler.
+function toggleEditMode(){
+ state.editMode=!state.editMode;
+ if(!state.editMode){
+  stopEnterPreview();stopAllEditNotePreviews();
+  fxEditMode=false;fxDigitBuffer='';
+ }
+ for(const assignment of keyboardAssignments.values()){
+  liveNoteOff(assignment.track,assignment.note,15);
+ }
+ keyboardDown.clear();keyboardAssignments.clear();
+ persist();renderAll();
+ if(view==='seq')focusSelectedPad(false);
+}
+function escapeMayToggleEdit(el){
+ if(!el)return true;
+ if(el.isContentEditable||el.tagName==='TEXTAREA'||el.tagName==='SELECT')return false;
+ if(el.tagName==='INPUT'&&!['range','checkbox','radio','button'].includes(el.type))return false;
+ return true;
+}
 function bindings(){
  const channelSelect=$('midiOutChannel');for(let ch=1;ch<=16;ch++)channelSelect.add(new Option('CH '+ch,String(ch-1)));
  const chordSelect=$('stepChordMode');for(const mode of CHORD_MODES)chordSelect.add(new Option(mode.label,mode.id));
@@ -6468,7 +6481,7 @@ function bindings(){
  channelSelect.value='0';
  channelSelect.onchange=()=>midiAllNotesOff();trackSelect.onchange=()=>midiAllNotesOff();
  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>switchView(b.dataset.view));$('songEnable').onchange=e=>{if(playing)stopTransport();if(e.target.checked&&!state.songSequence.length){e.target.checked=false;notify('Add at least one pattern to the arrangement.',true);return}state.songModeEnabled=e.target.checked;songPosition=songCuePosition;visibleSongPosition=songCuePosition;persist();renderSongMode()};$('songAddCurrent').onclick=()=>addSongPattern(state.pattern);$('songClear').onclick=()=>{if(!state.songSequence.length)return;if(!confirm('Clear the entire song arrangement?'))return;if(playing)stopTransport();state.songSequence=[];state.songModeEnabled=false;songPosition=0;songCuePosition=0;visibleSongPosition=0;persist();renderSongMode()};$('audioBtn').onclick=initAudio;$('playBtn').onclick=togglePlay;$('stopBtn').onclick=stopTransport;$('recBtn').onclick=toggleRecord;
- $('editModeBtn').onclick=()=>{state.editMode=!state.editMode;if(!state.editMode)stopAllEditNotePreviews();keyboardDown.clear();keyboardAssignments.clear();persist();renderAll();if(view==='seq')focusSelectedPad(false)};$('octaveInput').onchange=()=>{state.keyboardOctave=Number($('octaveInput').value);persist();if(view==='seq')focusSelectedPad(false)};
+ $('editModeBtn').onclick=toggleEditMode;$('octaveInput').onchange=()=>{state.keyboardOctave=Number($('octaveInput').value);persist();if(view==='seq')focusSelectedPad(false)};
  $('bpmInput').onchange=()=>{state.bpm=normalizeBpm($('bpmInput').value);applyLFOs();persist();renderAll()};$('swingInput').oninput=()=>{state.swing=Number($('swingInput').value);$('swingOut').textContent=state.swing+'%';persist()};$('masterInput').oninput=()=>{state.master=Number($('masterInput').value);$('masterOut').textContent=state.master+'%';applyTrackMix();persist()};$('patternNameInput').onchange=()=>setPatternName(state.pattern,$('patternNameInput').value);$('patternNameInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('patternNameInput').blur()}};
  $('patternGroup').onchange=()=>choosePattern(patternIndex(Number($('patternGroup').value),0));$('patternSelect').onchange=()=>choosePattern(patternIndex(Number($('patternGroup').value),Number($('patternSelect').value)));$('copyPatternBtn').onclick=()=>{clipboard={lanes:structuredClone(state.patterns[state.pattern]),lengths:[...state.trackLengths[state.pattern]]};notify('Pattern '+patternName(state.pattern)+' copied.')};$('pastePatternBtn').onclick=()=>{if(!clipboard){notify('Copy a pattern first.',true);return}if(playing)stopTransport();state.patterns[state.pattern]=structuredClone(clipboard.lanes);state.trackLengths[state.pattern]=clipboard.lengths?[...clipboard.lengths]:Array(TRACK_COUNT).fill(clipboard.length||32);state.patternLengths[state.pattern]=patternLength();state.selectedStep=Math.min(state.selectedStep,trackLength()-1);persist();renderAll();notify('Pattern and track lengths pasted.')};
  $('stepTrackKind').onchange=()=>assignTrackKind(state.selectedTrack,$('stepTrackKind').value);
@@ -6550,11 +6563,6 @@ function bindings(){
   notify('Choose a DRUM or SAMPLE track before loading audio.',true);
  };
  $('fileRenderSynth').onclick=()=>{$('fileMenu').open=false;renderSelectedSynthWav().catch(e=>notify('Render failed: '+e.message,true))};
- $('trackStepColor').onchange=e=>{
-  const track=state.tracks[state.selectedTrack];if(!track)return;
-  track.stepColor=validTrackStepColor(e.target.value);
-  persist();renderGrid();syncTrackStepColor();
- };
  $('fileExportSong').onclick=()=>{$('fileMenu').open=false;exportSongStereoWav().catch(e=>notify('Song export failed: '+e.message,true))};
  $('saveBtn').onclick=saveProject;$('loadBtn').onclick=()=>$('loadFile').click();
  $('loadFile').onchange=async e=>{
@@ -6619,6 +6627,16 @@ function bindings(){
   },true);
  document.addEventListener('keydown',e=>{
   const el=document.activeElement;
+  // Escape toggles EDIT once per physical press, except when a native menu or
+  // text editor needs Escape. The file menu gets first priority for closing.
+  if(e.key==='Escape'&&!e.ctrlKey&&!e.altKey&&!e.metaKey){
+   const menu=$('fileMenu');
+   if(menu?.open){e.preventDefault();menu.open=false;return}
+   if(escapeMayToggleEdit(el)){
+    e.preventDefault();if(!e.repeat)toggleEditMode();return;
+   }
+   return;
+  }
   const activeText=el&&(el.tagName==='TEXTAREA'||el.isContentEditable||el.tagName==='INPUT'&&!['range','checkbox','radio','button'].includes(el.type));
   const editorKeyboardNote=['sound','sample','drum'].includes(view)&&!activeText&&!(e.ctrlKey||e.altKey||e.metaKey)&&noteKeyboard[e.key.toLowerCase()]!==undefined;
   if(el&&(el.tagName==='INPUT'||el.tagName==='SELECT'||el.tagName==='TEXTAREA'||el.isContentEditable)&&!editorKeyboardNote)return;
@@ -6671,7 +6689,6 @@ function bindings(){
    return;
   }
   if(view==='seq'&&fxEditMode){
-   if(e.key==='Escape'){e.preventDefault();fxEditMode=false;fxDigitBuffer='';renderGrid();focusSelectedPad(false);return}
    if(e.key==='Backspace'){e.preventDefault();selectedStep().fx=0;selectedStep().fxAmount=0;fxDigitBuffer='';persist();renderGrid();renderFXEditor();focusSelectedPad(false);return}
    if(!e.repeat&&typeFXDigit(e.key)){e.preventDefault();return}
   }
