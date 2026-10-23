@@ -3259,7 +3259,7 @@ function attachFilterEnvelopes(filter,trackIndex,when){
   entries.push({source,delta,settings,started:when});
  }
  const patch=state.tracks[trackIndex]?.sound?.filterEnvelope;
- if(isSynth(trackIndex)&&patch){
+ if(isSynth(trackIndex)&&patch&&patch.enabled!==false&&Number(patch.amount)){
   const base=filterBaseCutoff(trackIndex);
   const depth=clamp(Number(patch.amount),-100,100);
   const peak=clamp(base*Math.pow(2,depth/100*3.4),80,18000);
@@ -6803,11 +6803,8 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
   filter.connect(env).connect(outputs[i]);
   const attack=Math.max(.003,Number(sound.attack??.01)),decay=Math.max(.01,Number(sound.decay??.2)),release=Math.max(.02,Number(sound.release??.2));
   const sustain=clamp(Number(sound.sustain??.6),0,1),peak=vel*.5;
-  env.gain.setValueAtTime(0,time);
-  env.gain.linearRampToValueAtTime(peak,time+Math.min(attack,length*.45));
-  env.gain.linearRampToValueAtTime(peak*sustain,time+Math.min(length*.9,attack+decay));
-  env.gain.setValueAtTime(peak*sustain,time+length);
-  env.gain.linearRampToValueAtTime(0,time+length+release);
+  // Follow current ADSR level when notes are shorter than attack/decay.
+  exportAdsr(env.gain,time,time+length,peak,attack,decay,sustain,release);
   const end=time+length+release+.01;
   exportFilterEnvelopes(filter,i,time,time+length);
   if(sound.engine==='fm'){
