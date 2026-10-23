@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.43 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.44 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1105,10 +1105,11 @@ input[type="password"],textarea,
 .song-export-progress-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
 .song-export-progress output{font-variant-numeric:tabular-nums;color:#f7c58e;white-space:nowrap}
 .song-export-progress progress{width:100%;height:8px;accent-color:#e0a56c}
-.file-menubar #fileExportSong:disabled{opacity:.45;cursor:wait}
+.file-menubar #fileExportSong:disabled,.file-menubar #fileRenderSynth:disabled{opacity:.45;cursor:wait}
 /* v0.2.33: export-quality controls remain inside the original, separate FILE menu. */
 .file-menubar .song-export-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:4px 5px 8px}
 .file-menubar .song-export-settings label{display:flex;flex-direction:column;gap:5px;color:#cdae89;font:700 10px Consolas,monospace;min-width:0}
+.file-menubar .synth-export-settings{grid-template-columns:minmax(0,1fr);margin:0 5px 7px}
 .file-menubar .song-export-settings select{width:100%;background:#211914;border:1px solid #775641;border-radius:5px;color:#e9d0ae;padding:8px 5px;font:700 11px Consolas,monospace}
 /* v0.2.26 - track-specific colors apply ONLY to active note steps. */
 .transport-track-color{display:flex;align-items:center;gap:7px;margin:auto;white-space:nowrap}
@@ -1135,6 +1136,15 @@ input[type="password"],textarea,
 <button type="button" id="fileExportSampleBank">↓ EXPORT SAMPLE BANK</button>
 <div class="file-menu-heading">RENDER / EXPORT</div>
 <button type="button" id="fileRenderSynth">♫ RENDER VA/FM SYNTH TO WAV</button>
+<div class="song-export-settings synth-export-settings" aria-label="VA or FM synth sample render destination">
+ <label for="synthRenderDestination">SYNTH SAMPLE DESTINATION
+  <select id="synthRenderDestination" aria-label="Choose where rendered synthesizer WAV is sent">
+   <option value="download">DOWNLOAD WAV</option>
+   <option value="library">SAVE TO 15-SAMPLE LIBRARY (FIRST FREE)</option>
+   <option value="both">DOWNLOAD WAV + SAVE TO LIBRARY</option>
+  </select>
+ </label>
+</div>
 <button type="button" id="fileExportSong">♫ EXPORT SONG TO STEREO WAV</button>
 <div class="song-export-settings" aria-label="Song WAV export settings">
   <label for="songExportRate">SAMPLE RATE<select id="songExportRate" aria-label="Song WAV export sample rate"><option value="48000">48,000 Hz</option><option value="44100">44,100 Hz</option></select></label>
@@ -1219,7 +1229,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.43';
+const SQUIRREL_VERSION='0.2.44';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -6059,6 +6069,50 @@ function parseSynthSampleNote(raw){
  if(midi<0||midi>127)return null;
  return {midi,label:m[1]+(m[2]==='B'?'b':m[2])+'-'+m[3]};
 }
+// All render destinations share exactly the same PCM WAV representation.
+// Decode PCM bytes, not pre-normalized float audio, so library playback
+// matches the saved WAV including normalization and dithering.
+const SYNTH_RENDER_DESTINATIONS=['download','library','both'];
+const SYNTH_RENDER_PREFS_KEY='squirrel-synth-render-destination-v1';
+function synthRenderDestination(){
+ const selected=$('synthRenderDestination')?.value;
+ return SYNTH_RENDER_DESTINATIONS.includes(selected)?selected:'download';
+}
+function firstFreeSynthLibrarySlot(){
+ for(let i=0;i<DRUM_LIBRARY_SIZE;i++)if(!drumLibraryItem(i)?.data)return i;
+ return -1;
+}
+async function saveRenderedSynthToLibrary(wav,expectedState,expectedGeneration){
+ if(!wav||!(wav.buffer instanceof ArrayBuffer)||!wav.name)throw Error('No rendered WAV to save.');
+ if(wav.buffer.byteLength>MAX_SAMPLE_BYTES)
+  throw Error('Rendered WAV exceeds the 16 MB sample limit. Choose 16-bit / 44.1 kHz or shorten the note.');
+ await restoredDrumLibrary;
+ if(expectedGeneration!==sampleSession||state!==expectedState)
+  throw Error('The project changed during rendering. No sample was saved.');
+ let index=firstFreeSynthLibrarySlot();
+ if(index<0)throw Error('All 15 sample-library slots are occupied. Clear a slot in DRUM SAMPLES first.');
+ const Offline=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+ if(!Offline)throw Error('Offline audio decoding is not supported in this browser.');
+ const decoder=new Offline(1,1,44100);
+ const decoded=await decoder.decodeAudioData(wav.buffer.slice(0));
+ if(!decoded?.length)throw Error('Rendered WAV contains no audio.');
+ const data=await fileToDataURL(new Blob([wav.buffer],{type:'audio/wav'}));
+ if(expectedGeneration!==sampleSession||state!==expectedState)
+  throw Error('The project changed during sample processing. No sample was saved.');
+ index=firstFreeSynthLibrarySlot();
+ if(index<0)throw Error('All 15 library slots became occupied before saving.');
+ const item={name:('SYNTH '+wav.name.replace(/^Squirrel_Synth_/,'')).slice(0,160),data};
+ state.drumLibrary[index]=item;drumLibraryBuffers.set(index,decoded);
+ drumLibrarySelected=index;
+ let stored=true;
+ try{await sampleDB('put',drumLibraryKey(index),item)}
+ catch(e){stored=false;console.warn('Rendered synth IndexedDB save:',e)}
+ persist();renderAll();if(view==='drum')renderDrumSamples();
+ notify(stored
+  ?'Synth WAV saved in sample library '+String(index+1).padStart(2,'0')+'/15. Assign it from DRUM SAMPLES.'
+  :'Saved in the current project, but browser storage failed. Use FILE → SAVE SONG to preserve it.',!stored);
+ return index;
+}
 async function renderSelectedSynthWav(){
  if(songExportBusy){notify('Another audio export is already running.',true);return}
  if(playing){notify('Stop playback before rendering a synth sample.',true);return}
@@ -6076,13 +6130,31 @@ async function renderSelectedSynthWav(){
   notify('Note duration must be between 0.05 and 15 seconds.',true);return;
  }
  const settings={...songExportSettings(),source:'selected'};
+ const destination=synthRenderDestination();
+ const renderState=state,renderGeneration=sampleSession;
  songExportBusy=true;
  const button=$('fileRenderSynth'),caption=button?.textContent;
  if(button){button.disabled=true;button.textContent='♫ RENDERING SYNTH…'}
  songExportProgress('PREPARING SYNTH SAMPLE',0);
  try{
   await yieldSongExportUI();
-  await exportSongStereoWav({previewSynth:{trackIndex,note:root.midi,noteText:root.label,holdSeconds},settingsOverride:settings});
+  if(destination!=='download'){
+   await restoredDrumLibrary;
+   if(renderGeneration!==sampleSession||renderState!==state)throw Error('Project changed before rendering.');
+   if(firstFreeSynthLibrarySlot()<0)throw Error('All 15 library slots are full. Clear one in DRUM SAMPLES before rendering.');
+  }
+  const wav=await exportSongStereoWav({
+   previewSynth:{trackIndex,note:root.midi,noteText:root.label,holdSeconds},
+   settingsOverride:settings,collectWav:destination!=='download'
+  });
+  if(destination!=='download'){
+   if(!wav)throw Error('No WAV was produced by the offline renderer.');
+   if(destination==='both'){
+    downloadSongBlob(new Blob([wav.buffer],{type:'audio/wav'}),wav.name);
+    notify('Synth WAV downloaded. Saving a copy in the sample library…');
+   }
+   await saveRenderedSynthToLibrary(wav,renderState,renderGeneration);
+  }
  }catch(e){console.error('Synth WAV export:',e);notify('Synth render failed: '+e.message,true)}
  finally{
   songExportBusy=false;songExportProgressDone();
@@ -7146,6 +7218,14 @@ function bindings(){
   notify('Choose a DRUM or SAMPLE track before loading audio.',true);
  };
  loadSongExportSettings();
+ try{
+  const saved=localStorage.getItem(SYNTH_RENDER_PREFS_KEY);
+  if(SYNTH_RENDER_DESTINATIONS.includes(saved))$('synthRenderDestination').value=saved;
+ }catch(e){console.warn('Synth render preference restore:',e)}
+ $('synthRenderDestination').onchange=()=>{
+  try{localStorage.setItem(SYNTH_RENDER_PREFS_KEY,synthRenderDestination())}
+  catch(e){console.warn('Synth render preference save:',e)}
+ };
  $('songExportRate').onchange=saveSongExportSettings;
  $('songExportBits').onchange=saveSongExportSettings;
  $('songExportSource').onchange=()=>{updateSongStemOptions();saveSongExportSettings()};
