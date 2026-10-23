@@ -2,7 +2,7 @@
   <img src="squirrel-icon.webp" alt="Squirrel Studio icon" width="112">
   <h1>Squirrel Studio</h1>
   <p><strong>A browser-based groovebox, synthesizer, sampler and tracker-style step sequencer.</strong></p>
-  <p><strong>Current version: 0.2.41</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
+  <p><strong>Current version: 0.2.42</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
 </div>
 
 Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrangement into a compact, eight-track music workstation. The web version runs in a modern desktop browser using the Web Audio API.
@@ -46,7 +46,7 @@ Open **FILE → Render / Export** to choose **44.1 or 48 kHz**, **16-bit or 24-b
 
 **Peak Normalize** is optional and off by default. When enabled, it adjusts each exported WAV to a peak of **−1 dBFS** without changing live playback. **TPDF Dither** is available for 16/24-bit PCM. Exports warn when an unnormalized WAV exceeds 0 dBFS. Disable normalization for stems if preserving relative track levels matters.
 
-The offline synth renderer now follows VA/FM transposition, VA sub-oscillator fine tuning, LFO-routed PWM and the two-operator FM modulation envelope. Stems and the optional full-mix reference share chance and generated-noise decisions, but nonlinear compression and shared effects can prevent an exact sum.
+The offline synth renderer follows VA/FM transposition, VA sub-oscillator fine tuning, LFO-routed PWM, FM2 modulation envelopes, and **four-operator FM carrier/modulator envelopes**. Synth cutoff/resonance and patch filter envelopes are also scheduled in the song WAV render, including accurate release on short notes. Stems and the optional full-mix reference share chance and generated-noise decisions, but nonlinear compression and shared effects can prevent an exact sum.
 
 **Note:** MIDI-only tracks send events to external instruments and are not captured as audio by the browser's offline WAV renderer.
 
