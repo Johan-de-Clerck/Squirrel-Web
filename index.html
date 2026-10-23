@@ -4742,6 +4742,18 @@ async function exportSongStereoWav(){
   gain.gain.value=clamp(Number(track.volume??78),0,100)/100;
   gain.connect(pan).connect(master);return gain;
  });
+ const activeExportSamples=Array.from({length:TRACK_COUNT},()=>[]);
+ const stopExportSample=(i,time)=>{
+  const list=activeExportSamples[i];
+  for(const voice of list){if(voice.stopped||time<=voice.started)continue;
+   const end=Math.max(voice.started+.002,time),fade=Math.min(.012,(end-voice.started)/2);
+   voice.amp.gain.cancelScheduledValues(Math.max(voice.started,end-fade));
+   voice.amp.gain.setValueAtTime(voice.level,Math.max(voice.started,end-fade));
+   voice.amp.gain.linearRampToValueAtTime(0,end);
+   try{voice.source.stop(end+.002)}catch(_){}voice.stopped=true;
+  }
+  activeExportSamples[i]=[];
+ };
  const anySolo=state.tracks.some(t=>t.solo);
  const audible=i=>!state.tracks[i].mute&&(!anySolo||state.tracks[i].solo)&&state.tracks[i].midiOutEnabled!==true;
  function addVoice(i,step,time,cutoffTime){
@@ -4756,8 +4768,10 @@ async function exportSongStereoWav(){
    const source=ctx.createBufferSource(),amp=ctx.createGain();source.buffer=buffer;
    if(isSample(i))source.playbackRate.value=Math.pow(2,(note-(track.sampleRoot??48))/12);
    amp.gain.value=vel*.8;source.connect(amp).connect(outputs[i]);
-   source.start(time);
-   if(Number.isFinite(cutoffTime)&&cutoffTime>time){const fade=Math.min(.02,(cutoffTime-time)/2);amp.gain.setValueAtTime(vel*.8,Math.max(time,cutoffTime-fade));amp.gain.linearRampToValueAtTime(0,cutoffTime);source.stop(cutoffTime+.01)}
+   const offset=step.fx===9?clamp(Number(step.fxAmount??0),0,99)/100*buffer.duration:0;
+   if(offset>=buffer.duration)return;
+   source.start(time,offset);
+   activeExportSamples[i].push({source,amp,level:vel*.8,started:time,stopped:false});
    return;
   }
   if(!isSynth(i))return;
@@ -4813,8 +4827,13 @@ async function exportSongStereoWav(){
     const lane=state.patterns[pattern]?.[t];
     if(!lane?.length)continue;
     const step=lane[stepIndex%trackLength(pattern,t)];
-    if(step?.on&&step.fx!==12){
+    if(!step)continue;
+    if(step.fx===12){stopExportSample(t,at);continue}
+    if(step.on){
      const nextAt=at+stepSeconds*(stepIndex%2===0?1+swingAmount:1-swingAmount);
+     if(isSample(t)||isDrum(t)){
+      if(activeExportSamples[t].length&&!stepContinuesSample(step))stopExportSample(t,at);
+     }
      addVoice(t,step,at,nextAt);
     }
    }
