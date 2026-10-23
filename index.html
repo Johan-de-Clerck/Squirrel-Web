@@ -6434,25 +6434,29 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
   (Math.random()*4294967296)>>>0;
  if(forcedTrack!==null)exportRequest.source='selected';
  const requestedTrack=previewSynth?previewSynth.trackIndex:(forcedTrack===null?state.selectedTrack:forcedTrack);
- // Export must include saved samples even when the audio engine was never enabled.
- songExportProgress('RESTORING SAVED SAMPLES',null);
- await Promise.all([restoredSamples,restoredDrumSamples,restoredDrumLibrary]);
- const decodeTasks=[];
- for(let t=0;t<TRACK_COUNT;t++){
-  if(isSample(t)&&state.tracks[t].sampleData&&!sampleBuffers.has(t))
-   decodeTasks.push(ensureEditorSampleBuffer('export-sample:'+t,state.tracks[t].sampleData,sampleBuffers,t));
-  if(isDrum(t))for(let slot=0;slot<5;slot++){
-   const item=drumSlotItem(t,slot),idx=item?.libraryIndex;
-   if(Number.isInteger(idx)&&idx>=0){
-    const bank=drumLibraryItem(idx);
-    if(bank?.data&&!drumLibraryBuffers.has(idx))
-     decodeTasks.push(ensureEditorSampleBuffer('export-library:'+idx,bank.data,drumLibraryBuffers,idx));
-   }else if(item?.data&&!drumSampleBuffers.has(drumSlotKey(t,slot)))
-    decodeTasks.push(ensureEditorSampleBuffer('export-drum:'+t+':'+slot,item.data,drumSampleBuffers,drumSlotKey(t,slot)));
+ // A synth-only render needs no IndexedDB sample restoration or decoding.
+ // Keep the complete restoration path for song mixes, stems and sampled drums.
+ if(!previewSynth){
+  // Export must include saved samples even when the audio engine was never enabled.
+  songExportProgress('RESTORING SAVED SAMPLES',null);
+  await Promise.all([restoredSamples,restoredDrumSamples,restoredDrumLibrary]);
+  const decodeTasks=[];
+  for(let t=0;t<TRACK_COUNT;t++){
+   if(isSample(t)&&state.tracks[t].sampleData&&!sampleBuffers.has(t))
+    decodeTasks.push(ensureEditorSampleBuffer('export-sample:'+t,state.tracks[t].sampleData,sampleBuffers,t));
+   if(isDrum(t))for(let slot=0;slot<5;slot++){
+    const item=drumSlotItem(t,slot),idx=item?.libraryIndex;
+    if(Number.isInteger(idx)&&idx>=0){
+     const bank=drumLibraryItem(idx);
+     if(bank?.data&&!drumLibraryBuffers.has(idx))
+      decodeTasks.push(ensureEditorSampleBuffer('export-library:'+idx,bank.data,drumLibraryBuffers,idx));
+    }else if(item?.data&&!drumSampleBuffers.has(drumSlotKey(t,slot)))
+     decodeTasks.push(ensureEditorSampleBuffer('export-drum:'+t+':'+slot,item.data,drumSampleBuffers,drumSlotKey(t,slot)));
+   }
   }
+  songExportProgress('DECODING SAMPLES',null);
+  await Promise.all(decodeTasks);
  }
- songExportProgress('DECODING SAMPLES',null);
- await Promise.all(decodeTasks);
  const sequence=previewSynth?[]:(state.songModeEnabled&&state.songSequence.length?state.songSequence.slice():[state.pattern]);
  const stepSeconds=60/state.bpm/4;
  const swingAmount=clamp(Number(state.swing??0),0,65)/100*.5;
