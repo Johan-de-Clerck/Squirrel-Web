@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.2.07**  
+**Current web version: 0.2.09**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,12 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.2.09
+
+- **CONTINUE retrigger rule:** a carried drum/sample may cross an empty pattern boundary, but any new drum/sample trigger on the same track releases the old carried voice first and starts the new sample normally. This applies even when the new step also has CONTINUE enabled.
+- **Compact drum filter and envelope graphs:** the cutoff-sweep and ADR displays no longer stretch across the entire slot panel and use lower graph heights.
+- **Filter graph alignment fix:** the sweep start handle now uses the actual clamped start frequency, exactly like the plotted audio curve, so the handle and curve stay aligned at high/low cutoff limits.
 
 ## What is new in 0.2.07
 
