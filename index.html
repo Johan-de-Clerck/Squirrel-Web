@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.1.81 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.07 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -504,6 +504,11 @@
 .fm-engine-controls h3,.fm-engine-controls .fm-engine-hint{grid-column:1/-1}
 .fm-engine-hint{font-size:11px;color:#b9a68f;line-height:1.5}
 @media(max-width:600px){.fm-engine-controls{grid-template-columns:1fr}}
+/* Build 0.2.07: real-time count of continuing sample/drum voices. */
+.lane-carry,.mixer-carry{display:inline-block;border:1px solid #6ab987;border-radius:4px;background:#203b2a;color:#b6efc7;font:700 10px Consolas,monospace;letter-spacing:.15px;padding:3px 5px;white-space:nowrap}
+.lane-carry[hidden],.mixer-carry[hidden]{display:none!important}
+.mixer-carry{margin:9px auto;text-align:center}
+@media(max-width:750px){.lane-carry{font-size:9px;padding:2px 3px}}
 /* 0.1.77: per-step CONTINUE checkbox on sample and drum lanes */
 .seq-step-cell{position:relative;min-width:0;width:100%;display:block}
 .seq-step-cell>.pad{display:block;width:100%;margin:0!important}
@@ -825,7 +830,7 @@ input[type="password"],textarea,
 <button type="button" id="fileRenderSynth">RENDER SYNTH TO WAV</button>
 <button type="button" id="fileExportSong">EXPORT SONG TO WAV</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.06</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.07</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1080,6 +1085,29 @@ const TICKS_PER_STEP=6;
 function blankFxRuntime(){return {voices:[],basePeriod:428,period:428,level:64,activeFx:0,activeAmount:0,phase:0,memory:{},vibratoSpeed:0,vibratoDepth:0}}
 let fxRuntime=Array.from({length:TRACK_COUNT},blankFxRuntime);
 const continuedSampleVoices=Array.from({length:TRACK_COUNT},()=>new Set());
+// Only show voices that have actually reached their scheduled start time.
+function activeCarryVoiceCount(t,now=audio?.ctx?.currentTime??0){
+ let count=0;
+ for(const voice of continuedSampleVoices[t]||[]){
+  if(!voice||voice.released||!scheduledVoices.has(voice))continue;
+  if(Number.isFinite(voice.startTime)&&voice.startTime>now+.012)continue;
+  count++;
+ }
+ return count;
+}
+function updateCarryIndicators(){
+ if(typeof document==='undefined')return;
+ for(const badge of document.querySelectorAll('.lane-carry[data-track],.mixer-carry[data-track]')){
+  const t=Number(badge.dataset.track);
+  const count=playing&&Number.isInteger(t)&&t>=0&&t<TRACK_COUNT?activeCarryVoiceCount(t):0;
+  badge.hidden=count===0;
+  if(count){
+   badge.textContent='CARRY '+count;
+   badge.title=count+' continuing sample '+(count===1?'voice':'voices')+' on '+state.tracks[t].name;
+  }
+ }
+}
+
 function markSampleContinuation(t,voice){
  // Sampler voices expose their AudioBufferSourceNode as oscs[0];
  // drum voices expose it as src. Never assume both voice types
@@ -3033,7 +3061,7 @@ function sampleVoice(t,note,velocity,when,pitch=0,offsetPercent=0){
  filter.type='lowpass';filter.frequency.setValueAtTime(track.sampleCutoff??12000,when);filter.Q.setValueAtTime(track.sampleResonance??.7,when);
  const filterEnvelopes=attachFilterEnvelopes(filter,t,when);audio.cutoffBuses[t].connect(filter.frequency);
  modGain.gain.value=1;src.connect(filter).connect(env).connect(modGain).connect(audio.trackGains[t]);
- const voice={env,src,oscs:[src],pitchParams:[src.detune],modGain,release:sampleReleaseSeconds(track),released:false,sampleVoice:true,filter,
+ const voice={env,src,oscs:[src],pitchParams:[src.detune],modGain,release:sampleReleaseSeconds(track),released:false,sampleVoice:true,startTime:when,filter,
   trackIndex:t,filterEnvelopes,ampEnvelope:{start:when,peak:Math.max(.0002,velocity/127*.8),attack:.003,decay:.01,sustain:1}};
  scheduledVoices.add(voice);let playback=null;src.onended=()=>{
   if(playback)playback.ended=true;voice.released=true;scheduledVoices.delete(voice);forgetSampleContinuation(voice);
@@ -3369,6 +3397,7 @@ function uiTick(){
    if(e.step!==lastVisualStep){lastVisualStep=e.step;renderPlayhead(e.step);lastBeatAt=performance.now()}
   }
  }
+ updateCarryIndicators();
  if(view==='mixer')updateMixerMeters();
  else lastMeterFrame=0;
  if(view==='sample'&&performance.now()-samplePlayheadFrame>33){
@@ -3464,7 +3493,9 @@ function renderGrid(){
   const lane=document.createElement('div');lane.className='lane-name';
   const choose=document.createElement('button');choose.type='button';
   choose.className='lane-main'+(state.selectedTrack===track?' selected':'');
-  choose.innerHTML='<span class="lane-index">'+String(track+1).padStart(2,'0')+'</span><strong>'+t.name+'</strong>'+(t.midiOnly?'<span class="lane-midi-badge">MIDI '+(t.midiChannel+1)+'</span>':'');
+  choose.innerHTML='<span class="lane-index">'+String(track+1).padStart(2,'0')+'</span><strong>'+t.name+'</strong>'+
+   (t.midiOnly?'<span class="lane-midi-badge">MIDI '+(t.midiChannel+1)+'</span>':'')+
+   (stepCanContinue(track)?'<span class="lane-carry" data-track="'+track+'" hidden aria-live="off"></span>':'');
   choose.onclick=()=>selectTrack(track);
   const controls=document.createElement('div');controls.className='lane-controls';
   for(const action of ['M','S']){
@@ -4030,6 +4061,12 @@ function renderMixer(){
    const ranges=d.querySelectorAll('input');
    ranges[0].oninput=()=>{t.volume=Number(ranges[0].value);d.querySelector('output').textContent=t.volume+'%';applyTrackMix();persist()};
    ranges[1].oninput=()=>{t.pan=Number(ranges[1].value);applyTrackMix();persist()};
+  }
+  if(stepCanContinue(i)){
+   const indicator=document.createElement('span');indicator.className='mixer-carry';
+   indicator.dataset.track=String(i);indicator.hidden=true;
+   indicator.setAttribute('aria-live','off');
+   d.appendChild(indicator);
   }
   const [mute,solo]=d.querySelectorAll('button');
   const effectiveMute=isTrackEffectivelyMuted(i);
