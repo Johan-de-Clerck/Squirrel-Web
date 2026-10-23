@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.08 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.09 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -539,9 +539,9 @@
 .sample-release-field input[type=range]{width:100%;accent-color:#83ba8a}
 .sample-release-numeric{width:100%;min-height:30px;padding:4px 7px;border:1px solid #725640;border-radius:5px;background:#2b221e;color:#d9eadb;font:12px Consolas,monospace}
 /* 0.1.74: drag-controlled cutoff-sweep visualization and editing. */
-#drumSlotList .drum-filter-sweep-graph-wrap{flex:1 1 100%;min-width:0;background:#211b17;border:1px solid #554438;border-radius:8px;padding:5px 8px}
-#drumSlotList .drum-filter-sweep-graph{display:block;width:100%;height:166px;touch-action:none;user-select:none}
-@media(max-width:600px){#drumSlotList .drum-filter-sweep-graph{height:140px}}
+#drumSlotList .drum-filter-sweep-graph-wrap{flex:0 1 820px;width:min(100%,820px);min-width:0;background:#211b17;border:1px solid #554438;border-radius:8px;padding:4px 7px}
+#drumSlotList .drum-filter-sweep-graph{display:block;width:100%;height:118px;touch-action:none;user-select:none}
+@media(max-width:600px){#drumSlotList .drum-filter-sweep-graph{height:106px}}
 /* 0.1.73: per-drum-slot triggered filter envelope sweep. */
 #drumSlotList .drum-slot-filter-sweep{display:flex;flex:1 1 100%;flex-wrap:wrap;align-items:center;gap:10px;padding-top:8px;border-top:1px dashed #66503c}
 #drumSlotList .drum-slot-filter-sweep.inactive{opacity:.48}
@@ -566,10 +566,10 @@
 #drumSlotList .drum-slot-filter-controls .drum-slot-reset{margin-left:auto}
 @media(max-width:800px){#drumSlotList .drum-slot-filter{order:3}#drumSlotList .drum-slot-envelope{order:4}#drumSlotList .drum-slot-controls{order:5}}
 /* 0.1.70: draggable per-slot ADR envelope visualizer. */
-#drumSlotList .drum-envelope-graph-wrap{flex:1 1 100%;min-width:0;padding:5px 8px;background:#211b17;border:1px solid #524137;border-radius:8px}
-#drumSlotList .drum-envelope-graph{display:block;width:100%;height:112px;overflow:visible;user-select:none;touch-action:none}
+#drumSlotList .drum-envelope-graph-wrap{flex:0 1 720px;width:min(100%,720px);min-width:0;padding:4px 7px;background:#211b17;border:1px solid #524137;border-radius:8px}
+#drumSlotList .drum-envelope-graph{display:block;width:100%;height:88px;overflow:visible;user-select:none;touch-action:none}
 #drumSlotList .drum-envelope-graph rect[data-env-field]:hover{stroke:#a6d8ad;stroke-width:1.5}
-@media(max-width:600px){#drumSlotList .drum-envelope-graph{height:104px}}
+@media(max-width:600px){#drumSlotList .drum-envelope-graph{height:82px}}
 /* 0.1.68: independent attack and decay row for each of the five drum slots. */
 #drumSlotList .drum-slot-envelope{display:flex;order:3;flex:1 1 100%;align-items:center;flex-wrap:wrap;gap:10px;padding-top:7px;border-top:1px solid #594637}
 #drumSlotList .drum-slot-envelope .drum-env-title{flex:1 1 100%;color:#add2b0;font:700 10px Consolas,monospace;letter-spacing:.35px}
@@ -841,7 +841,7 @@ input[type="password"],textarea,
 <button type="button" id="fileRenderSynth">RENDER SYNTH TO WAV</button>
 <button type="button" id="fileExportSong">EXPORT SONG TO WAV</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.08</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.09</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1285,7 +1285,7 @@ function createDrumFilterSweepGraph(item,slot,onChange){
   const duration=clamp(Number(item.slotFilterEnvTime)||0,0,3000);
   const effectiveStart=drumSlotSweepFrequency(sweep,0);
   const verticalFromHz=hz=>g.centerY-clamp(12*Math.log2(hz/sweep.base),-48,48)/48*g.depthScale;
-  const startY=drumSweepGraphDepthY(depth);
+  const startY=verticalFromHz(effectiveStart);
   depthDot.setAttribute('cy',startY);
   timeDot.setAttribute('cx',drumSweepGraphTimeX(duration));
   depthLink.setAttribute('d','M '+g.depthX+' '+startY+' H '+g.x0);
@@ -3235,9 +3235,9 @@ function scheduleStep(idx,when){
   }
   const startsNote=step.on&&step.fx!==12&&Math.random()*100<step.chance;
   if(startsNote){
-   // A new note without Continue ends carried sample voices from earlier patterns.
-   // With Continue enabled, overlapping voices remain independent.
-   if(stepCanContinue(t)&&!stepContinuesSample(step))releaseContinuedSamples(t,when);
+   // CONTINUE crosses empty pattern boundaries only. Any new sample/drum hit
+   // on this track first ends the old carried voice, then starts from scratch.
+   if(stepCanContinue(t))releaseContinuedSamples(t,when);
    for(const v of rt.voices)if(v&&!v.released&&!v.carryAcrossPatterns)releaseVoiceScheduled(v,when);
    rt.voices=[];rt.basePeriod=periodForNote(step.note);rt.period=rt.basePeriod;rt.level=64;rt.phase=0;rt.activeFx=0;
    // Blijf een voice vasthouden tot de volgende noot als een latere step
