@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.2.42 — User Manual
+# Squirrel Studio Web 0.2.43 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -256,6 +256,14 @@ Use the **FILE** menu for **NEW SONG**, **OPEN SONG (.JSON)** and **SAVE SONG (.
 - The app also maintains a locally stored working state in the browser; do not use browser storage as your only backup.
 
 Large sample-filled songs produce larger JSON files, because audio is embedded in the file.
+
+### Render a VA/FM synthesizer to a WAV sample
+
+Select a **LEAD, BASS or CHORD** track with an internal synthesizer (not MIDI OUT ONLY). Open **FILE → RENDER VA/FM SYNTH TO WAV** and enter a root note, for example **C-3** or **D#-3**, and the length of time to hold it (0.05–15 seconds). Cancel either input dialog to leave everything unchanged. The resulting WAV is named like `Squirrel_Synth_C-3_STEREO.wav` (with `_24BIT` for 24-bit output).
+
+Since version **0.2.43**, this action renders a single note using the **same offline voice and mixer as song export**, including FM2/FM4 operator algorithms, VA oscillators, sub/noise, pulse-width modulation, assigned LFOs, synth/track filter envelopes, stereo pan, distortion, delay, reverb, chorus and master processing. It does not play the pattern, change the selected track, or add notes to your project. For CHORD tracks it samples a **single root-note voice**, not the entire chord.
+
+The synth sample follows the File menu's WAV rate (44.1/48 kHz), PCM bit depth (16/24-bit), effect tail (3/6/10 seconds), normalize and dither selections; the **EXPORT SOURCE** selector does not affect this command. FX are printed into the audio, so loading this WAV back into a sample instrument with additional effects may double the effects.
 
 ### Stereo song WAV and stem export
 
