@@ -4702,8 +4702,9 @@ async function renderSelectedSynthWav(){
  const n=semis[match[1]]+(match[2]==='#'?1:match[2]==='B'?-1:0)+(Number(match[3])+1)*12;
  const duration=Number(prompt('Hold note for how many seconds?','1.5'));
  if(!Number.isFinite(duration)||duration<=0||duration>15)return;
- const rate=44100,ctx=new OfflineAudioContext(1,Math.ceil((duration+Math.max(.1,t.sound.release||.3)+.1)*rate),rate);
- const sound=t.sound,freq=440*Math.pow(2,(n-69)/12),mix=ctx.createGain();mix.connect(ctx.destination);
+ const rate=44100,ctx=new OfflineAudioContext(2,Math.ceil((duration+Math.max(.1,t.sound.release||.3)+.1)*rate),rate);
+ const sound=t.sound,freq=440*Math.pow(2,(n-69)/12),mix=ctx.createGain();
+ const stereo=ctx.createStereoPanner();stereo.pan.value=Math.max(-1,Math.min(1,(t.pan||0)/100));mix.connect(stereo).connect(ctx.destination);
  const peak=.45,attack=Math.max(.003,sound.attack||.01),decay=Math.max(.01,sound.decay||.2),sustain=Math.max(0,Math.min(1,sound.sustain??.6));
  mix.gain.setValueAtTime(0,0);mix.gain.linearRampToValueAtTime(peak,attack);
  mix.gain.linearRampToValueAtTime(peak*sustain,attack+decay);
@@ -4721,8 +4722,8 @@ async function renderSelectedSynthWav(){
   if(sound.noiseOn&&sound.noiseLevel>0){const buf=ctx.createBuffer(1,ctx.length,rate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const source=ctx.createBufferSource(),gain=ctx.createGain();source.buffer=buf;gain.gain.value=(sound.noiseLevel||0)/300;source.connect(gain).connect(filter);source.start()}
  }
  const rendered=await ctx.startRendering();
- downloadPCM16Wav([rendered.getChannelData(0)],rate,'Squirrel_Synth_'+noteText+'.wav');
- notify('Synth WAV rendered at '+noteText+'.');
+ downloadPCM16Wav([rendered.getChannelData(0),rendered.getChannelData(1)],rate,'Squirrel_Synth_'+noteText+'_STEREO.wav');
+ notify('Stereo synth WAV rendered at '+noteText+'.');
 }
 function typeFXDigit(key){
  const digit=key.toUpperCase();if(!/^[0-9A-F]$/.test(digit))return false;
