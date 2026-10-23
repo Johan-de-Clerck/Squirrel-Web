@@ -2,7 +2,7 @@
   <img src="squirrel-icon.webp" alt="Squirrel Studio icon" width="112">
   <h1>Squirrel Studio</h1>
   <p><strong>A browser-based groovebox, synthesizer, sampler and tracker-style step sequencer.</strong></p>
-  <p><strong>Current version: 0.2.42</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
+  <p><strong>Current version: 0.2.43</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
 </div>
 
 Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrangement into a compact, eight-track music workstation. The web version runs in a modern desktop browser using the Web Audio API.
@@ -19,7 +19,7 @@ Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrange
 | **Song Mode** | Arrange named patterns into a sequence. Selected sample and drum steps can continue across pattern boundaries, and C00 triggers release. |
 | **Mixer and FX** | Stereo volume and pan, mute/solo, per-track audition, distortion, delay, reverb and chorus sends. |
 | **MIDI** | MIDI input and per-track MIDI output options, including MIDI-only tracks. Availability depends on browser and hardware support. |
-| **Files and export** | Save/load songs as JSON, import audio and sample banks, render a synth to WAV, export a 16/24-bit stereo song WAV, or export individual track stems to ZIP (with optional full-mix reference and metadata). |
+| **Files and export** | Save/load songs as JSON, import audio and sample banks, render one VA/FM synth note to WAV using the same engine as the song export, export a 16/24-bit stereo song WAV, or export individual track stems to ZIP (with optional full-mix reference and metadata). |
 
 ## Getting started
 
@@ -43,6 +43,8 @@ See [HELP.md](HELP.md) for the detailed guide.
 ### Song WAV export
 
 Open **FILE → Render / Export** to choose **44.1 or 48 kHz**, **16-bit or 24-bit stereo PCM**, and an **FX tail of 3, 6 or 10 seconds**. Choose a full stereo mix, the selected audio track, or all internal audio tracks as a ZIP of sample-aligned WAV stems. Stem ZIPs include `STEMS_INFO.txt` and can include a full-mix reference. MIDI-only tracks cannot be rendered.
+
+**Single synth sample:** select an internal VA/FM track, then choose **FILE → RENDER VA/FM SYNTH TO WAV**. Enter a root note (such as `C-3`) and a hold duration (0.05–15 seconds). This uses the **same FM2/FM4, VA, PWM, filter envelopes, LFO, track mix, sends and master FX** as a selected-track song render, without playing the current pattern or changing the song. The WAV inherits the sample rate, bit depth, FX-tail, normalization and dither settings shown in the File menu. Any active effects are baked into the sample, so avoid applying them twice if you load it back into a SAMPLE track.
 
 **Peak Normalize** is optional and off by default. When enabled, it adjusts each exported WAV to a peak of **−1 dBFS** without changing live playback. **TPDF Dither** is available for 16/24-bit PCM. Exports warn when an unnormalized WAV exceeds 0 dBFS. Disable normalization for stems if preserving relative track levels matters.
 
