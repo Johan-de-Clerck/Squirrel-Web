@@ -4696,7 +4696,7 @@ async function renderSelectedSynthWav(){
  const t=state.tracks[state.selectedTrack];
  if(!isSynth(state.selectedTrack)){notify('Select a VA or FM synth track first.',true);return}
  const noteText=(prompt('Root note (example C-3):','C-3')||'').trim().toUpperCase();
- const match=/^([A-G])([#B]?)-?(\\d)$/.exec(noteText);
+ const match=/^([A-G])([#B]?)-?(\d)$/.exec(noteText);
  if(!match){notify('Invalid note. Use C-3, D#-3, etc.',true);return}
  const semis={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
  const n=semis[match[1]]+(match[2]==='#'?1:match[2]==='B'?-1:0)+(Number(match[3])+1)*12;
