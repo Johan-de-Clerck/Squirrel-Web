@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.39 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.40 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1153,7 +1153,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.39</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.40</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -6248,13 +6248,37 @@ async function zipStemExports(files){
  if(size>ZIP_STEMS_MAX_BYTES)throw new Error('ZIP too large for a safe browser export.');
  return new Blob([...localParts,...centralParts,end],{type:'application/zip'});
 }
+// v0.2.40: consistent Chance and synthesized noise for every render in a
+// single ZIP. Mixing a full reference with stems must not reroll each note.
+// Hash independent event identifiers instead of consuming sequential RNG calls:
+// exporting just one track must give the same decisions as exporting the mix.
+function stemHash(seed,...keys){
+ let x=(seed>>>0)^0x9E3779B9;
+ for(const key of keys){
+  x=Math.imul(x^(key>>>0),0x85EBCA6B)>>>0;
+  x^=x>>>13;
+ }
+ x^=x>>>16;x=Math.imul(x,0x7FEB352D)>>>0;
+ x^=x>>>15;x=Math.imul(x,0x846CA68B)>>>0;
+ return (x^(x>>>16))>>>0;
+}
+function stemRandom(seed){
+ let state=seed>>>0;
+ return ()=>{
+  state=(state+0x6D2B79F5)>>>0;
+  let x=state;
+  x=Math.imul(x^(x>>>15),x|1);
+  x^=x+Math.imul(x^(x>>>7),x|61);
+  return ((x^(x>>>14))>>>0)/4294967296;
+ };
+}
 // v0.2.39: include DAW import notes in each stem ZIP. This is metadata,
 // not another encoded audio file; all WAVs remain sample-aligned.
 function songStemManifest(trackIds,request,sequence,duration,includeMix){
  const clean=s=>String(s??'').replace(/[\r\n\t]+/g,' ').trim();
  const lines=[
   'SQUIRREL STUDIO · STEM EXPORT',
-  'Version: 0.2.39',
+  'Version: 0.2.40',
   'Project: '+clean(state.projectName||'Squirrel Song'),
   'Tempo: '+Number(state.bpm).toFixed(1)+' BPM',
   'Swing: '+clamp(Number(state.swing??0),0,65)+'%',
@@ -6267,6 +6291,7 @@ function songStemManifest(trackIds,request,sequence,duration,includeMix){
   'Peak normalize: '+(request.normalize?'ON':'OFF'),
   'TPDF dither: '+(request.dither?'ON':'OFF'),
   'Full mix reference included: '+(includeMix?'YES':'NO'),
+  'Consistent random seed: '+(request.exportSeed>>>0),
   '',
   'AUDIO TRACKS (all start at 00:00:00; import on separate DAW tracks):'
  ];
@@ -6279,7 +6304,8 @@ function songStemManifest(trackIds,request,sequence,duration,includeMix){
  lines.push('',
   'Each track WAV contains its own FX sends and master processing.',
   'Separate tracks may not sum exactly to the full mix because compression and shared FX are nonlinear.',
-  'Random Chance decisions can also vary between separately rendered stems and the full mix.',
+  'Chance choices and generated drum/synth noise use the same seed in every stem and reference mix.',
+  'Starting another ZIP export draws a fresh seed; chance notes may change between ZIP exports.',
   'Set your DAW project tempo to the BPM above, then import all files at 00:00:00.',
   '');
  const bytes=new TextEncoder().encode(lines.join('\n'));
@@ -6287,7 +6313,9 @@ function songStemManifest(trackIds,request,sequence,duration,includeMix){
 }
 async function exportSongStemsZip(){
  if(playing){notify('Stop playback before exporting.',true);return}
- const request=songExportSettings();
+ // Create one export seed and pass it unchanged to each internal render.
+ // Each independent ZIP gets a fresh sequence of chance decisions.
+ const request={...songExportSettings(),exportSeed:(Math.random()*4294967296)>>>0};
  const sequence=state.songModeEnabled&&state.songSequence.length?state.songSequence.slice():[state.pattern];
  const swing=clamp(Number(state.swing??0),0,65)/100*.5;
  const swingSteps=sequence.reduce((sum,p)=>{const count=patternLength(p);return sum+count+(count%2?swing:0)},0);
@@ -6413,6 +6441,8 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  // Snapshot export settings and the selected track at the moment Export starts.
  // A user switching tabs or tracks during sample restoration cannot retarget it.
  const exportRequest=settingsOverride?{...settingsOverride}:songExportSettings();
+ const exportSeed=Number.isInteger(exportRequest.exportSeed)?exportRequest.exportSeed>>>0:
+  (Math.random()*4294967296)>>>0;
  if(forcedTrack!==null)exportRequest.source='selected';
  const requestedTrack=forcedTrack===null?state.selectedTrack:forcedTrack;
  // Export must include saved samples even when the audio engine was never enabled.
@@ -6569,7 +6599,8 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
     if(!audible(t))continue;
     const step=state.patterns[pattern]?.[t]?.[stepIndex%trackLength(pattern,t)];
     if(step?.on&&step.fx!==12)
-     fired[t]=Math.random()*100<clamp(Number(step.chance??100),0,100);
+     fired[t]=(stemHash(exportSeed,patternPosition,stepIndex,t)/4294967296)*100<
+      clamp(Number(step.chance??100),0,100);
    }
    exportTimeline.push({pattern,patternPosition,stepIndex,at:exportCursor*stepSeconds,fired});
    exportCursor+=stepIndex%2===0?1+swingAmount:1-swingAmount;
@@ -6590,7 +6621,8 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  // Both tonal and noise components feed the same track mixer and send FX.
  const noiseBuffer=ctx.createBuffer(1,Math.round(rate*1.5),rate);
  const noiseValues=noiseBuffer.getChannelData(0);
- for(let n=0;n<noiseValues.length;n++)noiseValues[n]=Math.random()*2-1;
+ const drumNoiseRandom=stemRandom(stemHash(exportSeed,0x4452554D));
+ for(let n=0;n<noiseValues.length;n++)noiseValues[n]=drumNoiseRandom()*2-1;
  function renderBuiltInDrum(i,step,time){
   const track=state.tracks[i];
   const type=['kick','snare','hat'].includes(track.drumType)?track.drumType:'kick';
@@ -6798,7 +6830,9 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
    }
    if(sound.noiseOn&&sound.noiseLevel>0){
     const size=Math.ceil((length+release+.05)*rate),buf=ctx.createBuffer(1,size,rate),data=buf.getChannelData(0);
-    for(let j=0;j<size;j++)data[j]=Math.random()*2-1;
+    // One noise sequence per note, stable across full mix and isolated stem.
+    const synthNoiseRandom=stemRandom(stemHash(exportSeed,0x53594E54,i,Math.round(time*rate),note));
+    for(let j=0;j<size;j++)data[j]=synthNoiseRandom()*2-1;
     const noise=ctx.createBufferSource(),tone=ctx.createBiquadFilter(),amp=ctx.createGain();
     noise.buffer=buf;tone.type='lowpass';tone.frequency.value=200+clamp(Number(sound.noiseTone??70),0,100)/100*16000;
     amp.gain.value=clamp(Number(sound.noiseLevel),0,100)/300;
