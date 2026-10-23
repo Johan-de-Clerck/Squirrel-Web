@@ -902,7 +902,7 @@ const bases=[
  {name:'EMPTY 7',type:'empty',channel:7,volume:0,pan:0,color:'#887b6d',note:48},
  {name:'EMPTY 8',type:'empty',channel:8,volume:0,pan:0,color:'#887b6d',note:48}
 ];
-function defaultSound(t){const patch= t.type==='chord'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:8,pulseWidth:50,pulseWidth1:50,pulseWidth2:50,pwmDepth1:100,pwmDepth2:100,cutoff:1500,resonance:0.9,attack:.09,decay:.42,sustain:.68,release:.7,chord:'minor'}:t.type==='synth'&&t.name==='BASS'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'square',detune:9,pulseWidth:43,pulseWidth1:43,pulseWidth2:43,pwmDepth1:100,pwmDepth2:100,cutoff:1350,resonance:1.8,attack:.009,decay:.22,sustain:.52,release:.19,chord:'major'}:{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:14,pulseWidth:50,pulseWidth1:50,pulseWidth2:50,pwmDepth1:100,pwmDepth2:100,cutoff:4200,resonance:.8,attack:.015,decay:.21,sustain:.65,release:.27,chord:'major'};
+function defaultSound(t){const patch= t.type==='chord'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:8,pulseWidth:50,pulseWidth1:50,pulseWidth2:50,pwmDepth1:100,pwmDepth2:100,noiseOn:false,noiseLevel:0,noiseTone:70,cutoff:1500,resonance:0.9,attack:.09,decay:.42,sustain:.68,release:.7,chord:'minor'}:t.type==='synth'&&t.name==='BASS'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'square',detune:9,pulseWidth:43,pulseWidth1:43,pulseWidth2:43,pwmDepth1:100,pwmDepth2:100,noiseOn:false,noiseLevel:0,noiseTone:70,cutoff:1350,resonance:1.8,attack:.009,decay:.22,sustain:.52,release:.19,chord:'major'}:{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:14,pulseWidth:50,pulseWidth1:50,pulseWidth2:50,pwmDepth1:100,pwmDepth2:100,noiseOn:false,noiseLevel:0,noiseTone:70,cutoff:4200,resonance:.8,attack:.015,decay:.21,sustain:.65,release:.27,chord:'major'};
  return {...patch,engine:'va',fmRatio:2,fmIndex:3,fmAttack:.01,fmDecay:.3,fmSustain:30,fmMode:'two',fmAlgorithm:'stack',fmOp1Ratio:1,fmOp2Ratio:2,fmOp3Ratio:3,fmOp4Ratio:4,fmOp1Level:100,fmOp2Level:75,fmOp3Level:65,fmOp4Level:55,fmOp1Fine:0,fmOp2Fine:0,fmOp3Fine:0,fmOp4Fine:0,fmOp1Wave:'sine',fmOp2Wave:'sine',fmOp3Wave:'sine',fmOp4Wave:'sine',...Object.fromEntries(Array.from({length:4},(_,i)=>[['fmOp'+(i+1)+'Attack',.01],['fmOp'+(i+1)+'Decay',.3],['fmOp'+(i+1)+'Sustain',70],['fmOp'+(i+1)+'Release',.35]]).flat())}
 }
 const LFO_TARGETS=[['off','OFF'],...bases.flatMap((_,i)=>['volume','cutoff','pan','pulseWidth'].map(k=>['track'+i+'-'+k,'TRACK '+(i+1)+' · '+k.toUpperCase()]))];
@@ -2634,7 +2634,8 @@ const pulseCache=new Map();function pulseWave(ctx,duty){const key=Math.round(dut
 function oscillatorMixGain(s,osc){
  if(osc===0)return s.osc1On===false?0:.46*clamp(s.osc1Level??100,0,100)/100;
  if(osc===1)return s.osc2On===false?0:.27*clamp(s.osc2Level??100,0,100)/100;
- return s.subOn===false?0:.25*clamp(s.subLevel??35,0,100)/100;
+ if(osc===2)return s.subOn===false?0:.25*clamp(s.subLevel??35,0,100)/100;
+ return s.noiseOn===true?.35*clamp(s.noiseLevel??0,0,100)/100:0;
 }
 function updateLivePulseWidth(trackIndex){
  if(!audio)return;
@@ -2878,13 +2879,13 @@ function synthVoice(track,note,velocity,when,gate=null){
  }
 
  const out=c.createGain(),modGain=c.createGain(),filt=c.createBiquadFilter();
- const g1=c.createGain(),g2=c.createGain(),subGain=c.createGain();
+ const g1=c.createGain(),g2=c.createGain(),subGain=c.createGain(),noiseGain=c.createGain();
  modGain.gain.value=1;
  filt.type='lowpass';filt.frequency.setValueAtTime(s.cutoff,when);filt.Q.value=s.resonance;
  const filterEnvelopes=attachFilterEnvelopes(filt,trackIndex,when);
  audio.cutoffBuses[trackIndex].connect(filt.frequency);
  // Keep the sub level independently adjustable; 0% mutes it without changing the patch.
- g1.gain.value=oscillatorMixGain(s,0);g2.gain.value=oscillatorMixGain(s,1);subGain.gain.value=oscillatorMixGain(s,2);
+ g1.gain.value=oscillatorMixGain(s,0);g2.gain.value=oscillatorMixGain(s,1);subGain.gain.value=oscillatorMixGain(s,2);noiseGain.gain.value=oscillatorMixGain(s,3);
  const osc1=c.createOscillator(),osc2=c.createOscillator(),subOsc=c.createOscillator();
  for(const [osc,wave] of [[osc1,s.wave1],[osc2,s.wave2],[subOsc,s.subWave||'sine']]){
   // Saw plus phase-delayed inverted saw produces an audio-rate modulated pulse.
@@ -2911,11 +2912,17 @@ function synthVoice(track,note,velocity,when,gate=null){
  routeOsc(osc2,s.wave2,g2,f*Math.pow(2,s.detune/1200),2);
  routeOsc(subOsc,s.subWave||'sine',subGain,f*Math.pow(2,subOctave/12)*Math.pow(2,(s.subDetune||0)/1200),3);
  g1.connect(filt);g2.connect(filt);subGain.connect(filt);
+ const noiseBuffer=c.createBuffer(1,Math.floor(c.sampleRate*2),c.sampleRate),noiseData=noiseBuffer.getChannelData(0);
+ for(let i=0;i<noiseData.length;i++)noiseData[i]=Math.random()*2-1;
+ const noiseSource=c.createBufferSource(),noiseFilter=c.createBiquadFilter();noiseSource.buffer=noiseBuffer;noiseSource.loop=true;
+ noiseFilter.type='lowpass';noiseFilter.frequency.value=200+clamp(Number(s.noiseTone??70),0,100)/100*16000;
+ noiseSource.connect(noiseFilter).connect(noiseGain).connect(filt);
+ noiseSource.start(when);
  filt.connect(out).connect(modGain).connect(audio.trackGains[trackIndex]);
  gainEnv(out.gain,when,velocity,s.attack,s.decay,s.sustain);
  for(const osc of [osc1,osc2,subOsc])osc.start(when);
  const v={env:out,oscs:[osc1,osc2,subOsc],pitchParams:[osc1.detune,osc2.detune,subOsc.detune],
-  modGain,oscGains:[g1,g2,subGain],pwmParts,engine:'va',release:Math.max(.02,s.release),released:false,trackIndex,filter:filt,filterEnvelopes,
+  modGain,oscGains:[g1,g2,subGain,noiseGain],noiseSource,noiseFilter,pwmParts,engine:'va',release:Math.max(.02,s.release),released:false,trackIndex,filter:filt,filterEnvelopes,
   ampEnvelope:{start:when,peak:Math.max(.0002,velocity/127*.5),attack:Math.max(.003,s.attack),
                decay:Math.max(.01,s.decay),sustain:s.sustain}};
  scheduledVoices.add(v);
@@ -2923,6 +2930,7 @@ function synthVoice(track,note,velocity,when,gate=null){
   scheduledVoices.delete(v);
   try{
    osc1.disconnect();osc2.disconnect();subOsc.disconnect();g1.disconnect();g2.disconnect();subGain.disconnect();
+   try{noiseSource.stop();noiseSource.disconnect();noiseFilter.disconnect();noiseGain.disconnect()}catch(_){}
    for(const part of pwmParts){
     try{audio.pwmBuses?.[trackIndex]?.disconnect(part.pwmSmoother)}catch(_){}
     part.pwmSmoother.disconnect();part.depthGain.disconnect();part.delay.disconnect();part.inverse.disconnect();part.depthGain.disconnect();
@@ -3595,7 +3603,9 @@ const oscillatorFields=[
  {k:'subWave',label:'WAVE',type:'select',options:['sawtooth','pulse','sine']},
  {k:'subOctave',label:'OCTAVE',type:'select',options:[{value:-12,label:'−12 SEMITONES'},{value:-24,label:'−24 SEMITONES'}]},
  {k:'subDetune',label:'DETUNE',min:-50,max:50,step:1,unit:' cent'},
- {k:'subLevel',label:'LEVEL',min:0,max:100,step:1,unit:'%'}
+ {k:'subLevel',label:'LEVEL',min:0,max:100,step:1,unit:'%'},
+ {k:'noiseLevel',label:'NOISE LEVEL',min:0,max:100,step:1,unit:'%'},
+ {k:'noiseTone',label:'NOISE TONE',min:0,max:100,step:1,unit:'%'}
 ];
 const soundFields=[
  {k:'cutoff',label:'FILTER CUTOFF',min:80,max:12000,step:10,unit:' Hz'},
@@ -3635,7 +3645,7 @@ function soundFieldControl(s,f){
   if(f.k==='cutoff')updateLiveCutoff(state.selectedTrack);
    if(f.k==='pulseWidth'||f.k==='pulseWidth1'||f.k==='pulseWidth2'||f.k==='pwmDepth1'||f.k==='pwmDepth2')updateLivePulseWidth(state.selectedTrack);
    if(f.k==='fmRatio'||f.k==='fmIndex'||f.k==='fmSustain'||f.k.startsWith('fmOp'))updateLiveFM(state.selectedTrack);
-  if(['osc1Level','osc2Level','subLevel'].includes(f.k))updateLiveOscillatorMix(state.selectedTrack);
+  if(['osc1Level','osc2Level','subLevel','noiseLevel'].includes(f.k))updateLiveOscillatorMix(state.selectedTrack);
   drawWave();
  };
  wrap.append(ctrl);show();return wrap;
@@ -3671,13 +3681,14 @@ function renderSound(){
  engineRow.append(engineHead,engineSelect);area.append(engineRow);
  const row=document.createElement('div');row.className='oscillator-sections';
  const groups=s.engine==='fm'?[]:[
-  ['OSCILLATOR 1',['wave1','pulseWidth','osc1Level']],
-  ['OSCILLATOR 2',['wave2','detune','osc2Level']],
-  ['SUB OSCILLATOR',['subWave','subOctave','subDetune','subLevel']]
+  ['OSCILLATOR 1',['wave1','pulseWidth1','pwmDepth1','osc1Level']],
+  ['OSCILLATOR 2',['wave2','pulseWidth2','pwmDepth2','detune','osc2Level']],
+  ['SUB OSCILLATOR',['subWave','subOctave','subDetune','subLevel']],
+  ['NOISE GENERATOR',['noiseLevel','noiseTone']]
  ];
  for(const [groupIndex,[heading,fields]] of groups.entries()){
   const card=document.createElement('section');card.className='osc-section';
-  const enableKey=['osc1On','osc2On','subOn'][groupIndex];
+  const enableKey=['osc1On','osc2On','subOn','noiseOn'][groupIndex];
   const header=document.createElement('div');header.className='osc-header';
   const title=document.createElement('h3');title.textContent=heading;
   const toggle=document.createElement('label');toggle.className='osc-toggle';
