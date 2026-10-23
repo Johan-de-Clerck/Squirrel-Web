@@ -1,6 +1,14 @@
-# Squirrel Studio Web 0.1.79 — User Manual
+# Squirrel Studio Web 0.1.80 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.1.80 — Operator waveforms and routing
+
+In **SYNTH → FM**, select **OPERATORS: 4 OP** to expose four operator panels. Each operator's **WAVEFORM** can be set independently to **SINE**, **TRIANGLE**, **SAWTOOTH** or **SQUARE**. SINE is the original smooth FM sound; TRIANGLE, SAWTOOTH and SQUARE provide richer harmonic content. For example, experiment with a sine carrier and a sawtooth modulator for a more aggressive lead, or use triangle carriers in ADDITIVE mode.
+
+The **OPERATOR ROUTING** diagram shows all signal paths for the currently selected algorithm. Green operators are audible **CARRIER** outputs, and brown operators are **MODULATORS** feeding other operators. Operators with direct output flow into the blue **OUT** node. Switching an algorithm updates the diagram and affects new notes; changing an operator waveform updates active FM4 notes. The waveform display also reflects these changes.
+
+Waveform selections are saved with projects and instrument patches. Existing FM4 presets with no WAVEFORM settings load all operators as SINE, and original 2 OP FM patches are unchanged.
 
 ### New: Four-operator FM — algorithms and operator controls
 
