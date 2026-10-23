@@ -6093,7 +6093,11 @@ async function saveRenderedSynthToLibrary(wav,expectedState,expectedGeneration){
  if(index<0)throw Error('All 15 sample-library slots are occupied. Clear a slot in DRUM SAMPLES first.');
  const Offline=window.OfflineAudioContext||window.webkitOfflineAudioContext;
  if(!Offline)throw Error('Offline audio decoding is not supported in this browser.');
- const decoder=new Offline(1,1,44100);
+ // Decode at the WAV's actual rate (44.1 or 48 kHz); using a fixed
+ // decoder rate would silently resample the cached waveform.
+ const wavRate=new DataView(wav.buffer).getUint32(24,true);
+ if(![44100,48000].includes(wavRate))throw Error('Unsupported synth WAV sample rate.');
+ const decoder=new Offline(1,1,wavRate);
  const decoded=await decoder.decodeAudioData(wav.buffer.slice(0));
  if(!decoded?.length)throw Error('Rendered WAV contains no audio.');
  const data=await fileToDataURL(new Blob([wav.buffer],{type:'audio/wav'}));
