@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.80**  
+**Current web version: 0.1.81**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,14 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.1.81
+
+- **Per-operator FM fine tune:** In **SYNTH → FM → OPERATORS: 4 OP**, every operator now has a **FINE TUNE** control from **−100 to +100 cents**, independent of its ratio, waveform and output/modulation level.
+- Detuning audible carriers in **PAIRS** or **ADDITIVE** produces gentle beating; detuning modulators in **STACK** or **FAN** changes FM sidebands and timbre.
+- Fine-tune changes update already-playing FM4 voices smoothly. The step sequencer's pitch FX remain additive to each operator's own tuning; a pitch effect does not erase its fine-tune offset.
+- Fine-tune settings are preserved in project JSON and saved instrument patches, without a format change. Old songs and presets load with every operator at **0 cents**. Values outside the allowed range are safely clamped.
+- Added `tests/fm-operator-fine.test.js` with 30 checks covering operator tuning, live changes, tracker pitch FX, project/preset round-trips, migration and the original two-operator FM engine.
 
 ## What is new in 0.1.80
 
