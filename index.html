@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.27 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.28 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1122,7 +1122,7 @@ input[type="password"],textarea,
 <button type="button" id="fileLoadDemo">↑ LOAD DEMO.JSON</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.27</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.2.28</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -6214,9 +6214,9 @@ async function exportSongStereoWav(){
    }
   }
  }
- function addVoice(i,step,time,cutoffTime){
-  const track=state.tracks[i],vel=clamp(Number(step.velocity??100),0,127)/127;
-  const note=Number(step.note??track.note??48);
+ function addVoice(i,step,time,cutoffTime,noteOverride=null,velocityOverride=null){
+  const track=state.tracks[i],vel=clamp(Number(velocityOverride??step.velocity??100),0,127)/127;
+  const note=Number(noteOverride??step.note??track.note??48);
   if(!Number.isFinite(note))return;
   const length=Math.min(stepSeconds*Math.max(.1,Number(step.gate??90)/100),Math.max(.01,cutoffTime-time));
   if(isSample(i)||isDrum(i)){
@@ -6414,16 +6414,37 @@ async function exportSongStereoWav(){
     }
     // An explicit empty row without D00 does not cancel a previous carry request.
     // A new note or C00 below changes that state.
-    if(step.on){
-     // Match live playback: every new sample/drum note retriggers, even when
-     // the preceding pattern carried the same note and slot into this one.
-     const nextAt=at+stepSeconds*(stepIndex%2===0?1+swingAmount:1-swingAmount);
-     if(isSample(t)||isDrum(t)){
-      // A new note always releases the prior one. Carry only governs what
-      // happens at the pattern boundary without a new trigger.
-      if(activeExportSamples[t].some(v=>!v.stopped&&v.naturalEnd>at))stopExportSample(t,at);
+    // The live sequencer applies CHANCE once per step, before any ratchet hits.
+    if(step.on&&Math.random()*100<clamp(Number(step.chance??100),0,100)){
+     const swingStep=stepSeconds*(stepIndex%2===0?1+swingAmount:1-swingAmount);
+     const hits=clamp(Math.round(Number(step.ratchet??1)),1,6);
+     const subDuration=swingStep/hits;
+     for(let hit=0;hit<hits;hit++){
+      const hitTime=at+hit*subDuration;
+      const gateSeconds=hits===1
+       ?clamp(Number(step.gate??90)/100*stepSeconds,.025,.8)
+       :clamp(subDuration*Number(step.gate??90)/100,.004,subDuration*.94);
+      // For sampled tracks each hit is a new trigger. Earlier hits cannot
+      // accidentally inherit Carry into the next pattern.
+      if(isSample(t)||isDrum(t)){
+       if(activeExportSamples[t].some(v=>!v.stopped&&v.naturalEnd>hitTime))
+        stopExportSample(t,hitTime,null,hits>1?.008:null);
+      }
+      const renderedStep=hits>1&&hit<hits-1&&stepContinuesSample(step)
+       ?{...step,continueSample:false,fx:step.fx===13?0:step.fx}
+       :step;
+      if(kindOf(state.tracks[t])==='chord'){
+       // Live chord playback uses the chosen chord mode and divides voice
+       // amplitude between its notes, rather than playing only the root.
+       const sound=state.tracks[t].sound||{};
+       const notes=chordNotes(Number(step.note),step.chordMode||sound.chord);
+       const voiceVelocity=Number(step.velocity??100)*Math.sqrt(3/notes.length)*.72;
+       for(const chordNote of notes)
+        addVoice(t,renderedStep,hitTime,hitTime+gateSeconds,chordNote,voiceVelocity);
+      }else{
+       addVoice(t,renderedStep,hitTime,hitTime+gateSeconds);
+      }
      }
-     addVoice(t,step,at,nextAt);
      carriedAtBoundary[t]=false;
     }
    }
@@ -6437,7 +6458,7 @@ async function exportSongStereoWav(){
  notify('Rendering stereo song WAV…');
  const rendered=await ctx.startRendering();
  downloadPCM16Wav([rendered.getChannelData(0),rendered.getChannelData(1)],rate,'Squirrel_Song_STEREO.wav');
- notify('Stereo song WAV exported with track FX and modulation.');
+ notify('Stereo WAV exported with chords, ratchets, chance and track FX.');
 }
 function typeFXDigit(key){
  const digit=key.toUpperCase();if(!/^[0-9A-F]$/.test(digit))return false;
