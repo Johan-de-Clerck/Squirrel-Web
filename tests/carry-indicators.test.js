@@ -7,7 +7,7 @@ let app=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(app,'Application JS exists');
 app=app.replace(/installNotes\(\);bindings\(\);bindSampleEditor\(\);bindDrumSamples\(\);bindSampleBank\(\);attachStepRangeSelection\(\);resetUndoHistory\(\);renderAll\(\);refreshOutputs\(\);requestAnimationFrame\(uiTick\);bootstrapDemoJson\(\);/,'');
 assert.doesNotThrow(()=>new Function(app),'Application script parses');
-const run=new Function('document','window','localStorage','console','structuredClone',app+String.raw\`
+const run=new Function('document','window','localStorage','console','structuredClone',app+String.raw`
  state=fresh(false);let checks=0;const t=6;
  const eq=(a,b,n)=>{checks++;if(a!==b)throw Error(n+': '+a+' != '+b)};
  const dom1={dataset:{track:'6'},hidden:true,textContent:'',title:''};
@@ -64,7 +64,7 @@ const run=new Function('document','window','localStorage','console','structuredC
  eq(voices[0].carryAcrossPatterns,undefined,'earlier ratchet not carried');
  eq(voices[2].carryAcrossPatterns,true,'last ratchet carried');
  return checks;
-\`);
+`);
 const count=run({}, {},{getItem:()=>null,setItem(){}},{warn(){},log(){},error(){}},structuredClone);
 assert.equal(count,27,'CARRY assertions');
 console.log('PASS: '+count+' active carry badges, overlapping sampler voices, C00, pattern boundary and ratchet checks');
