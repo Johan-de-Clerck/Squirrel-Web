@@ -825,7 +825,7 @@ input[type="password"],textarea,
 <button type="button" id="fileRenderSynth">RENDER SYNTH TO WAV</button>
 <button type="button" id="fileExportSong">EXPORT SONG TO WAV</button>
 </div></details><input id="fileSampleInput" type="file" accept="audio/*,.wav,.mp3,.ogg,.aiff,.aif" hidden></nav>
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.88</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="version">BUILD 0.1.89</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -4801,12 +4801,16 @@ async function exportSongStereoWav(){
  const activeExportSamples=Array.from({length:TRACK_COUNT},()=>[]);
  const stopExportSample=(i,time)=>{
   const list=activeExportSamples[i];
-  for(const voice of list){if(voice.stopped||time<=voice.started)continue;
-   const end=Math.max(voice.started+.002,time),fade=Math.min(.012,(end-voice.started)/2);
-   voice.amp.gain.cancelScheduledValues(Math.max(voice.started,end-fade));
-   voice.amp.gain.setValueAtTime(voice.level,Math.max(voice.started,end-fade));
-   voice.amp.gain.linearRampToValueAtTime(0,end);
-   try{voice.source.stop(end+.002)}catch(_){}voice.stopped=true;
+  for(const voice of list){
+   if(voice.stopped||time<=voice.started)continue;
+   const release=voice.release;
+   const end=Math.max(voice.started+.004,time);
+   const stopAt=Math.min(duration-.002,end+release);
+   voice.amp.gain.cancelScheduledValues(end);
+   voice.amp.gain.setValueAtTime(voice.level,end);
+   voice.amp.gain.linearRampToValueAtTime(0,stopAt);
+   try{voice.source.stop(stopAt+.001)}catch(_){}
+   voice.stopped=true;
   }
   activeExportSamples[i]=[];
  };
@@ -4854,7 +4858,7 @@ async function exportSongStereoWav(){
     const naturalEnd=time+(plan.endAt-plan.startAt)/source.playbackRate.value;
     if(naturalEnd>time&&naturalEnd<duration)source.stop(naturalEnd);
    }
-   activeExportSamples[i].push({source,amp,level,started:time,stopped:false});
+   activeExportSamples[i].push({source,amp,level,started:time,stopped:false,release:drum?clamp(Number(item?.slotRelease??65),1,3000)/1000:sampleReleaseSeconds(track)});
    return;
   }
   if(!isSynth(i))return;
