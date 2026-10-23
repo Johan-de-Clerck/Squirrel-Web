@@ -2,7 +2,7 @@
 
 # Squirrel Studio — Web Synth & Step Sequencer
 
-**Current web version: 0.1.81**  
+**Current web version: 0.2.07**  
 **Current application:** [index.html](index.html)  
 **Download latest repository ZIP:** [Squirrel Studio Web — latest](https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip)
 
@@ -20,6 +20,15 @@ Squirrel Studio is a browser-based eight-track groovebox combining synthesized a
 For local Windows development, run `START_STUDIO.cmd` (Python 3 required) and open <http://localhost:8765>. Loading `index.html` using `file://` can prevent loading `demo.json` and may limit MIDI support.
 
 Read [HELP.md](HELP.md) for the full English user guide.
+
+## What is new in 0.2.07
+
+- **Live CARRY badge per DRUM and SAMPLE track:** a green `CARRY 1`, `CARRY 2` etc. label appears next to the track name in **SEQUENCER** and in the corresponding **MIXER** strip while one or more samples are actually continuing across patterns.
+- The count is **per audible voice**, not per checked step. Overlapping sampler voices, layered drums and the final hit of a continued ratchet can each contribute. The display excludes future notes before their actual scheduled start, and it hides released/ended voices.
+- **C00 NOTE OFF** clears the carried voice count once the voices enter release; **STOP** hides the indicators. The badges are informational and do not change playback, mutate saved patterns or consume tracker FX commands.
+- Real sampler voices now retain their individual scheduled start time for correct status display. Existing project and sample bank formats are unchanged.
+- Added `tests/carry-indicators.test.js` with 25 regression checks for CARRY counts, future notes, Song Mode/pattern transitions, overlapping carried voices, C00 release, and ratchets.
+- Builds **0.2.01–0.2.06** fixed the cross-pattern behavior of live sample voices, including overlap, note replacement, C00 and ratchet continuation. This build continues from the actual GitHub 0.2.06 baseline rather than replacing it with an earlier version.
 
 ## What is new in 0.1.81
 
