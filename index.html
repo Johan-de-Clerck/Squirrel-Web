@@ -2739,13 +2739,13 @@ function updateLiveFM(trackIndex){
     }
     for(const {from,gain} of v.fmModLinks){
      const level=clamp(Number(sound['fmOp'+(from+1)+'Level']??75),0,100)/100;
-     const target=Math.min(maxHz,v.fmFundamental*clamp(Number(sound.fmIndex??3),0,12))*level*clamp(Number(sound.fmSustain??30),0,100)/100;
+     const target=Math.min(maxHz,v.fmFundamental*clamp(Number(sound.fmIndex??3),0,12))*level*clamp(Number(sound['fmOp'+(from+1)+'Sustain']??70),0,100)/100;
      gain.gain.cancelScheduledValues(now);
      gain.gain.setTargetAtTime(target,now,.02);
     }
     for(const {index,gain} of v.fmCarrierGains)
      gain.gain.setTargetAtTime(.65/v.fmCarrierGains.length*
-      clamp(Number(sound['fmOp'+(index+1)+'Level']??100),0,100)/100,now,.02);
+      clamp(Number(sound['fmOp'+(index+1)+'Level']??100),0,100)/100*clamp(Number(sound['fmOp'+(index+1)+'Sustain']??70),0,100)/100,now,.02);
     continue;
    }
    if(v.engine!=='fm')continue;
