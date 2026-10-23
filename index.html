@@ -902,7 +902,7 @@ const bases=[
  {name:'EMPTY 7',type:'empty',channel:7,volume:0,pan:0,color:'#887b6d',note:48},
  {name:'EMPTY 8',type:'empty',channel:8,volume:0,pan:0,color:'#887b6d',note:48}
 ];
-function defaultSound(t){const patch= t.type==='chord'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:8,pulseWidth:50,cutoff:1500,resonance:0.9,attack:.09,decay:.42,sustain:.68,release:.7,chord:'minor'}:t.type==='synth'&&t.name==='BASS'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'square',detune:9,pulseWidth:43,cutoff:1350,resonance:1.8,attack:.009,decay:.22,sustain:.52,release:.19,chord:'major'}:{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:14,pulseWidth:50,cutoff:4200,resonance:.8,attack:.015,decay:.21,sustain:.65,release:.27,chord:'major'};
+function defaultSound(t){const patch= t.type==='chord'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:8,pulseWidth:50,pulseWidth1:50,pulseWidth2:50,cutoff:1500,resonance:0.9,attack:.09,decay:.42,sustain:.68,release:.7,chord:'minor'}:t.type==='synth'&&t.name==='BASS'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'square',detune:9,pulseWidth:43,pulseWidth1:43,pulseWidth2:43,cutoff:1350,resonance:1.8,attack:.009,decay:.22,sustain:.52,release:.19,chord:'major'}:{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:14,pulseWidth:50,pulseWidth1:50,pulseWidth2:50,cutoff:4200,resonance:.8,attack:.015,decay:.21,sustain:.65,release:.27,chord:'major'};
  return {...patch,engine:'va',fmRatio:2,fmIndex:3,fmAttack:.01,fmDecay:.3,fmSustain:30,fmMode:'two',fmAlgorithm:'stack',fmOp1Ratio:1,fmOp2Ratio:2,fmOp3Ratio:3,fmOp4Ratio:4,fmOp1Level:100,fmOp2Level:75,fmOp3Level:65,fmOp4Level:55,fmOp1Fine:0,fmOp2Fine:0,fmOp3Fine:0,fmOp4Fine:0,fmOp1Wave:'sine',fmOp2Wave:'sine',fmOp3Wave:'sine',fmOp4Wave:'sine',...Object.fromEntries(Array.from({length:4},(_,i)=>[['fmOp'+(i+1)+'Attack',.01],['fmOp'+(i+1)+'Decay',.3],['fmOp'+(i+1)+'Sustain',70],['fmOp'+(i+1)+'Release',.35]]).flat())}
 }
 const LFO_TARGETS=[['off','OFF'],...bases.flatMap((_,i)=>['volume','cutoff','pan','pulseWidth'].map(k=>['track'+i+'-'+k,'TRACK '+(i+1)+' · '+k.toUpperCase()]))];
@@ -2639,11 +2639,12 @@ function oscillatorMixGain(s,osc){
 function updateLivePulseWidth(trackIndex){
  if(!audio)return;
  const sound=state.tracks[trackIndex]?.sound;if(!sound)return;
- const duty=clamp(Number(sound.pulseWidth??50),5,95)/100,now=audio.ctx.currentTime;
+ const now=audio.ctx.currentTime;
  for(const voice of scheduledVoices){
   if(voice.trackIndex!==trackIndex||voice.released)continue;
   for(const part of voice.pwmParts||[]){
    const width=part.delay.delayTime,amplitude=part.depthGain.gain;
+   const duty=clamp(Number(sound['pulseWidth'+part.oscIndex]??sound.pulseWidth??50),5,95)/100;
    const base=duty/part.frequency;
    const depth=Math.max(0,Math.min(duty-.05,.95-duty))/part.frequency;
    if(typeof width.setTargetAtTime==='function')width.setTargetAtTime(base,now,.012);
@@ -2894,21 +2895,21 @@ function synthVoice(track,note,velocity,when,gate=null){
  osc2.frequency.setValueAtTime(f*Math.pow(2,s.detune/1200),when);
  subOsc.frequency.setValueAtTime(f*Math.pow(2,subOctave/12)*Math.pow(2,(s.subDetune||0)/1200),when);
  const pwmParts=[];
- const routeOsc=(osc,wave,gain,frequency)=>{
+ const routeOsc=(osc,wave,gain,frequency,oscIndex)=>{
   if(wave!=='pulse'){osc.connect(gain);return}
   const delay=c.createDelay(.25),inverse=c.createGain(),depthGain=c.createGain(),pwmSmoother=c.createBiquadFilter();
   pwmSmoother.type='lowpass';pwmSmoother.frequency.value=75;pwmSmoother.Q.value=.5;
-  const duty=clamp(Number(s.pulseWidth??50),5,95)/100;
+  const duty=clamp(Number(s['pulseWidth'+oscIndex]??s.pulseWidth??50),5,95)/100;
   inverse.gain.value=-1;
   delay.delayTime.setValueAtTime(duty/frequency,when);
   depthGain.gain.value=Math.max(0,Math.min(duty-.05,.95-duty))/frequency;
   osc.connect(gain);osc.connect(delay).connect(inverse).connect(gain);
   if(audio.pwmBuses?.[trackIndex])audio.pwmBuses[trackIndex].connect(pwmSmoother).connect(depthGain).connect(delay.delayTime);
-  pwmParts.push({delay,inverse,depthGain,pwmSmoother,frequency});
+  pwmParts.push({delay,inverse,depthGain,pwmSmoother,frequency,oscIndex});
  };
- routeOsc(osc1,s.wave1,g1,f);
- routeOsc(osc2,s.wave2,g2,f*Math.pow(2,s.detune/1200));
- routeOsc(subOsc,s.subWave||'sine',subGain,f*Math.pow(2,subOctave/12)*Math.pow(2,(s.subDetune||0)/1200));
+ routeOsc(osc1,s.wave1,g1,f,1);
+ routeOsc(osc2,s.wave2,g2,f*Math.pow(2,s.detune/1200),2);
+ routeOsc(subOsc,s.subWave||'sine',subGain,f*Math.pow(2,subOctave/12)*Math.pow(2,(s.subDetune||0)/1200),3);
  g1.connect(filt);g2.connect(filt);subGain.connect(filt);
  filt.connect(out).connect(modGain).connect(audio.trackGains[trackIndex]);
  gainEnv(out.gain,when,velocity,s.attack,s.decay,s.sustain);
@@ -3583,7 +3584,8 @@ function renderFXEditor(){
 }
 const oscillatorFields=[
  {k:'wave1',label:'WAVE',type:'select',options:['sawtooth','square','pulse','triangle','sine']},
- {k:'pulseWidth',label:'PULSE WIDTH 1+2',min:5,max:95,step:1,unit:'%'},
+ {k:'pulseWidth1',label:'OSC 1 PULSE WIDTH',min:5,max:95,step:1,unit:'%'},
+ {k:'pulseWidth2',label:'OSC 2 PULSE WIDTH',min:5,max:95,step:1,unit:'%'},
  {k:'osc1Level',label:'LEVEL',min:0,max:100,step:1,unit:'%'},
  {k:'wave2',label:'WAVE',type:'select',options:['sawtooth','square','pulse','triangle','sine']},
  {k:'detune',label:'DETUNE',min:-50,max:50,step:1,unit:' cent'},
@@ -3629,7 +3631,7 @@ function soundFieldControl(s,f){
   s[f.k]=f.type==='select'&&f.k!=='subOctave'?ctrl.value:Number(ctrl.value);
   show();persist();
   if(f.k==='cutoff')updateLiveCutoff(state.selectedTrack);
-   if(f.k==='pulseWidth')updateLivePulseWidth(state.selectedTrack);
+   if(f.k==='pulseWidth'||f.k==='pulseWidth1'||f.k==='pulseWidth2')updateLivePulseWidth(state.selectedTrack);
    if(f.k==='fmRatio'||f.k==='fmIndex'||f.k==='fmSustain'||f.k.startsWith('fmOp'))updateLiveFM(state.selectedTrack);
   if(['osc1Level','osc2Level','subLevel'].includes(f.k))updateLiveOscillatorMix(state.selectedTrack);
   drawWave();
