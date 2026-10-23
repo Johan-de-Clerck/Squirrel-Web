@@ -6139,6 +6139,8 @@ function syncPatternBounceOptions(){
  const control=$('patternBounceDestination');
  if(!control)return;
  const chosen=control.value||'download';
+ const bounceButton=$('fileBouncePattern');
+ if(bounceButton&&!bounceButton.disabled)bounceButton.textContent='↧ BOUNCE '+patternName(state.pattern)+' TO SAMPLE';
  control.replaceChildren(new Option('DOWNLOAD WAV FILE','download'));
  for(let slot=0;slot<DRUM_LIBRARY_SIZE;slot++){
   const item=drumLibraryItem(slot),used=!!item?.data;
