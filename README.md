@@ -2,7 +2,7 @@
   <img src="squirrel-icon.webp" alt="Squirrel Studio icon" width="112">
   <h1>Squirrel Studio</h1>
   <p><strong>A browser-based groovebox, synthesizer, sampler and tracker-style step sequencer.</strong></p>
-  <p><strong>Current version: 0.2.40</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
+  <p><strong>Current version: 0.2.41</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
 </div>
 
 Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrangement into a compact, eight-track music workstation. The web version runs in a modern desktop browser using the Web Audio API.
@@ -42,9 +42,11 @@ See [HELP.md](HELP.md) for the detailed guide.
 
 ### Song WAV export
 
-Open **FILE → Render / Export** to choose **44.1 or 48 kHz** and an **FX tail of 3, 6 or 10 seconds**. Exports use **16-bit stereo PCM**.
+Open **FILE → Render / Export** to choose **44.1 or 48 kHz**, **16-bit or 24-bit stereo PCM**, and an **FX tail of 3, 6 or 10 seconds**. Choose a full stereo mix, the selected audio track, or all internal audio tracks as a ZIP of sample-aligned WAV stems. Stem ZIPs include `STEMS_INFO.txt` and can include a full-mix reference. MIDI-only tracks cannot be rendered.
 
-**Peak Normalize** is optional and off by default. When enabled, it adjusts the exported file to a peak of **−1 dBFS**; it does not alter live playback or change the effect balance. The export message reports the original peak. If normalization is disabled and the peak exceeds 0 dBFS, the app warns that samples will clip when converted to PCM16.
+**Peak Normalize** is optional and off by default. When enabled, it adjusts each exported WAV to a peak of **−1 dBFS** without changing live playback. **TPDF Dither** is available for 16/24-bit PCM. Exports warn when an unnormalized WAV exceeds 0 dBFS. Disable normalization for stems if preserving relative track levels matters.
+
+The offline synth renderer now follows VA/FM transposition, VA sub-oscillator fine tuning, LFO-routed PWM and the two-operator FM modulation envelope. Stems and the optional full-mix reference share chance and generated-noise decisions, but nonlinear compression and shared effects can prevent an exact sum.
 
 **Note:** MIDI-only tracks send events to external instruments and are not captured as audio by the browser's offline WAV renderer.
 
