@@ -1,6 +1,16 @@
-# Squirrel Studio Web 0.2.66 — User Manual
+# Squirrel Studio Web 0.2.67 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.67 — Per-pattern BPM (A1–D8)
+
+Every pattern has its **own BPM**, adjustable in **0.1 BPM steps from 50.0 to 240.0**. Select a pattern in the **SEQUENCER** and change **BPM · A1** (the label follows the selected pattern), or change the BPM next to the pattern name in **OPTIONS → PATTERNS**. For example, set **A1 = 60.0 BPM** and **A2 = 120.0 BPM**. The tempo is saved separately for all 32 patterns, including empty patterns.
+
+In **SONG MODE**, the pattern library and song tiles show their BPM. Playback switches tempo **at the first step of each pattern**; changing A1 does not alter A2. Synced LFO rates follow the new tempo, while reverb, delay and long carried samples continue across the change. The selected pattern's BPM is also used when playing that pattern alone.
+
+**BOUNCE** uses the tempo of the pattern being bounced, regardless of Song Mode. **EXPORT WAV** and stem ZIP use the complete per-pattern tempo map, including accurate timing, sample length and effect tails. STEMS_INFO.txt lists the BPM of each arranged pattern, so DAWs can recreate the tempo changes. A copied pattern also copies its BPM; the original sample rate and export bit depth controls are unchanged.
+
+Existing projects without per-pattern BPM values inherit their original single BPM for every pattern when loaded. No manual conversion is needed.
 
 ### Improved in 0.2.66 — Step FX in bounced and exported audio
 
@@ -227,7 +237,7 @@ The **ProTracker keyboard layout** uses two rows. The **lower octave** starts at
 
 The BPM field accepts fractional tempos in **0.1 BPM steps**, from **50.0** to **240.0**. For example, select **120.3** (the browser may display a comma instead of a decimal point according to your locale). Use the keyboard arrow keys on the BPM input to adjust the tempo by one tenth.
 
-The chosen tempo controls sequencer playback and tempo-synchronized LFO rates. It is saved in your project JSON, restored when you reopen the project, and preserved when migrating compatible older songs.
+Each pattern stores its chosen BPM independently. It controls the sequencer and tempo-synchronized LFO rates whenever that pattern plays, is saved in project JSON, and is preserved when loading compatible older songs. Song Mode automatically follows the BPM of each arrangement tile.
 
 ## 4. Patterns, lengths and Song Mode
 
