@@ -1,6 +1,10 @@
-# Squirrel Studio Web 0.2.61 — User Manual
+# Squirrel Studio Web 0.2.62 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Fixed in 0.2.62 — Sample / Drum Slot selection
+
+In **SAMPLE EDITOR**, the **SAMPLE / DRUM SLOT** dropdown keeps its existing option elements while you choose a different track or slot. Previously the editor replaced all dropdown options on each selection, which could close the native picker immediately in Chrome/Edge. The list is now rebuilt only when options actually change; updates that arrive while it has focus wait until the picker loses focus. The sample audio, trim and loop settings are unaffected.
 
 ### New in 0.2.61 — Lighter WAV bounce/render with VA noise
 
