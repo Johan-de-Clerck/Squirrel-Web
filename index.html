@@ -6263,7 +6263,7 @@ function analyzePatternBounceWaveform(buffer,wavBytes=null){
  const pcmChannels=data?.getUint16(22,true);
  const pcmBytes=data?.getUint32(40,true);
  const bytesPerFrame=pcmBits===16?4:pcmBits===24?6:0;
- const pcmValid=!!(data&&data.getUint32(20,true)===1&&pcmChannels===2&&
+ const pcmValid=!!(data&&data.getUint16(20,true)===1&&pcmChannels===2&&
   [44100,48000].includes(pcmRate)&&bytesPerFrame&&
   pcmBytes%bytesPerFrame===0&&44+pcmBytes<=wavBytes.byteLength);
  const frames=pcmValid?pcmBytes/bytesPerFrame:buffer.length;
