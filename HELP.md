@@ -1,6 +1,12 @@
-# Squirrel Studio Web 0.2.68 — User Manual
+# Squirrel Studio Web 0.2.69 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Optimized in 0.2.69 — Ping-pong sample playback
+
+Ping-pong sample loops now allocate a shorter mirrored audio buffer: only the initial sample section and the forward/reverse loop are needed while loop playback is enabled. The unused material after the loop is no longer duplicated. Repeated notes reuse the prepared buffer, with a bounded four-variant, approximately 32 MiB per-sample cache that evicts old loop-point versions when you adjust markers. The most recently played variants stay cached.
+
+The audible forward/reverse loop, stereo channels, source sample data, loop markers and project format are unchanged. This optimization applies both to live SAMPLE/DRUM voices and to Bounce / Export to WAV, because all three paths use the same ping-pong buffer builder. Effect routing (reverb, delay and chorus) is unchanged; this update targets sample-loop memory and repeated buffer preparation only.
 
 ### Improved in 0.2.68 — Sample and drum release parity in Bounce / WAV Export
 
