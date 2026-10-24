@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.64 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.65 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1293,7 +1293,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.64</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.65</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1359,7 +1359,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.64';
+const SQUIRREL_VERSION='0.2.65';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -3162,14 +3162,29 @@ function updateDistortionEngine(){
   stage.post.gain.setTargetAtTime(.8/(1+d*.35),now,.012);
  });
 }
-function updateChorusEngine(){
+// Single source of truth for the live and offline/bounce stereo FX bus.
+const SEND_FX_BUS=Object.freeze({
+ delayDampingHz:4800,delayReturn:.6,reverbReturn:.72,
+ chorusDelay:.020,chorusPan:.95,
+ delaySend:.7,reverbSend:.85,chorusSend:.45
+});
+function normalizedSendFX(settings){
+ const fx=settings||{};
+ return {
+  delayTime:clamp(Number(fx.delayTime??.3),.07,1.2),
+  feedback:clamp(Number(fx.feedback??30),0,85)/100,
+  reverbDecay:clamp(Number(fx.reverbDecay??1.8),.5,4),
+  chorusRate:clamp(Number(fx.chorusRate??.7),.1,5),
+  chorusDepth:clamp(Number(fx.chorusDepth??4),0,10)/1000
+ };
+}
+function updateChorusEngine(values=null){
  if(!audio)return;
  const now=audio.ctx.currentTime;
- const fx=state.sendFX;
- audio.chorusOsc.frequency.setTargetAtTime(clamp(fx.chorusRate,.1,5),now,.03);
- const depth=clamp(fx.chorusDepth,0,10)/1000;
- audio.chorusDepthLeft.gain.setTargetAtTime(depth,now,.03);
- audio.chorusDepthRight.gain.setTargetAtTime(-depth,now,.03);
+ const fx=values||normalizedSendFX(state.sendFX);
+ audio.chorusOsc.frequency.setTargetAtTime(fx.chorusRate,now,.03);
+ audio.chorusDepthLeft.gain.setTargetAtTime(fx.chorusDepth,now,.03);
+ audio.chorusDepthRight.gain.setTargetAtTime(-fx.chorusDepth,now,.03);
 }
 // Stereo send busses preserve the dry signal. Each track has independent send levels.
 function makeReverbIR(ctx,seconds){
@@ -3186,10 +3201,11 @@ function makeReverbIR(ctx,seconds){
  }
  return buffer;
 }
-function updateSendEngine(){if(!audio)return;const now=audio.ctx.currentTime,f=state.sendFX;
+function updateSendEngine(){if(!audio)return;const now=audio.ctx.currentTime,f=normalizedSendFX(state.sendFX);
  audio.delayNode.delayTime.setTargetAtTime(f.delayTime,now,.03);
- audio.delayFeedback.gain.setTargetAtTime(f.feedback/100,now,.03);
- if(Math.abs(audio.irDecay-f.reverbDecay)>.001){audio.reverb.buffer=makeReverbIR(audio.ctx,f.reverbDecay);audio.irDecay=f.reverbDecay}updateChorusEngine()
+ audio.delayFeedback.gain.setTargetAtTime(f.feedback,now,.03);
+ if(Math.abs(audio.irDecay-f.reverbDecay)>.001){audio.reverb.buffer=makeReverbIR(audio.ctx,f.reverbDecay);audio.irDecay=f.reverbDecay}
+ updateChorusEngine(f);
 }
 // LFO panning: the mixer Pan knob supplies the centre, and the bipolar
 // oscillator adds a left/right offset to StereoPannerNode.pan. At full depth
@@ -3357,9 +3373,20 @@ function setTrackSolo(index){
  applyTrackMix();persist();renderAll();
 }
 function applyTrackMix(){for(let i=0;i<TRACK_COUNT;i++)nativeUpdateVAMix(i);if(!audio)return;state.tracks.forEach((t,i)=>{const isOn=!isTrackEffectivelyMuted(i)&&!t.midiOnly;audio.trackGains[i].gain.setTargetAtTime(isOn?(t.volume/100)**1.4:0,audio.ctx.currentTime,.018);audio.trackPans[i].pan.setTargetAtTime(t.pan/100,audio.ctx.currentTime,.02);
- audio.delaySends[i].gain.setTargetAtTime((t.delaySend/100)*.7,audio.ctx.currentTime,.03);
- audio.reverbSends[i].gain.setTargetAtTime((t.reverbSend/100)*.85,audio.ctx.currentTime,.03);audio.chorusSends[i].gain.setTargetAtTime((t.chorusSend/100)*.45,audio.ctx.currentTime,.03)});audio.masterGain.gain.setTargetAtTime((state.master/100)*.84,audio.ctx.currentTime,.018);updateDistortionEngine();applyLFOs()}
-function getNoise(){if(audio.noise)return audio.noise;const length=Math.round(audio.ctx.sampleRate*1.5),arr=new Float32Array(length);for(let i=0;i<length;i++)arr[i]=(Math.random()*2-1);const b=audio.ctx.createBuffer(1,length,audio.ctx.sampleRate);b.getChannelData(0).set(arr);audio.noise=b;return b}
+ audio.delaySends[i].gain.setTargetAtTime((t.delaySend/100)*SEND_FX_BUS.delaySend,audio.ctx.currentTime,.03);
+ audio.reverbSends[i].gain.setTargetAtTime((t.reverbSend/100)*SEND_FX_BUS.reverbSend,audio.ctx.currentTime,.03);audio.chorusSends[i].gain.setTargetAtTime((t.chorusSend/100)*SEND_FX_BUS.chorusSend,audio.ctx.currentTime,.03)});audio.masterGain.gain.setTargetAtTime((state.master/100)*.84,audio.ctx.currentTime,.018);updateDistortionEngine();applyLFOs()}
+// A shared seeded drum-noise source makes snare/hat transients and their FX
+// sends reproducible between live playback and OfflineAudioContext bounce.
+function makeDrumNoiseBuffer(ctx){
+ const length=Math.round(ctx.sampleRate*1.5),buffer=ctx.createBuffer(1,length,ctx.sampleRate);
+ const data=buffer.getChannelData(0);let seed=0x4452554D;
+ for(let i=0;i<length;i++){
+  seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;
+  data[i]=(seed>>>0)/2147483648-1;
+ }
+ return buffer;
+}
+function getNoise(){if(audio.noise)return audio.noise;audio.noise=makeDrumNoiseBuffer(audio.ctx);return audio.noise}
 function refreshAudioPowerUI(){
  const running=!!audio&&audio.ctx.state==='running';
  const btn=$('audioBtn');
@@ -3371,18 +3398,26 @@ async function initAudio(){
  if(!audio){const Ctx=window.AudioContext||window.webkitAudioContext;
  if(!Ctx){notify('Web Audio is not supported in this browser.',true);return false}
  const ctx=new Ctx({latencyHint:'interactive'}),compressor=ctx.createDynamicsCompressor();
+ const initialFx=normalizedSendFX(state.sendFX);
  compressor.threshold.value=-16;compressor.knee.value=12;compressor.ratio.value=3;compressor.attack.value=.004;compressor.release.value=.17;
- const masterGain=ctx.createGain(),analyser=ctx.createAnalyser();analyser.fftSize=512;analyser.smoothingTimeConstant=.82;
+ const masterGain=ctx.createGain(),analyser=ctx.createAnalyser();
+ masterGain.gain.value=clamp(Number(state.master??75),0,100)/100*.84;
+ analyser.fftSize=512;analyser.smoothingTimeConstant=.82;
  const delayNode=ctx.createDelay(2),delayFeedback=ctx.createGain(),delayDamping=ctx.createBiquadFilter(),delayReturn=ctx.createGain();
- delayDamping.type='lowpass';delayDamping.frequency.value=4800;delayReturn.gain.value=.6;
+ delayNode.delayTime.value=initialFx.delayTime;delayFeedback.gain.value=initialFx.feedback;
+ delayDamping.type='lowpass';delayDamping.frequency.value=SEND_FX_BUS.delayDampingHz;delayReturn.gain.value=SEND_FX_BUS.delayReturn;
  delayNode.connect(delayDamping).connect(delayFeedback).connect(delayNode);
  delayNode.connect(delayReturn).connect(compressor);
- const reverb=ctx.createConvolver(),reverbReturn=ctx.createGain();reverbReturn.gain.value=.72;reverb.connect(reverbReturn).connect(compressor);
-  const chorusInput=ctx.createGain(),chorusDelayLeft=ctx.createDelay(.08),chorusDelayRight=ctx.createDelay(.08);
-  chorusDelayLeft.delayTime.value=.020;chorusDelayRight.delayTime.value=.020;
+ const reverb=ctx.createConvolver(),reverbReturn=ctx.createGain();
+ reverb.buffer=makeReverbIR(ctx,initialFx.reverbDecay);
+ reverbReturn.gain.value=SEND_FX_BUS.reverbReturn;reverb.connect(reverbReturn).connect(compressor);
+  const chorusInput=ctx.createGain(),chorusDelayLeft=ctx.createDelay(.1),chorusDelayRight=ctx.createDelay(.1);
+  chorusDelayLeft.delayTime.value=SEND_FX_BUS.chorusDelay;chorusDelayRight.delayTime.value=SEND_FX_BUS.chorusDelay;
   const chorusOsc=ctx.createOscillator(),chorusDepthLeft=ctx.createGain(),chorusDepthRight=ctx.createGain();
   const chorusLeftPan=ctx.createStereoPanner(),chorusRightPan=ctx.createStereoPanner();
-  chorusLeftPan.pan.value=-.95;chorusRightPan.pan.value=.95;
+  chorusLeftPan.pan.value=-SEND_FX_BUS.chorusPan;chorusRightPan.pan.value=SEND_FX_BUS.chorusPan;
+  chorusOsc.frequency.value=initialFx.chorusRate;
+  chorusDepthLeft.gain.value=initialFx.chorusDepth;chorusDepthRight.gain.value=-initialFx.chorusDepth;
   chorusOsc.connect(chorusDepthLeft).connect(chorusDelayLeft.delayTime);
   chorusOsc.connect(chorusDepthRight).connect(chorusDelayRight.delayTime);
   chorusInput.connect(chorusDelayLeft).connect(chorusLeftPan).connect(compressor);
@@ -3396,7 +3431,17 @@ async function initAudio(){
   const volume=ctx.createGain(),lfoVolume=ctx.createGain(),pan=ctx.createStereoPanner(),meter=ctx.createAnalyser(),d=ctx.createGain(),r=ctx.createGain(),chorus=ctx.createGain(),cutoffBus=ctx.createGain();
    const dry=ctx.createGain(),wet=ctx.createGain(),pre=ctx.createGain(),shape=ctx.createWaveShaper(),post=ctx.createGain();
    shape.curve=distortionCurve;shape.oversample='2x';
-   lfoVolume.gain.value=1;d.gain.value=0;r.gain.value=0;chorus.gain.value=0;cutoffBus.gain.value=1;
+   const track=state.tracks[i],distortion=supportsDistortion(i)?clamp(Number(track.distortion??0),0,100)/100:0;
+   const isOn=!isTrackEffectivelyMuted(i)&&!track.midiOnly;
+   volume.gain.value=isOn?Math.pow(clamp(Number(track.volume??78),0,100)/100,1.4):0;
+   pan.pan.value=clamp(Number(track.pan??0),-100,100)/100;
+   dry.gain.value=1-distortion;wet.gain.value=distortion;
+   pre.gain.value=1+distortion*11;post.gain.value=.8/(1+distortion*.35);
+   lfoVolume.gain.value=1;
+   d.gain.value=clamp(Number(track.delaySend??0),0,100)/100*SEND_FX_BUS.delaySend;
+   r.gain.value=clamp(Number(track.reverbSend??0),0,100)/100*SEND_FX_BUS.reverbSend;
+   chorus.gain.value=clamp(Number(track.chorusSend??0),0,100)/100*SEND_FX_BUS.chorusSend;
+   cutoffBus.gain.value=1;
    meter.fftSize=1024;meter.smoothingTimeConstant=0;
    const meterL=ctx.createAnalyser(),meterR=ctx.createAnalyser(),stereoSplitter=ctx.createChannelSplitter(2);
    meterL.fftSize=meterR.fftSize=1024;meterL.smoothingTimeConstant=meterR.smoothingTimeConstant=0;
@@ -3415,7 +3460,7 @@ async function initAudio(){
  const pwmBuses=Array.from({length:TRACK_COUNT},()=>ctx.createGain());
  pwmBuses.forEach(bus=>bus.gain.value=1);
  const lfoNodes=[];for(let i=0;i<4;i++){const osc=ctx.createOscillator(),depthNode=ctx.createGain();depthNode.gain.value=0;osc.connect(depthNode);osc.start();lfoNodes.push({osc,depthNode,route:'off'})}
- audio={ctx,masterGain,analyser,compressor,trackGains,trackModGains,trackPans,trackMeters,trackStereoMeters,delaySends,reverbSends,chorusSends,distortionStages,cutoffBuses,pwmBuses,delayNode,delayFeedback,delayDamping,delayReturn,reverb,reverbReturn,chorusInput,chorusDelayLeft,chorusDelayRight,chorusOsc,chorusDepthLeft,chorusDepthRight,irDecay:0,lfoNodes,noise:null,streamDest:null,outputElement:null};
+ audio={ctx,masterGain,analyser,compressor,trackGains,trackModGains,trackPans,trackMeters,trackStereoMeters,delaySends,reverbSends,chorusSends,distortionStages,cutoffBuses,pwmBuses,delayNode,delayFeedback,delayDamping,delayReturn,reverb,reverbReturn,chorusInput,chorusDelayLeft,chorusDelayRight,chorusOsc,chorusDepthLeft,chorusDepthRight,irDecay:initialFx.reverbDecay,lfoNodes,noise:null,streamDest:null,outputElement:null};
  updateSendEngine();applyTrackMix();applyLFOs();
  ctx.addEventListener('statechange',refreshAudioPowerUI);
  }
@@ -7588,25 +7633,25 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  compressor.attack.value=.004;compressor.release.value=.17;
  master.gain.value=clamp(Number(state.master??75),0,100)/100*.84;
  compressor.connect(master).connect(ctx.destination);
- const fx=state.sendFX||{};
+ const fx=normalizedSendFX(state.sendFX);
  const delayInput=ctx.createGain(),delay=ctx.createDelay(2),feedback=ctx.createGain();
  const delayDamping=ctx.createBiquadFilter(),delayReturn=ctx.createGain();
- delay.delayTime.value=clamp(Number(fx.delayTime??.3),.07,1.2);
- feedback.gain.value=clamp(Number(fx.feedback??30),0,85)/100;
- delayDamping.type='lowpass';delayDamping.frequency.value=4800;
- delayReturn.gain.value=.6;
+ delay.delayTime.value=fx.delayTime;
+ feedback.gain.value=fx.feedback;
+ delayDamping.type='lowpass';delayDamping.frequency.value=SEND_FX_BUS.delayDampingHz;
+ delayReturn.gain.value=SEND_FX_BUS.delayReturn;
  delayInput.connect(delay);delay.connect(delayDamping).connect(feedback).connect(delay);
  delay.connect(delayReturn).connect(compressor);
  const reverb=ctx.createConvolver(),reverbReturn=ctx.createGain();
- reverb.buffer=makeReverbIR(ctx,clamp(Number(fx.reverbDecay??1.8),.5,4));
- reverbReturn.gain.value=.72;reverb.connect(reverbReturn).connect(compressor);
+ reverb.buffer=makeReverbIR(ctx,fx.reverbDecay);
+ reverbReturn.gain.value=SEND_FX_BUS.reverbReturn;reverb.connect(reverbReturn).connect(compressor);
  const chorusInput=ctx.createGain(),chorusLeft=ctx.createDelay(.1),chorusRight=ctx.createDelay(.1);
  const chorusLPan=ctx.createStereoPanner(),chorusRPan=ctx.createStereoPanner(),chorusOsc=ctx.createOscillator();
  const chorusDepthL=ctx.createGain(),chorusDepthR=ctx.createGain();
- chorusLPan.pan.value=-.95;chorusRPan.pan.value=.95;
- chorusLeft.delayTime.value=.02;chorusRight.delayTime.value=.02;
- chorusOsc.type='sine';chorusOsc.frequency.value=clamp(Number(fx.chorusRate??.7),.1,5);
- chorusDepthL.gain.value=clamp(Number(fx.chorusDepth??4),0,10)/1000;
+ chorusLPan.pan.value=-SEND_FX_BUS.chorusPan;chorusRPan.pan.value=SEND_FX_BUS.chorusPan;
+ chorusLeft.delayTime.value=SEND_FX_BUS.chorusDelay;chorusRight.delayTime.value=SEND_FX_BUS.chorusDelay;
+ chorusOsc.type='sine';chorusOsc.frequency.value=fx.chorusRate;
+ chorusDepthL.gain.value=fx.chorusDepth;
  chorusDepthR.gain.value=-chorusDepthL.gain.value;
  chorusOsc.connect(chorusDepthL).connect(chorusLeft.delayTime);
  chorusOsc.connect(chorusDepthR).connect(chorusRight.delayTime);
@@ -7644,9 +7689,9 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
   volumeMod.connect(pre).connect(shaper).connect(post).connect(wet).connect(pan);
   pan.connect(compressor);
   const delaySend=ctx.createGain(),reverbSend=ctx.createGain(),chorusSend=ctx.createGain();
-  delaySend.gain.value=clamp(Number(track.delaySend??0),0,100)/100*.7;
-  reverbSend.gain.value=clamp(Number(track.reverbSend??0),0,100)/100*.85;
-  chorusSend.gain.value=clamp(Number(track.chorusSend??0),0,100)/100*.45;
+  delaySend.gain.value=clamp(Number(track.delaySend??0),0,100)/100*SEND_FX_BUS.delaySend;
+  reverbSend.gain.value=clamp(Number(track.reverbSend??0),0,100)/100*SEND_FX_BUS.reverbSend;
+  chorusSend.gain.value=clamp(Number(track.chorusSend??0),0,100)/100*SEND_FX_BUS.chorusSend;
   pan.connect(delaySend).connect(delayInput);
   pan.connect(reverbSend).connect(reverb);
   pan.connect(chorusSend).connect(chorusInput);
@@ -7767,10 +7812,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  // Live DRUM tracks produce built-in kicks, snares and hats when no sample
  // is assigned to the step slot. Re-create those voices for offline export.
  // Both tonal and noise components feed the same track mixer and send FX.
- const noiseBuffer=ctx.createBuffer(1,Math.round(rate*1.5),rate);
- const noiseValues=noiseBuffer.getChannelData(0);
- const drumNoiseRandom=stemRandom(stemHash(exportSeed,0x4452554D));
- for(let n=0;n<noiseValues.length;n++)noiseValues[n]=drumNoiseRandom()*2-1;
+ const noiseBuffer=makeDrumNoiseBuffer(ctx);
  function renderBuiltInDrum(i,step,time){
   const track=state.tracks[i];
   const type=['kick','snare','hat'].includes(track.drumType)?track.drumType:'kick';
@@ -7851,7 +7893,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
     amp.gain.setValueAtTime(0,time);
     amp.gain.linearRampToValueAtTime(level,time+.003);
    }
-   let output=amp;
+   let output=amp,sampleFilter=null;
    if(drum){
     const pan=ctx.createStereoPanner();
     pan.pan.value=clamp(Number(item?.slotPan??0),-100,100)/100;
@@ -7864,7 +7906,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
     filter.Q.setValueAtTime(drumSlotFilterResonance(item),time);
     source.connect(filter).connect(amp);
    }else if(!drum){
-    const filter=ctx.createBiquadFilter();
+    const filter=ctx.createBiquadFilter();sampleFilter=filter;
     filter.type='lowpass';
     filter.frequency.setValueAtTime(clamp(Number(track.sampleCutoff??12000),20,20000),time);
     filter.Q.setValueAtTime(clamp(Number(track.sampleResonance??.7),.1,18),time);
@@ -7881,6 +7923,10 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
    // a finite gate ends a looping source earlier unless Step FX arms Carry.
    const envelopeEnd=drum&&drumEnvelope?.decayEnd!==null?drumEnvelope.decayEnd+.01:Infinity;
    const naturalEnd=Math.min(sampleEnd,envelopeEnd);
+   // Live sampler voices use assignable filter envelopes as well as cutoff
+   // LFOs. Apply those envelopes offline, holding until their natural end.
+   if(sampleFilter)exportFilterEnvelopes(sampleFilter,i,time,
+    Math.min(duration,Number.isFinite(naturalEnd)?naturalEnd:duration));
    if(Number.isFinite(naturalEnd)&&naturalEnd>time&&naturalEnd<duration)source.stop(naturalEnd);
    const carrying=stepContinuesSample(step);
    const gateAt=drum&&plan.loop&&!carrying&&Number.isFinite(cutoffTime)
