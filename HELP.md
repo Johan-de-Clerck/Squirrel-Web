@@ -1,6 +1,12 @@
-# Squirrel Studio Web 0.2.65 — User Manual
+# Squirrel Studio Web 0.2.66 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Improved in 0.2.66 — Step FX in bounced and exported audio
+
+**BOUNCE** and **EXPORT WAV** now apply tracker-style **1xx Pitch Up**, **2xx Pitch Down**, **4xy Vibrato**, **Axx Volume Down** and **Bxx Volume Up** with the same six-tick-per-step calculations as live playback. **3xx Octave Up** and **5xx Octave Down** change the sounding note's pitch as well. An effect on an empty row can modify a previously triggered note; the 1/2/A/B zero-parameter commands recall their last nonzero speed. A row without a continuous effect stops further movement but preserves the pitch/volume until the next note. Effects are applied to sample instruments, library drums, built-in synthesized drums and VA/FM tracks, including chord notes and ratchets. Per-note pitch/level feeds the existing track distortion, delay/reverb/chorus sends and master FX.
+
+Browser live/offline output can still vary slightly with sample rate, oscillator phase and timing. **EXACT PATTERN · LOOP** still truncates delay/reverb tails outside the chosen pattern length; choose a longer **FX TAIL** to keep them. The song file format is unchanged.
 
 ### Improved in 0.2.65 — Live/bounce FX consistency
 
