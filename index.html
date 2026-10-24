@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.49 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.50 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1284,7 +1284,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.49';
+const SQUIRREL_VERSION='0.2.50';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -2333,7 +2333,7 @@ function renderDrumLibrary(){
  label.title=item?.name||'No library sample';
  const actions=document.createElement('div');actions.className='drum-bank-actions';
  const upload=document.createElement('button');upload.type='button';upload.className='mini-btn';upload.textContent='LOAD LIBRARY';
- upload.onclick=()=>{drumFileTarget={library:i,track:drumEditorTrack,slot:drumLastSlot(drumEditorTrack)};$('drumSampleFileInput').click()};
+ upload.onclick=()=>{if(item?.data&&!confirm('Replace sample '+(i+1)+'? Every drum slot using it will play the new audio.'))return;drumFileTarget={library:i,track:drumEditorTrack,slot:drumLastSlot(drumEditorTrack)};$('drumSampleFileInput').click()};
  const audition=document.createElement('button');audition.type='button';audition.className='mini-btn';audition.textContent='▶ PREVIEW';
  audition.disabled=!item?.data;
  audition.onclick=async()=>{
@@ -2349,11 +2349,35 @@ function renderDrumLibrary(){
  assign.onclick=()=>assignDrumLibrary(drumEditorTrack,drumLastSlot(drumEditorTrack),i);
  const clear=document.createElement('button');clear.type='button';clear.className='mini-btn';clear.textContent='CLEAR';clear.disabled=!item?.data;
  clear.onclick=async()=>{
+  if(!confirm('Clear library sample '+(i+1)+'? Drum slots assigned to it will become silent.'))return;
   state.drumLibrary[i]={name:'',data:null};drumLibraryBuffers.delete(i);
   await sampleDB('delete',drumLibraryKey(i)).catch(e=>console.warn(e));
   persist();renderAll();renderDrumSamples();
  };
- actions.append(upload,audition,assign,clear);row.append(label,actions);root.append(row);
+ const rename=document.createElement('button');rename.type='button';rename.className='mini-btn';rename.textContent='RENAME';rename.disabled=!item?.data;
+ rename.onclick=async()=>{
+  const next=prompt('Sample name',item.name||'Sample '+(i+1));
+  if(next===null)return;
+  const name=next.trim().slice(0,160);if(!name)return;
+  state.drumLibrary[i]={...item,name};
+  try{await sampleDB('put',drumLibraryKey(i),state.drumLibrary[i])}catch(e){notify('Rename not saved in browser storage: '+e.message,true)}
+  persist();renderDrumLibrary();renderDrumSamples();
+ };
+ const copy=document.createElement('button');copy.type='button';copy.className='mini-btn';copy.textContent='COPY TO';copy.disabled=!item?.data;
+ copy.onclick=async()=>{
+  const answer=prompt('Copy this sample to library slot (1–15)',String(i+1));
+  if(answer===null)return;
+  if(!/^\\d+$/.test(answer.trim())){notify('Enter a slot number from 1 to 15.',true);return}
+  const target=Number(answer)-1;
+  if(target<0||target>=DRUM_LIBRARY_SIZE||target===i){notify('Choose a different slot from 1 to 15.',true);return}
+  if(drumLibraryItem(target)?.data&&!confirm('Overwrite library slot '+(target+1)+'? Assigned drum slots will hear the copied sample.'))return;
+  state.drumLibrary[target]={...item};
+  const buffer=drumLibraryBuffers.get(i);if(buffer)drumLibraryBuffers.set(target,buffer);else drumLibraryBuffers.delete(target);
+  try{await sampleDB('put',drumLibraryKey(target),state.drumLibrary[target])}
+  catch(e){notify('Copy made, but browser storage failed: '+e.message,true)}
+  drumLibrarySelected=target;persist();renderAll();renderDrumSamples();
+ };
+ actions.append(upload,audition,assign,rename,copy,clear);row.append(label,actions);root.append(row);
  const info=document.createElement('div');info.className='drum-bank-info';
  const assigned=state.drumSamples?.[drumEditorTrack]?.[drumLastSlot(drumEditorTrack)]?.libraryIndex===i;
  info.textContent=item?.data?(assigned?'✓ LOADED · ASSIGNED TO CURRENT SLOT':'✓ LOADED IN SHARED LIBRARY'):'EMPTY LIBRARY SLOT';
