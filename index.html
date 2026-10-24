@@ -6303,10 +6303,14 @@ async function previewPatternBounce(){
   const cached=reusablePatternBouncePreview(pattern,settings);
   const wav=cached||await exportSongStereoWav({bouncePattern:pattern,settingsOverride:settings,collectWav:true});
   if(serial!==patternBouncePreviewSerial)return;
+  if(project!==state||key!==patternBouncePreviewKey(pattern,settings))
+   throw Error('The pattern or audio settings changed during rendering. Preview again.');
   if(!wav?.buffer)throw Error('No audio returned from pattern renderer.');
   // Decode final PCM, including normalize/dither/crossfade, not raw float audio.
   const buffer=await context.decodeAudioData(wav.buffer.slice(0));
   if(serial!==patternBouncePreviewSerial)return;
+  if(project!==state||key!==patternBouncePreviewKey(pattern,settings))
+   throw Error('The pattern or audio settings changed during decoding. Preview again.');
   if(!buffer?.length)throw Error('Preview buffer is empty.');
   const source=context.createBufferSource();
   source.buffer=buffer;source.loop=settings.tail===0;
@@ -6351,7 +6355,7 @@ async function runPatternBounce(){
  songExportProgress('PREPARING PATTERN '+patternLabel,0);
  try{
   await restoredDrumLibrary;
-  if(expectedState!==state||expectedGeneration!==sampleSession)
+  if(expectedState!==state||expectedGeneration!==sampleSession||expectedRevision!==patternBounceProjectRevision)
    throw Error('The project changed before the bounce started.');
   const previousData=toFile?null:(drumLibraryItem(slot)?.data??null);
   const previousName=toFile?'':drumLibraryItem(slot)?.name||'Existing sample';
