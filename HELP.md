@@ -1,6 +1,10 @@
-# Squirrel Studio Web 0.2.60 — User Manual
+# Squirrel Studio Web 0.2.61 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.61 — Lighter WAV bounce/render with VA noise
+
+When VA NOISE is enabled, WAV export and pattern bounce now reuse the same two-second noise waveform approach as live synthesis, instead of allocating a new PCM noise buffer for every exported note. Each rendered note still has an independent deterministic start offset. This reduces peak memory demand for long VA-noise arrangements and brings the noise timbre closer to live playback. Other oscillator, FM, filter and effect settings are unchanged.
 
 ### New in 0.2.60 — Compact desktop sequencer
 
