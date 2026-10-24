@@ -1,6 +1,10 @@
-# Squirrel Studio Web 0.2.58 — User Manual
+# Squirrel Studio Web 0.2.59 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.59 — Audio status and timing diagnostics
+
+The top status bar now shows **VOICES N**, the number of currently held live voices (excluding release tails and notes whose scheduled start lies in the future). During playback it also shows **TIMING OK** or **LATE N** if the JavaScript step scheduler planned one or more grid events over 10 ms late. Hover on the timing label to see the worst delay. These readouts update about four times per second and do not alter audio. They are diagnostics, **not a CPU percentage**; browsers do not expose an accurate Web Audio DSP usage meter. The build label now matches the current release.
 
 ### New in 0.2.58 — Synth voice management
 
