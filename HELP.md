@@ -1,6 +1,10 @@
-# Squirrel Studio Web 0.2.54 — User Manual
+# Squirrel Studio Web 0.2.55 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.55 — Compact Step FX layout
+
+In **SEQUENCER → Step FX**, **APPLY CARRY TO RANGE**, **CLEAR FX** and **CLEAR TRACK FX** are arranged in a compact action column to the right of FX Command, Sample Playback and Parameter Locks. On narrow screens, the actions wrap below the fields. The controls retain their original behavior.
 
 ### New in 0.2.54 — VA audio efficiency
 
