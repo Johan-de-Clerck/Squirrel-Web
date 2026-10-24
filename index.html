@@ -6252,22 +6252,49 @@ let patternBouncePreviewRendering=false,patternBouncePreviewCache=null;
 // using constant-size peak arrays instead of retaining extra audio buffers.
 const PATTERN_BOUNCE_WAVE_COLUMNS=576;
 let patternBounceWaveAnimation=0;
-function analyzePatternBounceWaveform(buffer){
+function analyzePatternBounceWaveform(buffer,wavBytes=null){
  if(!buffer?.length||typeof buffer.getChannelData!=='function')return null;
+ // Browser AudioContext.decodeAudioData can resample 44.1 kHz PCM to the
+ // hardware's 48 kHz. Read the ORIGINAL little-endian WAV when available:
+ // the drawing then reflects exact exported PCM and metadata, not resampling.
+ const data=wavBytes instanceof ArrayBuffer&&wavBytes.byteLength>=44?new DataView(wavBytes):null;
+ const pcmBits=data?.getUint16(34,true);
+ const pcmRate=data?.getUint32(24,true);
+ const pcmChannels=data?.getUint16(22,true);
+ const pcmBytes=data?.getUint32(40,true);
+ const bytesPerFrame=pcmBits===16?4:pcmBits===24?6:0;
+ const pcmValid=!!(data&&data.getUint32(20,true)===1&&pcmChannels===2&&
+  [44100,48000].includes(pcmRate)&&bytesPerFrame&&
+  pcmBytes%bytesPerFrame===0&&44+pcmBytes<=wavBytes.byteLength);
+ const frames=pcmValid?pcmBytes/bytesPerFrame:buffer.length;
+ const rate=pcmValid?pcmRate:buffer.sampleRate;
  const cols=PATTERN_BOUNCE_WAVE_COLUMNS,channels=[];
  for(let c=0;c<2;c++){
-  const values=buffer.getChannelData(Math.min(c,(buffer.numberOfChannels||1)-1));
+  const values=pcmValid?null:buffer.getChannelData(Math.min(c,(buffer.numberOfChannels||1)-1));
   const lo=new Float32Array(cols),hi=new Float32Array(cols);
   for(let x=0;x<cols;x++){
-   const from=Math.floor(x*values.length/cols);
-   const to=Math.min(values.length,Math.max(from+1,Math.floor((x+1)*values.length/cols)));
+   const from=Math.floor(x*frames/cols);
+   const to=Math.min(frames,Math.max(from+1,Math.floor((x+1)*frames/cols)));
    let min=1,max=-1;
-   for(let i=from;i<to;i++){const value=Number.isFinite(values[i])?values[i]:0;min=Math.min(min,value);max=Math.max(max,value)}
+   for(let i=from;i<to;i++){
+    let value;
+    if(pcmValid){
+     const byte=44+i*bytesPerFrame+c*(pcmBits/8);
+     if(pcmBits===16)value=data.getInt16(byte,true)/32768;
+     else{
+      const raw=data.getUint8(byte)|(data.getUint8(byte+1)<<8)|(data.getUint8(byte+2)<<16);
+      value=(raw<<8>>8)/8388608;
+     }
+    }else value=values[i];
+    value=Number.isFinite(value)?value:0;
+    if(value<min)min=value;
+    if(value>max)max=value;
+   }
    lo[x]=min<=max?min:0;hi[x]=min<=max?max:0;
   }
   channels.push({lo,hi});
  }
- return {channels,frames:buffer.length,duration:buffer.duration||buffer.length/buffer.sampleRate,rate:buffer.sampleRate};
+ return {channels,frames,duration:frames/rate,rate};
 }
 function stopPatternBounceWaveAnimation(){
  if(patternBounceWaveAnimation&&typeof cancelAnimationFrame==='function')cancelAnimationFrame(patternBounceWaveAnimation);
@@ -6434,7 +6461,7 @@ async function previewPatternBounce(){
   // Peak extraction runs once per actual WAV. The cache stores tiny min/max
   // arrays, not the large decoded AudioBuffer, and survives stopping playback.
   const waveform=cached&&patternBouncePreviewCache?.waveform
-   ?patternBouncePreviewCache.waveform:analyzePatternBounceWaveform(buffer);
+   ?patternBouncePreviewCache.waveform:analyzePatternBounceWaveform(buffer,wav.buffer);
   if(serial!==patternBouncePreviewSerial)return;
   const source=context.createBufferSource();
   source.buffer=buffer;source.loop=settings.tail===0;
