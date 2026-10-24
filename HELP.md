@@ -1,6 +1,10 @@
-# Squirrel Studio Web 0.2.53 — User Manual
+# Squirrel Studio Web 0.2.54 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.54 — VA audio efficiency
+
+VA voices now reuse a single two-second noise waveform per AudioContext. When a patch has its NOISE generator disabled or set to 0 level, the voice no longer creates a noise source/filter. This avoids repeated large PCM allocations during dense passages. Existing VA oscillators, sub oscillator, PWM, filter, envelopes and output routing are unchanged.
 
 ### New in 0.2.53 — Groove & Humanize
 
