@@ -1,6 +1,10 @@
-# Squirrel Studio Web 0.2.51 — User Manual
+# Squirrel Studio Web 0.2.52 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.52 — Synth Preset Manager
+
+On **SYNTH**, the **SYNTH PRESET LIBRARY** bar lets you **SAVE AS** a named VA or FM patch, **LOAD** it onto the selected synth track, **RENAME** or **DELETE** saved presets, and **EXPORT**/**IMPORT** individual preset JSON files. Presets are kept in browser storage and can be used across songs in the same browser. They contain synthesizer sound settings, not patterns or mixer settings. Loading changes only the selected synth track; multiple BASS, LEAD and CHORD tracks can use independent patches. Export a preset JSON to move the sound to another browser.
 
 ### New in 0.2.51 — Parameter Locks
 
@@ -321,7 +325,7 @@ Press **STOP PREVIEW** to stop listening without deleting the displayed waveform
 
 The panel is a **read-only visualization**. For editing waveform trim and loop markers, use **SAMPLE EDITOR** after saving to a slot. There is no audio-length change from the visualization.
 
-### Select part of the bounce waveform (new in 0.2.51)
+### Select part of the bounce waveform (new in 0.2.52)
 
 The waveform under **FILE → RENDER / EXPORT → PREVIEW BOUNCE** supports **drag-to-select**. Click and hold on either L or R waveform and drag horizontally to mark the part of the rendered pattern that you want to keep. A mint-colored overlay highlights the selected range across both stereo channels, and the timing readout shows its start, end, and duration in seconds (to 1 ms in the UI). The internal selection is aligned to exact PCM sample frames, not rounded milliseconds.
 
