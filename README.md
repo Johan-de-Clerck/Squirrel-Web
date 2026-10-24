@@ -2,7 +2,7 @@
   <img src="squirrel-icon.webp" alt="Squirrel Studio icon" width="112">
   <h1>Squirrel Studio</h1>
   <p><strong>A browser-based groovebox, synthesizer, sampler and tracker-style step sequencer.</strong></p>
-  <p><strong>Current version: 0.2.66</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
+  <p><strong>Current version: 0.2.67</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
 </div>
 
 Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrangement into a compact, eight-track music workstation. The web version runs in a modern desktop browser using the Web Audio API.
@@ -11,12 +11,12 @@ Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrange
 
 | Area | Highlights |
 | --- | --- |
-| **Sequencer** | Eight freely configurable tracks, tracker-style note input, up to 32 steps in view, per-track pattern lengths, chance, ratchets, Step FX, VA/FM Parameter Locks and Groove & Humanize. |
+| **Sequencer** | Eight freely configurable tracks, tracker-style note input, up to 32 steps in view, per-track pattern lengths, **individual BPM for all 32 patterns**, chance, ratchets, Step FX, VA/FM Parameter Locks and Groove & Humanize. |
 | **Instruments** | Virtual analog (VA) and FM synthesizers, sampled instruments, drum tracks and chord playback. Independent sounds for different tracks and a reusable VA/FM preset manager. |
 | **VA / FM engines** | Multi-oscillator VA with sub oscillator, noise and PWM; two- and four-operator FM with selectable algorithms. |
 | **Drum library** | A shared pool of 15 samples, with five assignable slots per drum track, waveform preview, rename, copy and overwrite confirmation. |
 | **Sample editing** | Stereo waveforms with detailed, continuous 1×–4096× zoom, trim and loop points, normal and ping-pong loops, pitch, filters and envelopes. Mouse wheel zooms at the pointer; middle-button drag pans. |
-| **Song Mode** | Arrange named patterns into a sequence. Selected sample and drum steps can continue across pattern boundaries, and C00 triggers release. |
+| **Song Mode** | Arrange named patterns into a sequence with **automatic tempo changes** (e.g. A1 60 BPM → A2 120 BPM). Selected sample and drum steps can continue across boundaries, and C00 triggers release. |
 | **Mixer and FX** | Stereo volume and pan, mute/solo, per-track audition, distortion, delay, reverb and chorus sends with shared live/bounce effect settings and offline tracker pitch/volume effects. |
 | **MIDI** | MIDI input and per-track MIDI output options, including MIDI-only tracks. Availability depends on browser and hardware support. |
 | **Files and export** | Save/load songs as JSON, render synth notes to WAV/library, **bounce the selected pattern to a WAV or any of 15 library slots** (muted tracks excluded), export 16/24-bit stereo song WAVs, and export track stems to ZIP. |
@@ -38,7 +38,7 @@ See [HELP.md](HELP.md) for the detailed guide.
 - **BOUNCE** (next to FILE): selected-pattern bounce, preview waveform, loop crossfade and destination options.
 - **EXPORT WAV** (next to BOUNCE): stereo song, selected-track and stem ZIP export settings.
 - **SYNTH / DRUM SAMPLES / SAMPLE EDITOR**: edit the selected sound without losing other track and slot settings.
-- **SONG MODE**: chain patterns and manage cross-pattern sample continuation with **Step FX → Continue into next pattern**. A small check appears on an affected step only when continuation is enabled.
+- **SONG MODE**: chain patterns with their own BPM and manage cross-pattern sample continuation with **Step FX → Continue into next pattern**. A small check appears on an affected step only when continuation is enabled.
 - **Esc**: toggle Edit Mode when not entering text or using a menu.
 - **Sample Editor**: mouse wheel = zoom at the pointer; hold the middle mouse button and drag = horizontal navigation.
 
@@ -70,7 +70,7 @@ This is intentionally a **high-level release history**. Small bug fixes, interna
 
 | Release | Major changes |
 | --- | --- |
-| **0.2.x — Song production & export** | Compact Synth and Drum editors; expanded stereo mixer; enhanced waveform editor; Song Mode and cross-pattern continuation; stereo WAV/stem export; **VA/FM synth rendering, muted-aware pattern bounce to the 15-sample library and per-step cutoff/resonance locks, a portable VA/FM preset library and Groove & Humanize**. |
+| **0.2.x — Song production & export** | Individual BPM per pattern with tempo-aware WAV export; compact Synth and Drum editors; expanded stereo mixer; enhanced waveform editor; Song Mode and cross-pattern continuation; stereo WAV/stem export; **VA/FM synth rendering, muted-aware pattern bounce to the 15-sample library and per-step cutoff/resonance locks, a portable VA/FM preset library and Groove & Humanize**. |
 | **0.1.7x–0.1.8x — Advanced synthesis & sampling** | VA and FM engines, four-operator FM algorithms, PWM/LFO routing, shared drum sample library, per-slot filters and envelopes, sample looping and Step FX. |
 | **0.1.x — Foundation** | Eight-track web groovebox, tracker-style sequencer, instrument tracks, MIDI integration, basic FX and pattern workflow. |
 
