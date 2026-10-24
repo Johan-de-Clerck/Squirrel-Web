@@ -1,6 +1,12 @@
-# Squirrel Studio Web 0.2.64 — User Manual
+# Squirrel Studio Web 0.2.65 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Improved in 0.2.65 — Live/bounce FX consistency
+
+The live engine and offline **BOUNCE / EXPORT WAV** now use shared definitions for delay time/feedback, delay damping and return level, reverb decay/return, stereo chorus timing/depth, and the three per-track send gains. Live audio also initializes its master, channel volumes, pans, distortion dry/wet balance and FX parameters directly to their saved values, avoiding a brief ramp from Web Audio defaults when starting audio. Built-in snare/hi-hat noise is generated from the same deterministic source in both engines. Offline SAMPLE-track rendering now includes the assigned filter envelopes, as live playback already did. Synthesizer and drum/sample tracks still use the same shared reverb impulse generator.
+
+**Important:** **BOUNCE → EXACT PATTERN · LOOP** renders exactly one pattern duration, so delay or reverb echoes beyond the end are cut at that boundary. Choose **PATTERN + 3s / 6s / 10s FX TAIL** to keep the decay after the pattern. The WAV uses the selected sample rate; 44.1 kHz and 48 kHz rendering can differ slightly from a live audio device running at another rate. There is no change to the saved song format.
 
 ### Fixed in 0.2.64 — Mouse selection in dropdowns
 
