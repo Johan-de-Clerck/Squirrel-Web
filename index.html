@@ -5669,7 +5669,7 @@ function setPatternLength(bank,value){
 }
 
 async function applyLoadedProject(project){
- stopTransport();
+ stopTransport();patternBouncePreviewCache=null;
  sampleSession++;sampleBuffers.clear();drumSampleBuffers.clear();drumLibraryBuffers.clear();
  stepClipboard=null;clearStepRange();state=project;songPosition=0;songCuePosition=0;visibleSongPosition=0;fxEditMode=false;fxDigitBuffer='';
  // Replace IndexedDB samples as a single project, never mixing the demo with the previous song.
@@ -5717,7 +5717,7 @@ async function bootstrapDemoJson(){
 }
 function newSong(){
   if(!window.confirm('NEW SONG? All patterns, notes, effects, mixer settings, LFOs, envelopes and sends will be reset. Save your current song first if needed.'))return;
-  stopTransport();
+  stopTransport();patternBouncePreviewCache=null;
   for(const [key,voices] of activeLive){for(const voice of voices)if(!voice.drum)releaseVoice(voice,audio?.ctx.currentTime||0)}
   activeLive.clear();keyboardDown.clear();keyboardAssignments.clear();
   sampleSession++;sampleBuffers.clear();for(let i=0;i<TRACK_COUNT;i++)removeStoredSample(i);
@@ -6198,14 +6198,14 @@ function syncPatternBounceOptions(){
  control.value=chosen;
  if(control.selectedIndex<0)control.value='download';
 }
-async function saveBouncedPatternToLibrary(wav,slot,expectedState,expectedGeneration,previousData,patternLabel){
+async function saveBouncedPatternToLibrary(wav,slot,expectedState,expectedGeneration,previousData,patternLabel,expectedRevision=patternBounceProjectRevision){
  if(!Number.isInteger(slot)||slot<0||slot>=DRUM_LIBRARY_SIZE)throw Error('Invalid library slot.');
  if(!wav||!(wav.buffer instanceof ArrayBuffer)||!wav.name)throw Error('Pattern bounce did not return a WAV.');
  if(wav.buffer.byteLength>MAX_SAMPLE_BYTES)
   throw Error('Bounced WAV exceeds the 16 MB sample limit. Choose 16-bit PCM or a shorter FX tail.');
  await restoredDrumLibrary;
  const checkSlot=()=>{
-  if(state!==expectedState||sampleSession!==expectedGeneration)
+  if(state!==expectedState||sampleSession!==expectedGeneration||patternBounceProjectRevision!==expectedRevision)
    throw Error('The project changed while bouncing. Nothing was saved.');
   if((drumLibraryItem(slot)?.data??null)!==(previousData??null))
    throw Error('The selected sample slot changed while rendering. Nothing was overwritten.');
@@ -6344,7 +6344,7 @@ async function runPatternBounce(){
   notify('Choose DOWNLOAD WAV or a sample slot from 01 to 15.',true);return;
  }
  const settings=currentPatternBounceSettings();
- const expectedState=state,expectedGeneration=sampleSession;
+ const expectedState=state,expectedGeneration=sampleSession,expectedRevision=patternBounceProjectRevision;
  const button=$('fileBouncePattern'),oldLabel=button?.textContent;
  songExportBusy=true;
  if(button){button.disabled=true;button.textContent='↧ BOUNCING PATTERN…'}
@@ -6362,7 +6362,7 @@ async function runPatternBounce(){
   const wav=cached||await exportSongStereoWav({bouncePattern:pattern,settingsOverride:settings,collectWav:!toFile});
   if(!toFile){
    if(!wav)throw Error('No pattern WAV was produced.');
-   await saveBouncedPatternToLibrary(wav,slot,expectedState,expectedGeneration,previousData,patternLabel);
+   await saveBouncedPatternToLibrary(wav,slot,expectedState,expectedGeneration,previousData,patternLabel,expectedRevision);
   }else if(cached){
    downloadSongBlob(new Blob([cached.buffer],{type:'audio/wav'}),cached.name);
    notify('Pattern '+patternLabel+' downloaded from the exact audio you previewed.');
