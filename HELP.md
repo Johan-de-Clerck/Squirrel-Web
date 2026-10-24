@@ -1,6 +1,14 @@
-# Squirrel Studio Web 0.2.69 — User Manual
+# Squirrel Studio Web 0.2.70 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Improved in 0.2.70 — Shared FX routing in live playback and bounce
+
+The stereo **DELAY**, **REVERB** and **CHORUS** engines now use the same graph-building code in live playback, pattern bounce and song WAV export. The feedback route, damping filter, stereo chorus placement, reverb impulse response, return levels and compressor destination can no longer diverge through separate copies of the effects implementation. Track-level distortion and dry/send gain settings remain unchanged.
+
+When **PLAY** begins, live chorus and LFO oscillators restart their modulation phase on the first scheduled step. The offline renderer already starts these at time zero. This makes repeated playback and WAV rendering more consistent, especially with strong chorus, PWM or pan modulation. Free-running oscillators still continue through song-pattern transitions; phase is reset only when transport is started.
+
+For the closest live-versus-WAV comparison, choose the export sample rate that matches the audio device, leave **NORMALIZE** off, and use a **3/6/10-second FX TAIL** to capture full reverb and delay decays. An exact-length **LOOP** bounce intentionally ends at the pattern boundary and cannot preserve a tail after the last step. These changes do not modify saved projects or the sample library.
 
 ### Optimized in 0.2.69 — Ping-pong sample playback
 
