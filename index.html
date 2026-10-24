@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.45 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.46 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1161,6 +1161,14 @@ input[type="password"],textarea,
    <option value="10">PATTERN + 10s FX TAIL</option>
   </select>
  </label>
+ <label for="patternBounceCrossfade" id="patternBounceCrossfadeField">LOOP CROSSFADE
+  <select id="patternBounceCrossfade" aria-label="Crossfade the start and end of an exact pattern loop; not available with FX tails">
+   <option value="0">OFF · ORIGINAL AUDIO</option>
+   <option value="2">2 ms · TIGHT</option>
+   <option value="5">5 ms · SMOOTH</option>
+   <option value="10">10 ms · SOFT</option>
+  </select>
+ </label>
 </div>
 <div class="song-export-settings" aria-label="Song WAV export settings">
   <label for="songExportRate">SAMPLE RATE<select id="songExportRate" aria-label="Song WAV export sample rate"><option value="48000">48,000 Hz</option><option value="44100">44,100 Hz</option></select></label>
@@ -1245,7 +1253,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.45';
+const SQUIRREL_VERSION='0.2.46';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -6135,6 +6143,33 @@ async function saveRenderedSynthToLibrary(wav,expectedState,expectedGeneration){
 }
 // v0.2.45: One selected pattern -> WAV file or any of the 15 library slots.
 // Never insert the bounced WAV back into the source pattern automatically.
+const PATTERN_BOUNCE_PREFS_KEY='squirrel-pattern-bounce-options-v1';
+const PATTERN_LOOP_CROSSFADE_MS=[0,2,5,10];
+function patternBounceCrossfadeMs(){
+ const value=Number($('patternBounceCrossfade')?.value);
+ return PATTERN_LOOP_CROSSFADE_MS.includes(value)?value:0;
+}
+function updatePatternBounceCrossfadeState(){
+ const tail=Number($('patternBounceTail')?.value??0);
+ const disabled=tail!==0;
+ const field=$('patternBounceCrossfadeField'),control=$('patternBounceCrossfade');
+ if(control)control.disabled=disabled;
+ if(field)field.classList.toggle('is-disabled',disabled);
+}
+function persistPatternBouncePrefs(){
+ const record={tail:Number($('patternBounceTail').value),crossfade:patternBounceCrossfadeMs()};
+ try{localStorage.setItem(PATTERN_BOUNCE_PREFS_KEY,JSON.stringify(record))}
+ catch(e){console.warn('Pattern bounce preference save:',e)}
+}
+function restorePatternBouncePrefs(){
+ let record={};
+ try{record=JSON.parse(localStorage.getItem(PATTERN_BOUNCE_PREFS_KEY)||'{}')||{}}
+ catch(e){console.warn('Pattern bounce preference restore:',e)}
+ const tail=Number(record.tail),crossfade=Number(record.crossfade);
+ $('patternBounceTail').value=[0,3,6,10].includes(tail)?String(tail):'0';
+ $('patternBounceCrossfade').value=PATTERN_LOOP_CROSSFADE_MS.includes(crossfade)?String(crossfade):'0';
+ updatePatternBounceCrossfadeState();
+}
 function syncPatternBounceOptions(){
  const control=$('patternBounceDestination');
  if(!control)return;
@@ -6197,7 +6232,8 @@ async function runPatternBounce(){
  }
  const requestedTail=Number($('patternBounceTail')?.value??0);
  const tail=[0,3,6,10].includes(requestedTail)?requestedTail:0;
- const settings={...songExportSettings(),source:'mix',tail};
+ const loopCrossfadeMs=tail===0?patternBounceCrossfadeMs():0;
+ const settings={...songExportSettings(),source:'mix',tail,loopCrossfadeMs};
  const expectedState=state,expectedGeneration=sampleSession;
  const button=$('fileBouncePattern'),oldLabel=button?.textContent;
  songExportBusy=true;
@@ -6605,6 +6641,30 @@ function songExportWavName(bitDepth=16,source='mix',trackIndex=state.selectedTra
  const track=state.tracks[trackIndex];
  const trackName=source==='selected'&&track?'_TRACK'+String(trackIndex+1).padStart(2,'0')+'_'+projectFileName(track.name||'Track').replace(/\.json$/i,'').replace(/\s+/g,'_'):'';
  return base+trackName+'_STEREO'+(bitDepth===24?'_24BIT':'')+'.wav';
+}
+// v0.2.46 — In-place, zero-length-change crossfade around the wrap point.
+// For each stereo channel, blend samples from both sides of the loop boundary
+// with matched 50/50 seam samples. The first and last PCM frames then match,
+// while the untouched body, pitch, duration and source project stay unchanged.
+function crossfadePatternLoopSeam(channels,rate,milliseconds){
+ if(!PATTERN_LOOP_CROSSFADE_MS.includes(milliseconds)||milliseconds===0)return 0;
+ if(!Array.isArray(channels)||channels.length!==2||channels[0].length!==channels[1].length)
+  throw new Error('Loop crossfade requires equal-length stereo channels.');
+ const frames=channels[0].length;
+ const width=Math.min(Math.round(rate*milliseconds/1000),Math.floor(frames/4));
+ if(width<2)return 0;
+ for(const channel of channels){
+  const head=channel.slice(0,width),tail=channel.slice(frames-width);
+  for(let j=0;j<width;j++){
+   const position=j/(width-1);
+   const smooth=.5-.5*Math.cos(Math.PI*position);
+   const towardHead=.5*smooth;
+   const towardTail=.5*(1-smooth);
+   channel[frames-width+j]=tail[j]*(1-towardHead)+head[width-1-j]*towardHead;
+   channel[j]=head[j]*(1-towardTail)+tail[width-1-j]*towardTail;
+  }
+ }
+ return width;
 }
 async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOverride=null,previewSynth=null,bouncePattern=null}={}){
  if(playing){notify('Stop playback before exporting.',true);return}
@@ -7199,6 +7259,12 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  await yieldSongExportUI();
  const rendered=await ctx.startRendering();
  const channels=[rendered.getChannelData(0),rendered.getChannelData(1)];
+ // The seam is processed BEFORE peak normalization and PCM quantization,
+ // so library samples and downloaded WAV files use identical stereo audio.
+ const crossfadeMs=bouncePattern!==null&&tail===0
+  ?Number(exportRequest.loopCrossfadeMs??0):0;
+ const appliedSeam=crossfadePatternLoopSeam(channels,rate,crossfadeMs);
+ if(appliedSeam)songExportProgress('LOOP SEAM · '+crossfadeMs+' ms',null);
  const analysis=await wavPeakAnalysisAsync(channels);
  const gain=wavExportGain(analysis,normalize);
  const wavName=previewSynth
@@ -7355,6 +7421,9 @@ function bindings(){
  $('songExportTail').onchange=saveSongExportSettings;
  $('songExportNormalize').onchange=saveSongExportSettings;
  $('songExportDither').onchange=saveSongExportSettings;
+ restorePatternBouncePrefs();
+ $('patternBounceTail').onchange=()=>{updatePatternBounceCrossfadeState();persistPatternBouncePrefs()};
+ $('patternBounceCrossfade').onchange=persistPatternBouncePrefs;
  $('fileRenderSynth').onclick=()=>{$('fileMenu').open=false;renderSelectedSynthWav().catch(e=>notify('Render failed: '+e.message,true))};
  $('fileExportSong').onclick=()=>{$('fileMenu').open=false;runSongWavExport()};
  $('fileBouncePattern').onclick=()=>{$('fileMenu').open=false;runPatternBounce()};
