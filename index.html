@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.53 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.54 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1111,19 +1111,19 @@ input[type="password"],textarea,
 .pattern-bounce-preview-actions button:disabled{opacity:.5;cursor:default}
 #patternBouncePreviewStatus{padding:0 10px 4px;color:#c7ad8c;font:700 10px Consolas,monospace;min-height:14px}
  .pad.has-parameter-lock:after{content:'●';position:absolute;top:0;right:2px;font-size:8px;color:var(--accent2);pointer-events:none}
- /* v0.2.53: per-track groove, velocity humanize and microtiming. */
+ /* v0.2.54: per-track groove, velocity humanize and microtiming. */
 .groove-track-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
 .groove-track-row{display:grid;grid-template-columns:minmax(90px,1fr) minmax(0,1fr);gap:8px;align-items:center;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
 .groove-track-row strong{font-size:11px}
 .groove-track-row label{display:grid;gap:3px;font-size:10px;color:var(--muted)}
 .groove-track-row input{width:100%}
 @media(max-width:900px){.groove-track-list{grid-template-columns:1fr}}
-/* v0.2.53: reusable VA/FM preset bank. */
+/* v0.2.54: reusable VA/FM preset bank. */
 .synth-presets{display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding:10px;margin:0 0 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
 .synth-presets>.field-head{margin-right:6px}.synth-presets select{flex:1 1 200px;min-width:145px;max-width:360px}
 .synth-presets .mini-btn{flex:0 0 auto}
 .synth-presets.hidden{display:none}
-/* v0.2.53: step-level synth filter locks, independent from tracker FX. */
+/* v0.2.54: step-level synth filter locks, independent from tracker FX. */
 .step-locks{margin:10px 0;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}
 .step-lock-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:6px}
 .step-lock-controls label{display:flex;flex-wrap:wrap;align-items:center;gap:7px;font-size:11px;color:var(--text)}
@@ -1304,7 +1304,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.53';
+const SQUIRREL_VERSION='0.2.54';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -3700,6 +3700,22 @@ function fmSynthVoice(track,note,velocity,when,gate=null){
  if(gate!==null)releaseVoiceScheduled(v,when+Math.max(.035,gate));
  return v;
 }
+// Cache the VA noise waveform per AudioContext instead of generating and
+// allocating two seconds of fresh random PCM for every synth note.
+const vaNoiseBuffers=new WeakMap();
+function vaNoiseBuffer(ctx){
+ let buffer=vaNoiseBuffers.get(ctx);
+ if(buffer)return buffer;
+ buffer=ctx.createBuffer(1,Math.max(1,Math.floor(ctx.sampleRate*2)),ctx.sampleRate);
+ const data=buffer.getChannelData(0);
+ let seed=0x41c64e6d;
+ for(let i=0;i<data.length;i++){
+  seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;
+  data[i]=((seed>>>0)/2147483648)-1;
+ }
+ vaNoiseBuffers.set(ctx,buffer);
+ return buffer;
+}
 function synthVoice(track,note,velocity,when,gate=null){
  const c=audio.ctx,s=track.sound,trackIndex=state.tracks.indexOf(track);
  note=clamp(note+Number(s.transpose||0),0,127);
@@ -3751,12 +3767,15 @@ function synthVoice(track,note,velocity,when,gate=null){
  routeOsc(osc2,s.wave2,g2,f*Math.pow(2,s.detune/1200),2);
  routeOsc(subOsc,s.subWave||'sine',subGain,f*Math.pow(2,subOctave/12)*Math.pow(2,(s.subDetune||0)/1200),3);
  g1.connect(filt);g2.connect(filt);subGain.connect(filt);
- const noiseBuffer=c.createBuffer(1,Math.floor(c.sampleRate*2),c.sampleRate),noiseData=noiseBuffer.getChannelData(0);
- for(let i=0;i<noiseData.length;i++)noiseData[i]=Math.random()*2-1;
- const noiseSource=c.createBufferSource(),noiseFilter=c.createBiquadFilter();noiseSource.buffer=noiseBuffer;noiseSource.loop=true;
- noiseFilter.type='lowpass';noiseFilter.frequency.value=200+clamp(Number(s.noiseTone??70),0,100)/100*16000;
- noiseSource.connect(noiseFilter).connect(noiseGain).connect(filt);
- noiseSource.start(when);
+ let noiseSource=null,noiseFilter=null;
+ if(s.noiseOn===true&&Number(s.noiseLevel??0)>0){
+  noiseSource=c.createBufferSource();noiseFilter=c.createBiquadFilter();
+  noiseSource.buffer=vaNoiseBuffer(c);noiseSource.loop=true;
+  noiseFilter.type='lowpass';noiseFilter.frequency.value=200+clamp(Number(s.noiseTone??70),0,100)/100*16000;
+  noiseSource.connect(noiseFilter).connect(noiseGain).connect(filt);
+  // Different offsets prevent simultaneous VA voices from using the same noise phase.
+  noiseSource.start(when,(Math.random()*noiseSource.buffer.duration));
+ }
  filt.connect(out).connect(modGain).connect(audio.trackGains[trackIndex]);
  gainEnv(out.gain,when,velocity,s.attack,s.decay,s.sustain);
  for(const osc of [osc1,osc2,subOsc])osc.start(when);
@@ -3770,10 +3789,10 @@ function synthVoice(track,note,velocity,when,gate=null){
   scheduledVoices.delete(v);
   try{
    osc1.disconnect();osc2.disconnect();subOsc.disconnect();g1.disconnect();g2.disconnect();subGain.disconnect();
-   try{noiseSource.stop();noiseSource.disconnect();noiseFilter.disconnect();noiseGain.disconnect()}catch(_){}
+   try{if(noiseSource){noiseSource.stop();noiseSource.disconnect();noiseFilter.disconnect()}noiseGain.disconnect()}catch(_){}
    for(const part of pwmParts){
     try{audio.pwmBuses?.[trackIndex]?.disconnect(part.pwmSmoother)}catch(_){}
-    part.pwmSmoother.disconnect();part.depthGain.disconnect();part.delay.disconnect();part.inverse.disconnect();part.depthGain.disconnect();
+    part.pwmSmoother.disconnect();part.depthGain.disconnect();part.delay.disconnect();part.inverse.disconnect();
    }
    audio.cutoffBuses[trackIndex].disconnect(filt.frequency);
    filterEnvelopes.forEach(e=>{try{e.source.stop();e.source.disconnect()}catch(_){}});
