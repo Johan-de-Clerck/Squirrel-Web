@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.2.45 — User Manual
+# Squirrel Studio Web 0.2.46 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -282,6 +282,10 @@ Use **FILE → RENDER / EXPORT → BOUNCE SELECTED PATTERN TO SAMPLE**. This bou
 Set **BOUNCE DESTINATION** to **DOWNLOAD WAV FILE**, or choose **SLOT 01–15**. The slot selector displays each library entry's current name or EMPTY. Selecting an occupied slot asks for confirmation to **replace its audio**, affecting every drum slot already assigned to that shared sample. Cancelling leaves it unchanged. The WAV is not assigned to a drum track automatically; assign it afterwards in **DRUM SAMPLES**. Bouncing does not change the current pattern's note data, Mute/Solo state or Song Mode arrangement.
 
 Set **PATTERN BOUNCE LENGTH** to **EXACT PATTERN · LOOP** (no extra tail, useful for beat loops), or add **3, 6 or 10 seconds** to capture delay/reverb decay. It uses the File menu's sample rate, 16/24-bit PCM, peak normalization and dither options; the normal Song Export Source setting is ignored. For a 15-sample library slot, the rendered WAV must fit the 16 MB slot limit. 24-bit stereo at 48 kHz can exceed that limit on longer patterns; use 16-bit / 44.1 kHz or a shorter tail. With Exact Pattern selected, reverb and note releases reaching beyond the pattern boundary will be cut at the bounce's end.
+
+**Loop Crossfade (new in 0.2.46):** when PATTERN BOUNCE LENGTH is set to **EXACT PATTERN · LOOP**, the **LOOP CROSSFADE** option becomes available with **OFF**, **2 ms (tight)**, **5 ms (smooth)** or **10 ms (soft)**. This performs a short stereo crossfade across the first and last few milliseconds of the pattern, helping prevent a click when the WAV repeats. It keeps the exact sample-frame count, so the bounce remains tempo-aligned. The body of the pattern is unchanged and the processing occurs before peak normalization and PCM encoding. **OFF** retains the original beginning/end samples. For sharp kicks or transients at step 1, prefer OFF or 2 ms; 5/10 ms may slightly soften the very beginning and end of the loop. Seam processing cannot compensate for a rhythm that does not musically repeat smoothly.
+
+Choosing a **3, 6 or 10 second FX tail** automatically disables and bypasses loop crossfade, because that WAV is intended to play through the effect decay rather than loop immediately. The chosen tail/crossfade settings are remembered locally, and normal song WAV exports and stem ZIPs remain untouched.
 
 A successfully saved bounce can be exported in a **song JSON** or **sample-bank backup**. If local storage fails, save the song as JSON to preserve the sample. If the project or selected slot changes during rendering, saving is cancelled instead of overwriting unrelated data.
 
