@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.56 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.57 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1111,19 +1111,19 @@ input[type="password"],textarea,
 .pattern-bounce-preview-actions button:disabled{opacity:.5;cursor:default}
 #patternBouncePreviewStatus{padding:0 10px 4px;color:#c7ad8c;font:700 10px Consolas,monospace;min-height:14px}
  .pad.has-parameter-lock:after{content:'●';position:absolute;top:0;right:2px;font-size:8px;color:var(--accent2);pointer-events:none}
- /* v0.2.56: per-track groove, velocity humanize and microtiming. */
+ /* v0.2.57: per-track groove, velocity humanize and microtiming. */
 .groove-track-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
 .groove-track-row{display:grid;grid-template-columns:minmax(90px,1fr) minmax(0,1fr);gap:8px;align-items:center;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
 .groove-track-row strong{font-size:11px}
 .groove-track-row label{display:grid;gap:3px;font-size:10px;color:var(--muted)}
 .groove-track-row input{width:100%}
 @media(max-width:900px){.groove-track-list{grid-template-columns:1fr}}
-/* v0.2.56: reusable VA/FM preset bank. */
+/* v0.2.57: reusable VA/FM preset bank. */
 .synth-presets{display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding:10px;margin:0 0 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
 .synth-presets>.field-head{margin-right:6px}.synth-presets select{flex:1 1 200px;min-width:145px;max-width:360px}
 .synth-presets .mini-btn{flex:0 0 auto}
 .synth-presets.hidden{display:none}
-/* v0.2.56: step-level synth filter locks, independent from tracker FX. */
+/* v0.2.57: step-level synth filter locks, independent from tracker FX. */
 .step-locks{margin:10px 0;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}
 .step-lock-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:6px}
 .step-lock-controls label{display:flex;flex-wrap:wrap;align-items:center;gap:7px;font-size:11px;color:var(--text)}
@@ -1156,7 +1156,7 @@ input[type="password"],textarea,
 .pad.on.track-colored .note-label{color:var(--note-ink,#221916)}
 .pad.on.track-colored .mini-bar{background:#211a1a88}
 @media(max-width:1100px){.transport-track-color{margin:0}}
-/* v0.2.56 — Keep Step FX tools beside the fields; no extra editor scroll. */
+/* v0.2.57 — Keep Step FX tools beside the fields; no extra editor scroll. */
 #view-seq .fx-compact-layout{display:grid;grid-template-columns:minmax(0,1fr) 148px;gap:10px;align-items:stretch;min-width:0}
 #view-seq .fx-main-fields{min-width:0}
 #view-seq .fx-main-fields .fx-controls{min-width:0;gap:5px 8px}
@@ -1177,7 +1177,7 @@ input[type="password"],textarea,
  #view-seq .fx-compact-layout .fx-actions{flex-direction:row;flex-wrap:wrap;justify-content:flex-start;margin-top:5px}
  #view-seq .fx-compact-layout .fx-actions .mini-btn{width:auto;flex:1 1 100px}
 }
-/* v0.2.56: separate File, Bounce and WAV Export dropdowns. */
+/* v0.2.57: separate File, Bounce and WAV Export dropdowns. */
 .file-menubar{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .file-menubar>.file-action-menu>summary{white-space:nowrap}
 .file-menubar>.file-action-menu .file-menu-items{width:min(405px,92vw)}
@@ -1322,7 +1322,7 @@ input[type="password"],textarea,
 <div class="options-demo">
  <h3>DEMO SONG</h3>
  <div class="options-demo-actions"><button class="btn" type="button" id="loadDemoJsonBtn">↑ LOAD DEMO.JSON</button>
- <label class="options-demo-switch"><input type="checkbox" id="autoDemoJson"> AUTO-LOAD ON START</label></div>
+</div>
 </div>
 <div class="file-legacy-actions" hidden><button type="button" id="newSongBtn">NEW SONG</button></div></section></div>
       <div id="view-setup" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">MIDI & audio</h2></div></div>
@@ -1343,7 +1343,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.56';
+const SQUIRREL_VERSION='0.2.57';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -1935,11 +1935,12 @@ function fresh(withDemo=true){const tracks=bases.map((b,i)=>({...b,trackKind:i<3
  tracks.forEach(t=>{t.delaySend=0;t.reverbSend=0;t.chorusSend=0;t.distortion=0});
  return {version:23,drumLibrary:Array.from({length:DRUM_LIBRARY_SIZE},()=>({name:'',data:null})),drumLastSlots:Array(TRACK_COUNT).fill(0),drumSamples:Array.from({length:TRACK_COUNT},()=>Array.from({length:5},()=>defaultDrumSlot())),projectName:'',patternNames:Array.from({length:PATTERN_COUNT},(_,i)=>defaultPatternName(i)),songModeEnabled:false,songSequence:[],bpm:120,swing:0,master:75,keyboardOctave:3,editMode:false,pattern:0,patternLengths:Array(PATTERN_COUNT).fill(32),trackLengths:Array.from({length:PATTERN_COUNT},()=>Array(TRACK_COUNT).fill(32)),selectedTrack:3,selectedStep:0,tracks,patterns,lfos:defaultLFOs(),envelopes:defaultEnvelopes(),sendFX:defaultSendFX()};}
 const LOCAL_PROJECT_KEY='squirrel-studio-0.1';
-const DEMO_AUTO_KEY='squirrel-studio-auto-demo';
-let hasLocalProject=false,autoDemoOnStart=false;
-try{hasLocalProject=!!localStorage.getItem(LOCAL_PROJECT_KEY);autoDemoOnStart=localStorage.getItem(DEMO_AUTO_KEY)==='1'}
+let hasLocalProject=false;
+try{hasLocalProject=!!localStorage.getItem(LOCAL_PROJECT_KEY)}
 catch(e){console.warn('Local storage unavailable:',e)}
-let state=fresh();
+// Start with a blank project when there is no saved local project.
+// demo.json stays on the server and is loaded only by an explicit menu action.
+let state=fresh(false);
 try{const raw=localStorage.getItem(LOCAL_PROJECT_KEY);if(raw)state=validate(JSON.parse(raw))}
 catch(e){console.warn('Invalid local storage:',e);hasLocalProject=false}
 let audio=null,midiAccess=null,selectedInput=null,selectedOutput=null,midiOutEnabled=false,midiHeld=new Map(),clipboard=null,stepClipboard=null,playing=false,recording=false,songPosition=0,songCuePosition=0,visibleSongPosition=0,currentStep=0,lastVisualStep=-1,nextNoteTime=0,timer=null,view='seq',audioSink='default',messageTimeout=null;
@@ -5999,11 +6000,6 @@ async function loadDemoJson(confirmReplace=true){
   return false;
  }
 }
-async function bootstrapDemoJson(){
- // A saved project takes precedence unless the user explicitly opted into every-start loading.
- if(hasLocalProject&&!autoDemoOnStart)return;
- await loadDemoJson(false);
-}
 function newSong(){
   if(!window.confirm('NEW SONG? All patterns, notes, effects, mixer settings, LFOs, envelopes and sends will be reset. Save your current song first if needed.'))return;
   stopTransport();patternBouncePreviewCache=null;
@@ -6122,7 +6118,7 @@ function updatePatternPicker(){
  }
  picker.value=String(state.pattern%PATTERNS_PER_GROUP);
 }
-function renderAll(){renderGrid();renderStepEditor();renderFXEditor();if(view==='song')renderSongMode();if(view==='drum')renderDrumSamples();if(view==='sound')renderSound();renderMixerIfChanged();if(view==='mod'){renderLFO();renderEnvelopes()}if(view==='sample')renderSampleEditor();if(view==='send')renderSendFX();if(view==='options')renderOptions();$('autoDemoJson').checked=autoDemoOnStart;$('bpmInput').value=state.bpm.toFixed(1);$('octaveInput').value=String(state.keyboardOctave);$('editModeBtn').textContent=state.editMode?'✎ EDIT ON':'✎ EDIT OFF';$('editModeBtn').classList.toggle('active',state.editMode);$('editModeBtn').setAttribute('aria-pressed',String(state.editMode));$('swingInput').value=state.swing;$('swingOut').textContent=state.swing+'%';$('masterInput').value=state.master;$('masterOut').textContent=state.master+'%';updatePatternPicker();$('patternNameInput').value=patternName(state.pattern);$('projectNameInput').value=state.projectName||'';$('pasteStepBtn').disabled=!stepClipboard;$('pasteStepBtn').textContent=stepClipboard?.kind==='range'?'PASTE RANGE':'PASTE STEP';$('copyStepBtn').textContent=rangeCells().length>1?'COPY RANGE':'COPY STEP';updateUndoButtons()}
+function renderAll(){renderGrid();renderStepEditor();renderFXEditor();if(view==='song')renderSongMode();if(view==='drum')renderDrumSamples();if(view==='sound')renderSound();renderMixerIfChanged();if(view==='mod'){renderLFO();renderEnvelopes()}if(view==='sample')renderSampleEditor();if(view==='send')renderSendFX();if(view==='options')renderOptions();$('bpmInput').value=state.bpm.toFixed(1);$('octaveInput').value=String(state.keyboardOctave);$('editModeBtn').textContent=state.editMode?'✎ EDIT ON':'✎ EDIT OFF';$('editModeBtn').classList.toggle('active',state.editMode);$('editModeBtn').setAttribute('aria-pressed',String(state.editMode));$('swingInput').value=state.swing;$('swingOut').textContent=state.swing+'%';$('masterInput').value=state.master;$('masterOut').textContent=state.master+'%';updatePatternPicker();$('patternNameInput').value=patternName(state.pattern);$('projectNameInput').value=state.projectName||'';$('pasteStepBtn').disabled=!stepClipboard;$('pasteStepBtn').textContent=stepClipboard?.kind==='range'?'PASTE RANGE':'PASTE STEP';$('copyStepBtn').textContent=rangeCells().length>1?'COPY RANGE':'COPY STEP';updateUndoButtons()}
 function switchView(to){document.querySelectorAll('.file-menubar details').forEach(menu=>{menu.open=false});if(view==='mixer'&&to!=='mixer')stopAllMixerPreviews();if(view==='sample'&&to!=='sample')stopSampleEditorAudition();if(to!==view){stopEnterPreview();stopAllEditNotePreviews()}if(to==='sound'&&!isSynth(state.selectedTrack)){const synths=availableSynthTracks();if(synths.length){state.selectedTrack=synths.includes(lastSynthTrack)?lastSynthTrack:synths[0];state.selectedStep=Math.min(state.selectedStep,trackLength()-1)}}if(to!=='seq'){fxEditMode=false;fxDigitBuffer=''}if(to==='drum'&&isDrum(state.selectedTrack))drumEditorTrack=state.selectedTrack;if(to==='sample'&&isSample(state.selectedTrack)){selectedSampleEditorTrack=state.selectedTrack;selectedSampleEditorDrumSlot=null}view=to;for(const id of ['seq','song','drum','sound','mixer','mod','sample','send','options','setup'])$('view-'+id).classList.toggle('hidden',id!==to);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===to));if(to==='song')renderSongMode();if(to==='drum')renderDrumSamples();if(to==='sound')renderSound();if(to==='mixer')renderMixerIfChanged();if(to==='mod'){renderLFO();renderEnvelopes()}if(to==='sample')renderSampleEditor();if(to==='send')renderSendFX();if(to==='options')renderOptions()}
 function installNotes(){const group=$('patternGroup');for(let g=0;g<4;g++)group.add(new Option(PATTERN_GROUPS[g],String(g)));updatePatternPicker();const el=$('stepNote');for(let n=24;n<=95;n++){const o=document.createElement('option');o.value=n;o.textContent=noteName(n);el.appendChild(o)}const preview=$('previewKeys');for(let i=0;i<12;i++){const btn=document.createElement('button');btn.className='key'+(NAMES[i].includes('#')?' black':'');btn.textContent=noteName(60+i);btn.onpointerdown=e=>{e.preventDefault();playPreview(state.selectedTrack,60+i)};preview.appendChild(btn)}}
 // Web MIDI output: timestamped messages follow the Web Audio scheduler.
@@ -8195,14 +8191,6 @@ function bindings(){
   catch(err){notify('Failed to load project: '+err.message,true)}
   e.target.value='';
  };$('loadDemoJsonBtn').onclick=()=>loadDemoJson(true);
- $('autoDemoJson').onchange=()=>{
-  const desired=$('autoDemoJson').checked;
-  if(desired&&!window.confirm('Automatically load demo.json on every startup, replacing the locally saved song?')){
-   $('autoDemoJson').checked=false;return;
-  }
-  autoDemoOnStart=desired;
-  try{localStorage.setItem(DEMO_AUTO_KEY,desired?'1':'0')}catch(e){console.warn(e)}
- };
  $('newSongBtn').onclick=newSong;$('demoBtn').onclick=()=>{if(!confirm('Restore demo? Unsaved changes in this session will be overwritten.'))return;stopTransport();sampleSession++;sampleBuffers.clear();for(let i=0;i<TRACK_COUNT;i++)removeStoredSample(i);state=fresh();drumSampleBuffers.clear();drumLibraryBuffers.clear();clearDrumSamplesStorage();songPosition=0;songCuePosition=0;visibleSongPosition=0;persist();applyTrackMix();renderAll();notify('Demo restored.')};
   // Houd de padnavigatie direct bereikbaar na muis-/touchbediening van een slider.
   // Sliderinput blijft tijdens het slepen gefocust; na loslaten gaat de focus
@@ -8352,7 +8340,7 @@ function bindings(){
  });
  window.addEventListener('blur',()=>{stopEnterPreview();stopAllEditNotePreviews();for(const [key,voices] of activeLive){voices.forEach(v=>releaseVoice(v,audio?.ctx.currentTime||0))}activeLive.clear();keyboardDown.clear();keyboardAssignments.clear()});window.addEventListener('beforeunload',persist);
 }
-installNotes();bindings();bindSampleEditor();bindDrumSamples();bindSampleBank();attachStepRangeSelection();resetUndoHistory();renderAll();refreshOutputs();requestAnimationFrame(uiTick);bootstrapDemoJson();
+installNotes();bindings();bindSampleEditor();bindDrumSamples();bindSampleBank();attachStepRangeSelection();resetUndoHistory();renderAll();refreshOutputs();requestAnimationFrame(uiTick);
 </script>
 </body>
 </html>
