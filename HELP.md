@@ -1,6 +1,10 @@
-# Squirrel Studio Web 0.2.56 — User Manual
+# Squirrel Studio Web 0.2.57 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.57 — Manual demo loading
+
+A new installation starts with empty patterns instead of loading a demonstration song. An existing locally saved project is still restored. **demo.json** remains on the web server and can be loaded manually with **FILE → LOAD DEMO.JSON** or **OPTIONS → LOAD DEMO.JSON**. The previous automatic-start checkbox has been removed so a stored preference cannot overwrite the user's work on startup.
 
 ### New in 0.2.56 — Dedicated Bounce and Export WAV menus
 
@@ -392,7 +396,7 @@ The VU meter is a visual indicator, not a recording or gain-adjustment control. 
 
 - On first visit, if there is no saved local project, the app attempts to load this file automatically.
 - **OPTIONS → LOAD DEMO.JSON** loads it manually after a replacement warning.
-- **OPTIONS → AUTO-LOAD ON START** intentionally makes the demo override the local song at every startup; this is opt-in.
+- **OPTIONS → manual demo loading** intentionally makes the demo override the local song at every startup; this is opt-in.
 - To replace the hosted demo, export a **complete project JSON** (including embedded samples), rename it `demo.json`, and upload it alongside `index.html`.
 
 If `demo.json` is missing or cannot be fetched, the app still opens. The included `demo.json` is the **Johan_01** song with embedded kick, clap, snare, and closed hi-hat audio, plus named patterns **Main**, **Odd Track** and **Odd Snare**. Replace it with a different complete project JSON whenever you choose.
