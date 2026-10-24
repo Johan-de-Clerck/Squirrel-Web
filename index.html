@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.65 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.66 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1293,7 +1293,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.65</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.66</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1359,7 +1359,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.65';
+const SQUIRREL_VERSION='0.2.66';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -7747,6 +7747,17 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
   }
  }
 
+ // Offline Step FX shares ProTracker tick calculations with playback.
+ // Per-note AudioParams keep pitch/volume slides local to their own voice.
+ const exportFXRows=Array.from({length:TRACK_COUNT},blankFxRuntime);
+ function applyExportFXVoice(voices,at,result){
+  for(const voice of voices){
+   if(!voice)continue;
+   voice.gainParam.setValueAtTime(result.level,at);
+   for(const {param,base} of voice.pitchParams)
+    param.setValueAtTime(base+result.cents,at);
+  }
+ }
  const activeExportSynthFilters=Array.from({length:TRACK_COUNT},()=>[]);
  const activeExportSamples=Array.from({length:TRACK_COUNT},()=>[]);
  const stopExportSample=(i,time,voiceFilter=null,releaseOverride=null)=>{
@@ -7818,10 +7829,14 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
   const type=['kick','snare','hat'].includes(track.drumType)?track.drumType:'kick';
   const vol=clamp(Number(step.velocity??100)/127,0,1);
   const ratio=Math.pow(2,clamp(Number(step.pitch??0),-48,48)/12);
-  const output=outputs[i];
+  const fxGain=ctx.createGain();
+  fxGain.gain.value=1;fxGain.connect(outputs[i]);
+  const fxVoice={gainParam:fxGain.gain,pitchParams:[],started:time};
+  const output=fxGain;
   if(type==='kick'){
    const osc=ctx.createOscillator(),gain=ctx.createGain();
    osc.type='sine';
+   fxVoice.pitchParams.push({param:osc.detune,base:0});
    osc.frequency.setValueAtTime(165*ratio,time);
    osc.frequency.exponentialRampToValueAtTime(49*ratio,time+.09);
    osc.frequency.exponentialRampToValueAtTime(42*ratio,time+.26);
@@ -7833,6 +7848,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
   }else{
    const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();
    src.buffer=noiseBuffer;src.playbackRate.value=ratio;filter.type='highpass';
+   fxVoice.pitchParams.push({param:src.detune,base:0});
    filter.frequency.setValueAtTime(clamp((type==='hat'?6200:1300)*ratio,200,15000),time);
    gain.gain.setValueAtTime(.0001,time);
    gain.gain.exponentialRampToValueAtTime(Math.max(.0002,(type==='hat'?.37:.6)*vol),time+.004);
@@ -7842,12 +7858,14 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
    if(type==='snare'){
     const osc=ctx.createOscillator(),tone=ctx.createGain();
     osc.type='triangle';osc.frequency.setValueAtTime(175*ratio,time);
+    fxVoice.pitchParams.push({param:osc.detune,base:0});
     tone.gain.setValueAtTime(.18*vol,time);
     tone.gain.exponentialRampToValueAtTime(.0001,time+.13);
     osc.connect(tone).connect(output);
     osc.start(time);osc.stop(time+.15);
    }
   }
+  return fxVoice;
  }
  function addVoice(i,step,time,cutoffTime,noteOverride=null,velocityOverride=null,holdSynth=false){
   const track=state.tracks[i],vel=clamp(Number(velocityOverride??step.velocity??100),0,127)/127;
@@ -7863,8 +7881,8 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
    const buffer=isDrum(i)?drumSlotBuffer(i,slot):sampleBuffers.get(i);
    if(!buffer){
     // Preserve the exact live fallback instead of producing silence.
-    if(isDrum(i))renderBuiltInDrum(i,step,time);
-    return;
+    if(isDrum(i))return renderBuiltInDrum(i,step,time);
+    return null;
    }
    const source=ctx.createBufferSource(),amp=ctx.createGain();
    const drum=isDrum(i),item=drum?state.drumSamples[i]?.[slot]:track;
@@ -7913,7 +7931,9 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
     for(const lfo of lfoNodes)if(lfo.target==='track'+i+'-cutoff')lfo.depth.connect(filter.frequency);
     source.connect(filter).connect(amp);
    }else source.connect(amp);
-   output.connect(outputs[i]);
+   const fxGain=ctx.createGain();fxGain.gain.value=1;
+   output.connect(fxGain).connect(outputs[i]);
+   const fxVoice={gainParam:fxGain.gain,pitchParams:[{param:source.detune,base:source.detune.value}],started:time};
    const startAt=clamp(plan.startAt,0,Math.max(0,source.buffer.duration-.001));
    if(startAt>=source.buffer.duration)return;
    source.start(time,startAt);
@@ -7934,7 +7954,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
    activeExportSamples[i].push({source,amp,level,note,slot,chokeGroup,carryAcrossPatterns:carrying,gateAt,
     started:time,naturalEnd,stopped:false,drumEnvelope,
     release:drum?clamp(Number(item?.slotRelease??18),0,2000)/1000:sampleReleaseSeconds(track)});
-   return;
+   return fxVoice;
   }
   if(!isSynth(i))return;
   const sound=track.sound||{},soundNote=clamp(note+Number(sound.transpose||0),0,127),freq=hz(soundNote);
@@ -7946,7 +7966,9 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
   filter.Q.value=typeof locks.resonance==='number'&&Number.isFinite(locks.resonance)?clamp(Number(locks.resonance),.1,18):clamp(Number(sound.resonance??.7),.1,18);
   activeExportSynthFilters[i].push({filter,end:time+length+Math.max(.1,Number(sound.release??.2))});
   for(const lfo of lfoNodes)if(lfo.target==='track'+i+'-cutoff')lfo.depth.connect(filter.frequency);
-  filter.connect(env).connect(outputs[i]);
+  const fxGain=ctx.createGain();fxGain.gain.value=1;
+  filter.connect(env).connect(fxGain).connect(outputs[i]);
+  const fxVoice={gainParam:fxGain.gain,pitchParams:[],started:time};
   const attack=Math.max(.003,Number(sound.attack??.01)),decay=Math.max(.01,Number(sound.decay??.2)),release=Math.max(.02,Number(sound.release??.2));
   const sustain=clamp(Number(sound.sustain??.6),0,1),peak=vel*.5;
   // Follow current ADSR level when notes are shorter than attack/decay.
@@ -7963,6 +7985,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
      osc.type=fmOperatorWave(sound,op);
      osc.frequency.value=Math.min(maxHz,freq*clamp(Number(sound[key+'Ratio']??(op+1)),.25,16));
      osc.detune.value=clamp(Number(sound[key+'Fine']??0),-100,100);
+     fxVoice.pitchParams.push({param:osc.detune,base:osc.detune.value});
      return osc;
     });
     const opRelease=op=>Math.max(.01,Number(sound['fmOp'+(op+1)+'Release']??.35));
@@ -7996,6 +8019,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
     carrier.type='sine';mod.type='sine';
     carrier.frequency.value=Math.min(freq,maxHz);
     mod.frequency.value=Math.min(freq*clamp(Number(sound.fmRatio??2),.25,16),maxHz);
+    fxVoice.pitchParams.push({param:carrier.detune,base:0},{param:mod.detune,base:0});
     exportAdsr(depth.gain,time,time+length,modPeak,modAttack,modDecay,modSustain,release);
     mod.connect(depth).connect(carrier.frequency);
     const carrierLevel=ctx.createGain();carrierLevel.gain.value=.65;
@@ -8013,6 +8037,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
     const osc=ctx.createOscillator(),amp=ctx.createGain();
     const frequency=freq*ratio;
     osc.type=wave==='pulse'?'sawtooth':wave;osc.frequency.value=frequency;
+    fxVoice.pitchParams.push({param:osc.detune,base:0});
     amp.gain.value=oscillatorMixGain(sound,index);
     osc.connect(amp);
     if(wave==='pulse'){
@@ -8045,6 +8070,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
     noise.start(time,phase);noise.stop(Math.min(duration,time+length+release+.05));
    }
   }
+  return fxVoice;
  }
  // Deferred gate scheduling lets D00 on a later step keep an already
  // playing drum loop alive, while still stopping non-carried loops precisely
@@ -8094,6 +8120,9 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
     if(!lane?.length)continue;
     const step=lane[stepIndex%trackLength(pattern,t)];
     if(!step)continue;
+    // Every track-length wrap resets effect state, just like live playback.
+    if(stepIndex%trackLength(pattern,t)===0)exportFXRows[t]=blankFxRuntime();
+    const fxRow=exportFXRows[t];
     if(isSynth(t)){
      const active=activeExportSynthFilters[t];
      for(let n=active.length-1;n>=0;n--)if(active[n].end<at)active.splice(n,1);
@@ -8106,7 +8135,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
      }
     }
     if(isDrum(t))expireExportDrumGates(t,at);
-    if(step.fx===12){stopExportSample(t,at);carriedAtBoundary[t]=false;continue}
+    if(step.fx===12){stopExportSample(t,at);carriedAtBoundary[t]=false;fxRow.voices=[];fxRow.activeFx=0;continue}
     if(!step.on&&stepContinuesSample(step)&&(isSample(t)||isDrum(t))){
      for(const voice of activeExportSamples[t])if(!voice.stopped&&voice.naturalEnd>at){
       voice.carryAcrossPatterns=true;voice.gateAt=Infinity;
@@ -8116,6 +8145,9 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
     // A new note or C00 below changes that state.
     // The live sequencer applies CHANCE once per step, before any ratchet hits.
     if(row.fired[t]){
+     // A new note resets pitch/volume while retaining effect memory.
+     fxRow.voices=[];fxRow.basePeriod=periodForNote(step.note);
+     fxRow.period=fxRow.basePeriod;fxRow.level=64;fxRow.phase=0;fxRow.activeFx=0;
      const swingStep=stepSeconds*(stepIndex%2===0?1+swingAmount:1-swingAmount);
      const hits=clamp(Math.round(Number(step.ratchet??1)),1,6);
      const subDuration=swingStep/hits;
@@ -8145,13 +8177,25 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
        const sound=state.tracks[t].sound||{};
        const notes=chordNotes(Number(step.note),step.chordMode||sound.chord);
        const voiceVelocity=Number(renderedStep.velocity??100)*Math.sqrt(3/notes.length)*.72;
-       for(const chordNote of notes)
-        addVoice(t,renderedStep,hitTime,noteOffTime,chordNote,voiceVelocity,holdSynth);
+       for(const chordNote of notes){
+        const fxVoice=addVoice(t,renderedStep,hitTime,noteOffTime,chordNote,voiceVelocity,holdSynth);
+        if(fxVoice)fxRow.voices.push(fxVoice);
+       }
       }else{
-       addVoice(t,renderedStep,hitTime,noteOffTime,null,null,holdSynth);
+       const fxVoice=addVoice(t,renderedStep,hitTime,noteOffTime,null,null,holdSynth);
+       if(fxVoice)fxRow.voices.push(fxVoice);
       }
      }
      carriedAtBoundary[t]=false;
+    }
+    applyFXCommand(fxRow,step);
+    if(fxRow.voices.length){
+     // The zero tick preserves slides and applies octave shifts on empty rows.
+     const wave=fxRow.activeFx===4?Math.sin(fxRow.phase*2*Math.PI/64)*fxRow.vibratoDepth*4:0;
+     const cents=1200*Math.log2(fxRow.basePeriod/Math.max(55,fxRow.period+wave));
+     applyExportFXVoice(fxRow.voices,at,{cents,level:fxRow.level/64});
+     for(let tick=1;tick<TICKS_PER_STEP;tick++)
+      applyExportFXVoice(fxRow.voices,at+tick*stepSeconds/TICKS_PER_STEP,advanceFXTick(fxRow));
     }
    }
    cursor+=stepIndex%2===0?1+swingAmount:1-swingAmount;
