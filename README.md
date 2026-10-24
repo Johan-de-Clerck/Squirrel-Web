@@ -2,7 +2,7 @@
   <img src="squirrel-icon.webp" alt="Squirrel Studio icon" width="112">
   <h1>Squirrel Studio</h1>
   <p><strong>A browser-based groovebox, synthesizer, sampler and tracker-style step sequencer.</strong></p>
-  <p><strong>Current version: 0.2.49</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
+  <p><strong>Current version: 0.2.51</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
 </div>
 
 Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrangement into a compact, eight-track music workstation. The web version runs in a modern desktop browser using the Web Audio API.
@@ -11,10 +11,10 @@ Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrange
 
 | Area | Highlights |
 | --- | --- |
-| **Sequencer** | Eight freely configurable tracks, tracker-style note input, up to 32 steps in view, per-track pattern lengths, chance, ratchets and Step FX. |
+| **Sequencer** | Eight freely configurable tracks, tracker-style note input, up to 32 steps in view, per-track pattern lengths, chance, ratchets, Step FX and VA/FM filter Parameter Locks. |
 | **Instruments** | Virtual analog (VA) and FM synthesizers, sampled instruments, drum tracks and chord playback. Independent sounds for different tracks. |
 | **VA / FM engines** | Multi-oscillator VA with sub oscillator, noise and PWM; two- and four-operator FM with selectable algorithms. |
-| **Drum library** | A shared pool of 15 samples, with five assignable slots per drum track and independent slot controls. |
+| **Drum library** | A shared pool of 15 samples, with five assignable slots per drum track, waveform preview, rename, copy and overwrite confirmation. |
 | **Sample editing** | Stereo waveforms, trim and loop points, normal and ping-pong loops, pitch, filters and envelopes. Mouse wheel zooms; middle-button drag pans the waveform. |
 | **Song Mode** | Arrange named patterns into a sequence. Selected sample and drum steps can continue across pattern boundaries, and C00 triggers release. |
 | **Mixer and FX** | Stereo volume and pan, mute/solo, per-track audition, distortion, delay, reverb and chorus sends. |
@@ -54,7 +54,7 @@ Open **FILE → Render / Export** to choose **44.1 or 48 kHz**, **16-bit or 24-b
 
 **Stereo bounce waveform (0.2.48):** After **PREVIEW BOUNCE**, the FILE menu shows two independent waveform lanes (**L** and **R**) computed from the *actual rendered stereo WAV*. The mini-editor marks **START** and **END**, shades both crossfade-edge regions when loop crossfade is enabled, and shows a moving playback cursor while auditioning. Beneath it, you can see the duration, sample rate, end time and crossfade length. FX-tail bounces show their total duration without highlighting a loop crossfade. If you change the pattern or audio settings, the old waveform displays **SETTINGS CHANGED** instead of presenting stale audio as current. Preview analysis adds no samples to the song and does not change the bounce duration. This is a visual preview only; sample editing remains on the **SAMPLE EDITOR** page.
 
-**Select and bounce a range (0.2.49):** After **PREVIEW BOUNCE**, drag horizontally over the stereo waveform to mark a start and end. The mint highlight and precise time readout show the chosen audio. **BOUNCE RANGE ONLY** is enabled automatically; leave it checked to download *just the selected section* or write that section into any of the shared **15 sample slots**. Uncheck it to bounce the full pattern; click **CLEAR RANGE** to remove it. The selection crops the actual stereo 16/24-bit PCM WAV on whole-sample frames, preserving its original rate, bit depth and channel order. No separate synth/drum render is required, and the full WAV remains unchanged until you choose to export. An occupied slot still requires confirmation. The **16 MB library limit applies to the cropped WAV**, allowing a shorter selection from a larger preview. When a preview is out of date, the app prevents accidentally exporting an old selection. Note that a cropped excerpt of an original loop may need a new loop crossfade in the Sample Editor.
+**Select and bounce a range (0.2.51):** After **PREVIEW BOUNCE**, drag horizontally over the stereo waveform to mark a start and end. The mint highlight and precise time readout show the chosen audio. **BOUNCE RANGE ONLY** is enabled automatically; leave it checked to download *just the selected section* or write that section into any of the shared **15 sample slots**. Uncheck it to bounce the full pattern; click **CLEAR RANGE** to remove it. The selection crops the actual stereo 16/24-bit PCM WAV on whole-sample frames, preserving its original rate, bit depth and channel order. No separate synth/drum render is required, and the full WAV remains unchanged until you choose to export. An occupied slot still requires confirmation. The **16 MB library limit applies to the cropped WAV**, allowing a shorter selection from a larger preview. When a preview is out of date, the app prevents accidentally exporting an old selection. Note that a cropped excerpt of an original loop may need a new loop crossfade in the Sample Editor.
 
 **Peak Normalize** is optional and off by default. When enabled, it adjusts each exported WAV to a peak of **−1 dBFS** without changing live playback. **TPDF Dither** is available for 16/24-bit PCM. Exports warn when an unnormalized WAV exceeds 0 dBFS. Disable normalization for stems if preserving relative track levels matters.
 
@@ -68,7 +68,7 @@ This is intentionally a **high-level release history**. Small bug fixes, interna
 
 | Release | Major changes |
 | --- | --- |
-| **0.2.x — Song production & export** | Compact Synth and Drum editors; expanded stereo mixer; enhanced waveform editor; Song Mode and cross-pattern continuation; stereo WAV/stem export; **VA/FM synth rendering and muted-aware pattern bounce directly to the 15-sample library**. |
+| **0.2.x — Song production & export** | Compact Synth and Drum editors; expanded stereo mixer; enhanced waveform editor; Song Mode and cross-pattern continuation; stereo WAV/stem export; **VA/FM synth rendering, muted-aware pattern bounce to the 15-sample library and per-step cutoff/resonance locks**. |
 | **0.1.7x–0.1.8x — Advanced synthesis & sampling** | VA and FM engines, four-operator FM algorithms, PWM/LFO routing, shared drum sample library, per-slot filters and envelopes, sample looping and Step FX. |
 | **0.1.x — Foundation** | Eight-track web groovebox, tracker-style sequencer, instrument tracks, MIDI integration, basic FX and pattern workflow. |
 
