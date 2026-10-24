@@ -2,7 +2,7 @@
   <img src="squirrel-icon.webp" alt="Squirrel Studio icon" width="112">
   <h1>Squirrel Studio</h1>
   <p><strong>A browser-based groovebox, synthesizer, sampler and tracker-style step sequencer.</strong></p>
-  <p><strong>Current version: 0.2.62</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
+  <p><strong>Current version: 0.2.63</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
 </div>
 
 Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrangement into a compact, eight-track music workstation. The web version runs in a modern desktop browser using the Web Audio API.
@@ -15,7 +15,7 @@ Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrange
 | **Instruments** | Virtual analog (VA) and FM synthesizers, sampled instruments, drum tracks and chord playback. Independent sounds for different tracks and a reusable VA/FM preset manager. |
 | **VA / FM engines** | Multi-oscillator VA with sub oscillator, noise and PWM; two- and four-operator FM with selectable algorithms. |
 | **Drum library** | A shared pool of 15 samples, with five assignable slots per drum track, waveform preview, rename, copy and overwrite confirmation. |
-| **Sample editing** | Stereo waveforms, trim and loop points, normal and ping-pong loops, pitch, filters and envelopes. Mouse wheel zooms; middle-button drag pans the waveform. |
+| **Sample editing** | Stereo waveforms with detailed, continuous 1×–4096× zoom, trim and loop points, normal and ping-pong loops, pitch, filters and envelopes. Mouse wheel zooms at the pointer; middle-button drag pans. |
 | **Song Mode** | Arrange named patterns into a sequence. Selected sample and drum steps can continue across pattern boundaries, and C00 triggers release. |
 | **Mixer and FX** | Stereo volume and pan, mute/solo, per-track audition, distortion, delay, reverb and chorus sends. |
 | **MIDI** | MIDI input and per-track MIDI output options, including MIDI-only tracks. Availability depends on browser and hardware support. |
