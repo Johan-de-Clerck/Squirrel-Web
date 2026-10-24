@@ -6262,6 +6262,129 @@ let patternBouncePreviewRendering=false,patternBouncePreviewCache=null;
 // v0.2.48: Build an accurate stereo min/max envelope FROM decoded PCM WAV,
 // using constant-size peak arrays instead of retaining extra audio buffers.
 const PATTERN_BOUNCE_WAVE_COLUMNS=576;
+const PATTERN_BOUNCE_WAVE_LEFT=28,PATTERN_BOUNCE_WAVE_RIGHT_MARGIN=14;
+let patternBounceSelection=null,patternBounceDragging=null;
+// Read the canonical stereo PCM header produced by Squirrel's WAV encoder.
+// Crop at complete frames so the output has the original sample rate and bit depth.
+function patternBouncePCMInfo(wav){
+ if(!wav?.buffer||!(wav.buffer instanceof ArrayBuffer)||wav.buffer.byteLength<44)
+  throw Error('No valid bounced WAV. Press PREVIEW BOUNCE first.');
+ const view=new DataView(wav.buffer);
+ const fourCC=(offset)=>String.fromCharCode(...new Uint8Array(wav.buffer,offset,4));
+ const rate=view.getUint32(24,true),bits=view.getUint16(34,true),channels=view.getUint16(22,true);
+ const frameBytes=channels*bits/8,dataBytes=view.getUint32(40,true);
+ if(fourCC(0)!=='RIFF'||fourCC(8)!=='WAVE'||fourCC(12)!=='fmt '||fourCC(36)!=='data'||
+  view.getUint16(20,true)!==1||channels!==2||![16,24].includes(bits)||
+  ![44100,48000].includes(rate)||view.getUint32(16,true)!==16||
+  !Number.isInteger(frameBytes)||!frameBytes||dataBytes%frameBytes!==0||
+  44+dataBytes>wav.buffer.byteLength)
+  throw Error('Selection requires a valid 16/24-bit stereo PCM WAV.');
+ return {rate,bits,frameBytes,frames:dataBytes/frameBytes};
+}
+function cropPatternBounceWav(wav,startFrame,endFrame){
+ const info=patternBouncePCMInfo(wav);
+ const first=Math.max(0,Math.min(info.frames,Math.round(startFrame)));
+ const last=Math.max(0,Math.min(info.frames,Math.round(endFrame)));
+ if(!Number.isFinite(startFrame)||!Number.isFinite(endFrame)||last<=first)
+  throw Error('Select a non-empty range by dragging over the bounce waveform.');
+ const bytes=(last-first)*info.frameBytes;
+ const output=new ArrayBuffer(44+bytes);
+ new Uint8Array(output,0,44).set(new Uint8Array(wav.buffer,0,44));
+ new Uint8Array(output,44,bytes).set(new Uint8Array(wav.buffer,44+first*info.frameBytes,bytes));
+ const header=new DataView(output);
+ header.setUint32(4,36+bytes,true);
+ header.setUint32(40,bytes,true);
+ const suffix='_RANGE_'+(first/info.rate).toFixed(3)+'s-'+(last/info.rate).toFixed(3)+'s';
+ return {name:wav.name.replace(/\\.wav$/i,'')+suffix+'.wav',buffer:output};
+}
+function activePatternBounceSelection(){
+ const selection=patternBounceSelection,cached=patternBouncePreviewCache;
+ if(!selection||!cached||cached.project!==state||
+  cached.key!==patternBouncePreviewKey(state.pattern,currentPatternBounceSettings())||
+  cached.wav!==selection.wav||selection.project!==state||selection.key!==cached.key)
+  return null;
+ return selection;
+}
+function updatePatternBounceRangeControls(){
+ const active=activePatternBounceSelection(),checkbox=$('patternBounceUseSelection');
+ const clear=$('patternBounceClearSelection'),label=$('patternBounceRangeReadout');
+ if(checkbox)checkbox.disabled=!active;
+ if(clear)clear.disabled=!patternBounceSelection;
+ if(label){
+  if(active){
+   const meta=patternBouncePCMInfo(active.wav);
+   label.textContent=(active.startFrame/meta.rate).toFixed(3)+' – '+
+    (active.endFrame/meta.rate).toFixed(3)+' S · '+
+    ((active.endFrame-active.startFrame)/meta.rate).toFixed(3)+' S SELECTED';
+  }else label.textContent=patternBounceSelection
+   ?'RANGE OUT OF DATE · PREVIEW AGAIN OR CLEAR':'DRAG ON WAVEFORM TO SELECT';
+ }
+ const button=$('fileBouncePattern');
+ if(button&&!songExportBusy){
+  button.disabled=!!(patternBounceSelection&&!active&&checkbox?.checked);
+  button.textContent='↧ BOUNCE '+patternName(state.pattern)+
+   (active&&checkbox?.checked?' · RANGE':'')+' TO SAMPLE';
+ }
+}
+function clearPatternBounceSelection(){
+ patternBounceSelection=null;patternBounceDragging=null;
+ const control=$('patternBounceUseSelection');
+ if(control)control.checked=false;
+ updatePatternBounceRangeControls();drawPatternBounceWaveform();
+}
+function bounceFrameAtPointer(e,canvas,frameCount){
+ const rect=canvas.getBoundingClientRect();
+ if(!rect.width)return 0;
+ const x=(e.clientX-rect.left)*canvas.width/rect.width;
+ const plotWidth=canvas.width-PATTERN_BOUNCE_WAVE_LEFT-PATTERN_BOUNCE_WAVE_RIGHT_MARGIN;
+ const relative=Math.max(0,Math.min(1,(x-PATTERN_BOUNCE_WAVE_LEFT)/plotWidth));
+ return Math.round(relative*frameCount);
+}
+function bindPatternBounceSelection(){
+ const canvas=$('patternBounceWaveform');
+ if(!canvas)return;
+ canvas.onpointerdown=e=>{
+  if(e.button!==0)return;
+  const cached=patternBouncePreviewCache;
+  if(!reusablePatternBouncePreview(state.pattern,currentPatternBounceSettings())||!cached?.waveform)return;
+  e.preventDefault();
+  patternBounceDragging={pointerId:e.pointerId,startX:e.clientX,
+   startFrame:bounceFrameAtPointer(e,canvas,cached.waveform.frames),
+   endFrame:bounceFrameAtPointer(e,canvas,cached.waveform.frames)};
+  try{canvas.setPointerCapture(e.pointerId)}catch(err){}
+ };
+ canvas.onpointermove=e=>{
+  const dragging=patternBounceDragging;
+  if(!dragging||dragging.pointerId!==e.pointerId)return;
+  const cached=patternBouncePreviewCache;
+  if(!cached?.waveform)return;
+  dragging.endFrame=bounceFrameAtPointer(e,canvas,cached.waveform.frames);
+  drawPatternBounceWaveform();
+ };
+ canvas.onpointerup=e=>{
+  const dragging=patternBounceDragging;
+  if(!dragging||dragging.pointerId!==e.pointerId)return;
+  const cached=patternBouncePreviewCache;
+  if(cached?.waveform)dragging.endFrame=bounceFrameAtPointer(e,canvas,cached.waveform.frames);
+  patternBounceDragging=null;
+  try{canvas.releasePointerCapture(e.pointerId)}catch(err){}
+  if(Math.abs(e.clientX-dragging.startX)>=4&&cached?.wav&&
+   dragging.startFrame!==dragging.endFrame&&
+   reusablePatternBouncePreview(state.pattern,currentPatternBounceSettings())){
+   const from=Math.min(dragging.startFrame,dragging.endFrame);
+   const to=Math.max(dragging.startFrame,dragging.endFrame);
+   patternBounceSelection={startFrame:from,endFrame:to,
+    key:cached.key,project:cached.project,wav:cached.wav};
+   $('patternBounceUseSelection').checked=true;
+  }
+  updatePatternBounceRangeControls();drawPatternBounceWaveform();
+ };
+ canvas.onpointercancel=e=>{
+  if(patternBounceDragging?.pointerId===e.pointerId){
+   patternBounceDragging=null;drawPatternBounceWaveform();
+  }
+ };
+}
 let patternBounceWaveAnimation=0;
 function analyzePatternBounceWaveform(buffer,wavBytes=null){
  if(!buffer?.length||typeof buffer.getChannelData!=='function')return null;
