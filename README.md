@@ -2,7 +2,7 @@
   <img src="squirrel-icon.webp" alt="Squirrel Studio icon" width="112">
   <h1>Squirrel Studio</h1>
   <p><strong>A browser-based groovebox, synthesizer, sampler and tracker-style step sequencer.</strong></p>
-  <p><strong>Current version: 0.2.64</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
+  <p><strong>Current version: 0.2.65</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
 </div>
 
 Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrangement into a compact, eight-track music workstation. The web version runs in a modern desktop browser using the Web Audio API.
@@ -17,7 +17,7 @@ Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrange
 | **Drum library** | A shared pool of 15 samples, with five assignable slots per drum track, waveform preview, rename, copy and overwrite confirmation. |
 | **Sample editing** | Stereo waveforms with detailed, continuous 1×–4096× zoom, trim and loop points, normal and ping-pong loops, pitch, filters and envelopes. Mouse wheel zooms at the pointer; middle-button drag pans. |
 | **Song Mode** | Arrange named patterns into a sequence. Selected sample and drum steps can continue across pattern boundaries, and C00 triggers release. |
-| **Mixer and FX** | Stereo volume and pan, mute/solo, per-track audition, distortion, delay, reverb and chorus sends. |
+| **Mixer and FX** | Stereo volume and pan, mute/solo, per-track audition, distortion, delay, reverb and chorus sends with shared live/bounce effect settings. |
 | **MIDI** | MIDI input and per-track MIDI output options, including MIDI-only tracks. Availability depends on browser and hardware support. |
 | **Files and export** | Save/load songs as JSON, render synth notes to WAV/library, **bounce the selected pattern to a WAV or any of 15 library slots** (muted tracks excluded), export 16/24-bit stereo song WAVs, and export track stems to ZIP. |
 
