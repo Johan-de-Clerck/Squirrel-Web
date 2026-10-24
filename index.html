@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.69 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.70 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1296,7 +1296,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.69</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.70</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label" id="bpmPatternLabel">BPM · A1</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1362,7 +1362,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.69';
+const SQUIRREL_VERSION='0.2.70';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -3225,6 +3225,40 @@ function makeReverbIR(ctx,seconds){
  }
  return buffer;
 }
+// Identical effect graph for live playback and OfflineAudioContext bounce.
+// The only intentional difference is the scheduled oscillator stop time.
+function createStereoSendFX(ctx,compressor,settings,endAt=null){
+ const f=normalizedSendFX(settings);
+ const delayInput=ctx.createGain(),delayNode=ctx.createDelay(2),delayFeedback=ctx.createGain();
+ const delayDamping=ctx.createBiquadFilter(),delayReturn=ctx.createGain();
+ delayNode.delayTime.value=f.delayTime;delayFeedback.gain.value=f.feedback;
+ delayDamping.type='lowpass';delayDamping.frequency.value=SEND_FX_BUS.delayDampingHz;
+ delayReturn.gain.value=SEND_FX_BUS.delayReturn;
+ delayInput.connect(delayNode);
+ delayNode.connect(delayDamping).connect(delayFeedback).connect(delayNode);
+ delayNode.connect(delayReturn).connect(compressor);
+ const reverb=ctx.createConvolver(),reverbReturn=ctx.createGain();
+ reverb.buffer=makeReverbIR(ctx,f.reverbDecay);
+ reverbReturn.gain.value=SEND_FX_BUS.reverbReturn;
+ reverb.connect(reverbReturn).connect(compressor);
+ const chorusInput=ctx.createGain(),chorusDelayLeft=ctx.createDelay(.1),chorusDelayRight=ctx.createDelay(.1);
+ const chorusOsc=ctx.createOscillator(),chorusDepthLeft=ctx.createGain(),chorusDepthRight=ctx.createGain();
+ const chorusLeftPan=ctx.createStereoPanner(),chorusRightPan=ctx.createStereoPanner();
+ chorusDelayLeft.delayTime.value=SEND_FX_BUS.chorusDelay;
+ chorusDelayRight.delayTime.value=SEND_FX_BUS.chorusDelay;
+ chorusLeftPan.pan.value=-SEND_FX_BUS.chorusPan;chorusRightPan.pan.value=SEND_FX_BUS.chorusPan;
+ chorusOsc.type='sine';chorusOsc.frequency.value=f.chorusRate;
+ chorusDepthLeft.gain.value=f.chorusDepth;chorusDepthRight.gain.value=-f.chorusDepth;
+ chorusOsc.connect(chorusDepthLeft).connect(chorusDelayLeft.delayTime);
+ chorusOsc.connect(chorusDepthRight).connect(chorusDelayRight.delayTime);
+ chorusInput.connect(chorusDelayLeft).connect(chorusLeftPan).connect(compressor);
+ chorusInput.connect(chorusDelayRight).connect(chorusRightPan).connect(compressor);
+ if(endAt===null)chorusOsc.start();
+ else{chorusOsc.start(0);chorusOsc.stop(endAt)}
+ return {delayInput,delayNode,delayFeedback,delayDamping,delayReturn,reverb,reverbReturn,
+  chorusInput,chorusDelayLeft,chorusDelayRight,chorusOsc,chorusDepthLeft,chorusDepthRight,
+  irDecay:f.reverbDecay};
+}
 function updateSendEngine(){if(!audio)return;const now=audio.ctx.currentTime,f=normalizedSendFX(state.sendFX);
  audio.delayNode.delayTime.setTargetAtTime(f.delayTime,now,.03);
  audio.delayFeedback.gain.setTargetAtTime(f.feedback,now,.03);
@@ -3422,31 +3456,13 @@ async function initAudio(){
  if(!audio){const Ctx=window.AudioContext||window.webkitAudioContext;
  if(!Ctx){notify('Web Audio is not supported in this browser.',true);return false}
  const ctx=new Ctx({latencyHint:'interactive'}),compressor=ctx.createDynamicsCompressor();
- const initialFx=normalizedSendFX(state.sendFX);
  compressor.threshold.value=-16;compressor.knee.value=12;compressor.ratio.value=3;compressor.attack.value=.004;compressor.release.value=.17;
  const masterGain=ctx.createGain(),analyser=ctx.createAnalyser();
  masterGain.gain.value=clamp(Number(state.master??75),0,100)/100*.84;
  analyser.fftSize=512;analyser.smoothingTimeConstant=.82;
- const delayNode=ctx.createDelay(2),delayFeedback=ctx.createGain(),delayDamping=ctx.createBiquadFilter(),delayReturn=ctx.createGain();
- delayNode.delayTime.value=initialFx.delayTime;delayFeedback.gain.value=initialFx.feedback;
- delayDamping.type='lowpass';delayDamping.frequency.value=SEND_FX_BUS.delayDampingHz;delayReturn.gain.value=SEND_FX_BUS.delayReturn;
- delayNode.connect(delayDamping).connect(delayFeedback).connect(delayNode);
- delayNode.connect(delayReturn).connect(compressor);
- const reverb=ctx.createConvolver(),reverbReturn=ctx.createGain();
- reverb.buffer=makeReverbIR(ctx,initialFx.reverbDecay);
- reverbReturn.gain.value=SEND_FX_BUS.reverbReturn;reverb.connect(reverbReturn).connect(compressor);
-  const chorusInput=ctx.createGain(),chorusDelayLeft=ctx.createDelay(.1),chorusDelayRight=ctx.createDelay(.1);
-  chorusDelayLeft.delayTime.value=SEND_FX_BUS.chorusDelay;chorusDelayRight.delayTime.value=SEND_FX_BUS.chorusDelay;
-  const chorusOsc=ctx.createOscillator(),chorusDepthLeft=ctx.createGain(),chorusDepthRight=ctx.createGain();
-  const chorusLeftPan=ctx.createStereoPanner(),chorusRightPan=ctx.createStereoPanner();
-  chorusLeftPan.pan.value=-SEND_FX_BUS.chorusPan;chorusRightPan.pan.value=SEND_FX_BUS.chorusPan;
-  chorusOsc.frequency.value=initialFx.chorusRate;
-  chorusDepthLeft.gain.value=initialFx.chorusDepth;chorusDepthRight.gain.value=-initialFx.chorusDepth;
-  chorusOsc.connect(chorusDepthLeft).connect(chorusDelayLeft.delayTime);
-  chorusOsc.connect(chorusDepthRight).connect(chorusDelayRight.delayTime);
-  chorusInput.connect(chorusDelayLeft).connect(chorusLeftPan).connect(compressor);
-  chorusInput.connect(chorusDelayRight).connect(chorusRightPan).connect(compressor);
-  chorusOsc.start();
+ const {delayInput,delayNode,delayFeedback,delayDamping,delayReturn,reverb,reverbReturn,
+  chorusInput,chorusDelayLeft,chorusDelayRight,chorusOsc,chorusDepthLeft,chorusDepthRight,irDecay}=
+  createStereoSendFX(ctx,compressor,state.sendFX);
   const distortionCurve=createDistortionCurve();
   const meterSilence=ctx.createGain();meterSilence.gain.value=0;meterSilence.connect(ctx.destination);
  const trackStereoMeters=[];
@@ -3476,7 +3492,7 @@ async function initAudio(){
    lfoVolume.connect(pre).connect(shape).connect(post).connect(wet).connect(pan);
    // The post-fader/post-pan dry signal travels THROUGH this track's analyser.
    // Unlike the master meter, it cannot show audio from other tracks or FX returns.
-   pan.connect(meter).connect(compressor);pan.connect(d).connect(delayNode);pan.connect(r).connect(reverb);pan.connect(chorus).connect(chorusInput);
+   pan.connect(meter).connect(compressor);pan.connect(d).connect(delayInput);pan.connect(r).connect(reverb);pan.connect(chorus).connect(chorusInput);
    distortionStages.push({dry,wet,pre,shape,post});
    trackGains.push(volume);trackModGains.push(lfoVolume);trackPans.push(pan);trackMeters.push(meter);delaySends.push(d);reverbSends.push(r);chorusSends.push(chorus);cutoffBuses.push(cutoffBus);
  }
@@ -3484,7 +3500,7 @@ async function initAudio(){
  const pwmBuses=Array.from({length:TRACK_COUNT},()=>ctx.createGain());
  pwmBuses.forEach(bus=>bus.gain.value=1);
  const lfoNodes=[];for(let i=0;i<4;i++){const osc=ctx.createOscillator(),depthNode=ctx.createGain();depthNode.gain.value=0;osc.connect(depthNode);osc.start();lfoNodes.push({osc,depthNode,route:'off'})}
- audio={ctx,masterGain,analyser,compressor,trackGains,trackModGains,trackPans,trackMeters,trackStereoMeters,delaySends,reverbSends,chorusSends,distortionStages,cutoffBuses,pwmBuses,delayNode,delayFeedback,delayDamping,delayReturn,reverb,reverbReturn,chorusInput,chorusDelayLeft,chorusDelayRight,chorusOsc,chorusDepthLeft,chorusDepthRight,irDecay:initialFx.reverbDecay,lfoNodes,noise:null,streamDest:null,outputElement:null};
+ audio={ctx,masterGain,analyser,compressor,trackGains,trackModGains,trackPans,trackMeters,trackStereoMeters,delaySends,reverbSends,chorusSends,distortionStages,cutoffBuses,pwmBuses,delayNode,delayFeedback,delayDamping,delayReturn,reverb,reverbReturn,chorusInput,chorusDelayLeft,chorusDelayRight,chorusOsc,chorusDepthLeft,chorusDepthRight,irDecay,lfoNodes,noise:null,streamDest:null,outputElement:null};
  updateSendEngine();applyTrackMix();applyLFOs();
  ctx.addEventListener('statechange',refreshAudioPowerUI);
  }
@@ -4366,8 +4382,34 @@ async function togglePlay(){
  }
  lastVisualStep=-1;playheadQueue=[];resetFXRuntime();
  lateSchedulerSteps=0;worstSchedulerDelayMs=0;lastAudioStatsFrame=0;nextNoteTime=audio.ctx.currentTime+.06;
+ resetTransportModulationPhase(nextNoteTime);
  playing=true;renderSongPosition();$('playBtn').classList.add('playing');$('playBtn').textContent='❚❚ PAUZE';
  scheduler();timer=setInterval(scheduler,25);
+}
+// A live AudioContext may have been open long before PLAY. Start modulator
+// phases on the first song step, as the offline renderer does at time zero.
+function resetTransportModulationPhase(when){
+ if(!audio)return;
+ const ctx=audio.ctx,f=normalizedSendFX(state.sendFX);
+ const oldChorus=audio.chorusOsc;
+ const chorus=ctx.createOscillator();
+ chorus.type='sine';chorus.frequency.value=f.chorusRate;
+ chorus.connect(audio.chorusDepthLeft);
+ chorus.connect(audio.chorusDepthRight);
+ chorus.start(when);
+ audio.chorusOsc=chorus;
+ try{oldChorus?.disconnect();oldChorus?.stop()}catch(e){}
+ for(let i=0;i<audio.lfoNodes.length;i++){
+  const node=audio.lfoNodes[i],settings=state.lfos[i];
+  const replacement=ctx.createOscillator();
+  replacement.type=['sine','square','sawtooth','triangle'].includes(settings?.wave)?settings.wave:'sine';
+  replacement.frequency.value=lfoFrequency(settings);
+  replacement.connect(node.depthNode);
+  replacement.start(when);
+  const previous=node.osc;node.osc=replacement;
+  try{previous.disconnect();previous.stop()}catch(e){}
+ }
+ applyLFOs(when);
 }
 function toggleRecord(){recording=!recording;$('recBtn').classList.toggle('recording',recording);if(recording&&!playing)notify('REC armed: press PLAY and play notes via MIDI.');else notify(recording?'MIDI recording enabled.':'MIDI recording disabled.')}
 function renderPlayhead(i){
@@ -7689,31 +7731,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  compressor.attack.value=.004;compressor.release.value=.17;
  master.gain.value=clamp(Number(state.master??75),0,100)/100*.84;
  compressor.connect(master).connect(ctx.destination);
- const fx=normalizedSendFX(state.sendFX);
- const delayInput=ctx.createGain(),delay=ctx.createDelay(2),feedback=ctx.createGain();
- const delayDamping=ctx.createBiquadFilter(),delayReturn=ctx.createGain();
- delay.delayTime.value=fx.delayTime;
- feedback.gain.value=fx.feedback;
- delayDamping.type='lowpass';delayDamping.frequency.value=SEND_FX_BUS.delayDampingHz;
- delayReturn.gain.value=SEND_FX_BUS.delayReturn;
- delayInput.connect(delay);delay.connect(delayDamping).connect(feedback).connect(delay);
- delay.connect(delayReturn).connect(compressor);
- const reverb=ctx.createConvolver(),reverbReturn=ctx.createGain();
- reverb.buffer=makeReverbIR(ctx,fx.reverbDecay);
- reverbReturn.gain.value=SEND_FX_BUS.reverbReturn;reverb.connect(reverbReturn).connect(compressor);
- const chorusInput=ctx.createGain(),chorusLeft=ctx.createDelay(.1),chorusRight=ctx.createDelay(.1);
- const chorusLPan=ctx.createStereoPanner(),chorusRPan=ctx.createStereoPanner(),chorusOsc=ctx.createOscillator();
- const chorusDepthL=ctx.createGain(),chorusDepthR=ctx.createGain();
- chorusLPan.pan.value=-SEND_FX_BUS.chorusPan;chorusRPan.pan.value=SEND_FX_BUS.chorusPan;
- chorusLeft.delayTime.value=SEND_FX_BUS.chorusDelay;chorusRight.delayTime.value=SEND_FX_BUS.chorusDelay;
- chorusOsc.type='sine';chorusOsc.frequency.value=fx.chorusRate;
- chorusDepthL.gain.value=fx.chorusDepth;
- chorusDepthR.gain.value=-chorusDepthL.gain.value;
- chorusOsc.connect(chorusDepthL).connect(chorusLeft.delayTime);
- chorusOsc.connect(chorusDepthR).connect(chorusRight.delayTime);
- chorusInput.connect(chorusLeft).connect(chorusLPan).connect(compressor);
- chorusInput.connect(chorusRight).connect(chorusRPan).connect(compressor);
- chorusOsc.start(0);chorusOsc.stop(duration);
+ const {delayInput,reverb,chorusInput}=createStereoSendFX(ctx,compressor,state.sendFX,duration);
  const curve=createDistortionCurve();
  const exportLfos=state.lfos||[];
  const lfoTotals={};
