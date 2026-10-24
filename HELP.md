@@ -1,6 +1,12 @@
-# Squirrel Studio Web 0.2.52 — User Manual
+# Squirrel Studio Web 0.2.53 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.53 — Groove & Humanize
+
+Open **OPTIONS → GROOVE & HUMANIZE PER TRACK**. Every track has **SWING** (0–60%) and **VELOCITY ±** (0–30%). Track Swing delays odd steps by part of one step, in addition to the existing master Swing setting. Velocity variation is deterministic per pattern, track and step: repeated playback of the same pattern has consistent velocity changes.
+
+In **SEQUENCER → Step Editor**, adjust **MICROTIMING** from −25% (early) to +25% (late) for the selected step. These settings are saved with the song, included in live playback and applied to offline song/stem/pattern-bounce WAV exports. Existing project files default to zero groove change, and saved Parameter Locks also survive project reloads.
 
 ### New in 0.2.52 — Synth Preset Manager
 
