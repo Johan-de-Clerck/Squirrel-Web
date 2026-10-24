@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.51 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.52 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1111,7 +1111,12 @@ input[type="password"],textarea,
 .pattern-bounce-preview-actions button:disabled{opacity:.5;cursor:default}
 #patternBouncePreviewStatus{padding:0 10px 4px;color:#c7ad8c;font:700 10px Consolas,monospace;min-height:14px}
  .pad.has-parameter-lock:after{content:'●';position:absolute;top:0;right:2px;font-size:8px;color:var(--accent2);pointer-events:none}
- /* v0.2.51: step-level synth filter locks, independent from tracker FX. */
+ /* v0.2.52: reusable VA/FM preset bank. */
+.synth-presets{display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding:10px;margin:0 0 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+.synth-presets>.field-head{margin-right:6px}.synth-presets select{flex:1 1 200px;min-width:145px;max-width:360px}
+.synth-presets .mini-btn{flex:0 0 auto}
+.synth-presets.hidden{display:none}
+/* v0.2.52: step-level synth filter locks, independent from tracker FX. */
 .step-locks{margin:10px 0;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}
 .step-lock-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:6px}
 .step-lock-controls label{display:flex;flex-wrap:wrap;align-items:center;gap:7px;font-size:11px;color:var(--text)}
@@ -1245,7 +1250,7 @@ input[type="password"],textarea,
 <div class="song-toolbar"><label class="song-switch"><input type="checkbox" id="songEnable"> ENABLE SONG PLAYBACK</label><button class="btn" id="songAddCurrent">+ ADD CURRENT PATTERN</button><button class="btn" id="songClear">CLEAR SONG</button><span class="song-playing" id="songPositionLabel">PATTERN MODE</span></div>
 <div class="song-mode-grid"><section class="song-browser"><h3 class="song-subtitle">PATTERN LIBRARY</h3><div id="songPalette" class="song-palette"></div></section>
 <section class="song-builder"><h3 class="song-subtitle">SONG ARRANGEMENT</h3><div id="songSequence" class="song-sequence" aria-label="Song pattern sequence"></div></section></div><p class="song-hint">Click a song tile to cue its playback position. Double-click to start there. Drag to reorder; arrow, + and × buttons edit the arrangement.</p></section></div>
-<div id="view-sound" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Synth engine</h2></div><div class="right-buttons"><span class="pill" id="soundTrackLabel">BASS</span><label class="sq-synth-track-switch"><span>SYNTH TRACK</span><select id="soundTrackSelect" aria-label="Choose synth track"></select></label><label class="sq-engine-switch"><span>ENGINE</span><select id="soundEngineSelect" aria-label="Synthesis engine"><option value="va">VA SYNTH</option><option value="fm">FM SYNTH</option></select></label><button class="btn" id="soundAuditionBtn">♪ PREVIEW C3</button></div></div><div class="wave-viz" id="waveViz" aria-label="Oscillator visualization"></div><div class="control-grid" id="soundControls"></div><div class="preview"><div><div class="tag">LIVE KEYBOARD</div></div><div class="preview-keys" id="previewKeys"></div></div></section></div>
+<div id="view-sound" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Synth engine</h2></div><div class="right-buttons"><span class="pill" id="soundTrackLabel">BASS</span><label class="sq-synth-track-switch"><span>SYNTH TRACK</span><select id="soundTrackSelect" aria-label="Choose synth track"></select></label><label class="sq-engine-switch"><span>ENGINE</span><select id="soundEngineSelect" aria-label="Synthesis engine"><option value="va">VA SYNTH</option><option value="fm">FM SYNTH</option></select></label><button class="btn" id="soundAuditionBtn">♪ PREVIEW C3</button></div></div><div class="synth-presets" id="synthPresetBar"><span class="field-head">SYNTH PRESET LIBRARY</span><select id="synthPresetSelect" aria-label="Saved VA and FM synth presets"></select><button type="button" class="mini-btn" id="synthPresetLoad">LOAD</button><button type="button" class="mini-btn" id="synthPresetSave">SAVE AS</button><button type="button" class="mini-btn" id="synthPresetRename">RENAME</button><button type="button" class="mini-btn" id="synthPresetDelete">DELETE</button><button type="button" class="mini-btn" id="synthPresetExport">EXPORT</button><button type="button" class="mini-btn" id="synthPresetImport">IMPORT</button><input type="file" id="synthPresetFile" accept=".json,application/json" hidden></div><div class="wave-viz" id="waveViz" aria-label="Oscillator visualization"></div><div class="control-grid" id="soundControls"></div><div class="preview"><div><div class="tag">LIVE KEYBOARD</div></div><div class="preview-keys" id="previewKeys"></div></div></section></div>
       <div id="view-mixer" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Eight-track mixer</h2></div><button class="mini-btn" id="resetMixerBtn">RESET MIXER</button></div><div class="mixer" id="mixerStrips"></div></section></div>
       <div id="view-mod" class="hidden"><div class="mod-layout"><section class="panel"><div class="panel-head"><h2 class="section-title">LFO modulation</h2><span class="pill">4 LFO's</span></div><div class="lfo-grid" id="lfoGrid"></div></section><section class="panel"><div class="panel-head"><h2 class="section-title">Filter envelopes</h2><span class="pill">2 ADSR</span></div><div id="envelopeGrid" class="envelope-grid"></div></section></div></div>
       <div id="view-drum" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Drum samples</h2><div class="sample-bank-tools"><button class="mini-btn" id="drumExportBank" type="button">↓ EXPORT BANK</button><button class="mini-btn" id="drumImportBank" type="button">↑ IMPORT BANK</button><span class="pill">5 SLOTS / DRUM TRACK</span></div></div>
@@ -1292,7 +1297,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.51';
+const SQUIRREL_VERSION='0.2.52';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -4791,6 +4796,110 @@ function renderSquirrelVADashboard(sound,track,root){
  root.append(board);
 }
 
+const SYNTH_PRESET_BANK_KEY='squirrel-synth-presets-v1';
+let synthPresetSelection='';
+function readSynthPresetBank(){
+ try{
+  const list=JSON.parse(localStorage.getItem(SYNTH_PRESET_BANK_KEY)||'[]');
+  return Array.isArray(list)?list.filter(p=>p&&typeof p.name==='string'&&p.sound&&typeof p.sound==='object'&&['va','fm'].includes(p.sound.engine)).slice(0,128):[];
+ }catch(e){console.warn('Could not read synth presets',e);return []}
+}
+function writeSynthPresetBank(list){
+ try{localStorage.setItem(SYNTH_PRESET_BANK_KEY,JSON.stringify(list));return true}
+ catch(e){notify('Cannot save synth preset: browser storage is full or unavailable.',true);return false}
+}
+function normalizeSynthPresetSound(candidate,track){
+ const defaults=defaultSound(track),result={...defaults};
+ if(!candidate||typeof candidate!=='object'||!['va','fm'].includes(candidate.engine))throw Error('Invalid VA/FM preset');
+ for(const key of Object.keys(defaults)){
+  if(key==='filterEnvelope'){
+   if(candidate.filterEnvelope&&typeof candidate.filterEnvelope==='object'){
+    const env={...defaults.filterEnvelope};
+    for(const k of Object.keys(env))if(typeof candidate.filterEnvelope[k]===typeof env[k])env[k]=candidate.filterEnvelope[k];
+    result.filterEnvelope=env;
+   }
+  }else if(typeof candidate[key]===typeof defaults[key]&&(
+   typeof candidate[key]!=='number'||Number.isFinite(candidate[key])))result[key]=candidate[key];
+ }
+ return result;
+}
+function presetFileName(name){
+ return (name||'Squirrel_Synth').replace(/[^a-z0-9_-]+/gi,'_').slice(0,65)+'.squirrel-preset.json';
+}
+function renderSynthPresetManager(){
+ const bar=$('synthPresetBar'),select=$('synthPresetSelect');
+ if(!bar||!select)return;
+ const valid=isSynth(state.selectedTrack);
+ bar.classList.toggle('hidden',!valid);if(!valid)return;
+ const bank=readSynthPresetBank();
+ select.replaceChildren();select.add(new Option('CHOOSE VA / FM PRESET',''));
+ for(const p of bank)select.add(new Option((p.sound.engine==='fm'?'FM · ':'VA · ')+p.name,p.name));
+ const current=bank.some(p=>p.name===synthPresetSelection)?synthPresetSelection:'';
+ select.value=current;synthPresetSelection=current;
+ const chosen=bank.find(p=>p.name===current);
+ for(const id of ['synthPresetLoad','synthPresetRename','synthPresetDelete','synthPresetExport'])$(id).disabled=!chosen;
+ select.onchange=()=>{synthPresetSelection=select.value;renderSynthPresetManager()};
+ $('synthPresetSave').onclick=()=>{
+  const track=state.tracks[state.selectedTrack];
+  if(!track||!isSynth(state.selectedTrack))return;
+  const proposed=prompt('Save this VA/FM sound as preset',synthPresetSelection||track.name+' '+(track.sound.engine==='fm'?'FM':'VA'));
+  if(proposed===null)return;
+  const name=proposed.trim().slice(0,60);
+  if(!name){notify('Please enter a preset name.',true);return}
+  const list=readSynthPresetBank(),idx=list.findIndex(p=>p.name.toLowerCase()===name.toLowerCase());
+  if(idx>=0&&!confirm('Replace existing preset "'+list[idx].name+'"?'))return;
+  const item={name,sound:normalizeSynthPresetSound(track.sound,track)};
+  if(idx>=0)list[idx]=item;else list.push(item);
+  if(list.length>128){notify('Preset bank is full (128 presets).',true);return}
+  if(!writeSynthPresetBank(list))return;
+  synthPresetSelection=name;renderSynthPresetManager();notify('Synth preset saved: '+name);
+ };
+ $('synthPresetLoad').onclick=()=>{
+  const selected=readSynthPresetBank().find(p=>p.name===synthPresetSelection);
+  if(!selected||!isSynth(state.selectedTrack))return;
+  const track=state.tracks[state.selectedTrack];
+  track.sound=normalizeSynthPresetSound(selected.sound,track);
+  persist();renderSound();notify('Loaded '+selected.name+' into '+track.name+'. Other synth tracks unchanged.');
+ };
+ $('synthPresetRename').onclick=()=>{
+  const list=readSynthPresetBank(),p=list.find(p=>p.name===synthPresetSelection);
+  if(!p)return;
+  const proposed=prompt('Rename synth preset',p.name);if(proposed===null)return;
+  const name=proposed.trim().slice(0,60);if(!name)return;
+  if(list.some(other=>other!==p&&other.name.toLowerCase()===name.toLowerCase())){notify('Preset name already exists.',true);return}
+  p.name=name;if(!writeSynthPresetBank(list))return;
+  synthPresetSelection=name;renderSynthPresetManager();
+ };
+ $('synthPresetDelete').onclick=()=>{
+  if(!chosen||!confirm('Delete saved preset "'+chosen.name+'"? Sounds already loaded on tracks are not changed.'))return;
+  if(!writeSynthPresetBank(readSynthPresetBank().filter(p=>p.name!==chosen.name)))return;
+  synthPresetSelection='';renderSynthPresetManager();notify('Deleted preset: '+chosen.name);
+ };
+ $('synthPresetExport').onclick=()=>{
+  if(!chosen)return;
+  const blob=new Blob([JSON.stringify({app:'Squirrel Synth Preset',version:1,...chosen},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=presetFileName(chosen.name);a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+ };
+ $('synthPresetImport').onclick=()=>$('synthPresetFile').click();
+ $('synthPresetFile').onchange=async event=>{
+  const file=event.target.files?.[0];event.target.value='';if(!file)return;
+  if(file.size>128*1024){notify('Synth preset file exceeds 128 KB.',true);return}
+  try{
+   const obj=JSON.parse(await file.text());
+   if(obj.app!=='Squirrel Synth Preset'||obj.version!==1||!obj.sound)throw Error('Not a Squirrel synth preset file');
+   const track=state.tracks[state.selectedTrack],sound=normalizeSynthPresetSound(obj.sound,track);
+   const name=String(obj.name||'Imported Preset').trim().slice(0,60);
+   if(!name)throw Error('Preset name is empty');
+   const list=readSynthPresetBank(),idx=list.findIndex(p=>p.name.toLowerCase()===name.toLowerCase());
+   if(idx>=0&&!confirm('Replace existing saved preset "'+list[idx].name+'"?'))return;
+   if(idx>=0)list[idx]={name,sound};else list.push({name,sound});
+   if(list.length>128)throw Error('Preset bank is full (128 presets)');
+   if(!writeSynthPresetBank(list))return;
+   synthPresetSelection=name;renderSynthPresetManager();notify('Imported preset: '+name);
+  }catch(e){notify('Preset import failed: '+e.message,true)}
+ };
+}
 function renderSound(){
  const available=availableSynthTracks();
  const picker=$('soundTrackSelect');picker.replaceChildren();
@@ -4813,6 +4922,7 @@ function renderSound(){
   $('soundControls').append(hint);return;
  }
  lastSynthTrack=state.selectedTrack;picker.value=String(state.selectedTrack);
+ renderSynthPresetManager();
  picker.onchange=()=>{
   const i=Number(picker.value);if(!isSynth(i))return;
   stopEnterPreview();stopAllEditNotePreviews();
