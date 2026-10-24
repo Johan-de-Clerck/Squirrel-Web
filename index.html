@@ -6363,6 +6363,12 @@ function reusablePatternBouncePreview(pattern,settings){
  return cached&&cached.project===state&&cached.key===patternBouncePreviewKey(pattern,settings)
   ?cached.wav:null;
 }
+function patternBounceAudioOptionsChanged(){
+ // Never continue auditioning a stale bounce when quality, tail or crossfade
+ // changes. Keep the cached PCM so returning to identical settings can reuse it.
+ stopPatternBouncePreview(true);
+ updatePatternBouncePreviewUI();
+}
 function updatePatternBouncePreviewUI(){
  const play=$('filePreviewPattern'),stop=$('fileStopPatternPreview'),status=$('patternBouncePreviewStatus');
  if(play)play.disabled=songExportBusy||!!patternBouncePreview;
@@ -6427,7 +6433,8 @@ async function previewPatternBounce(){
   if(!buffer?.length)throw Error('Preview buffer is empty.');
   // Peak extraction runs once per actual WAV. The cache stores tiny min/max
   // arrays, not the large decoded AudioBuffer, and survives stopping playback.
-  const waveform=analyzePatternBounceWaveform(buffer);
+  const waveform=cached&&patternBouncePreviewCache?.waveform
+   ?patternBouncePreviewCache.waveform:analyzePatternBounceWaveform(buffer);
   if(serial!==patternBouncePreviewSerial)return;
   const source=context.createBufferSource();
   source.buffer=buffer;source.loop=settings.tail===0;
@@ -7653,16 +7660,16 @@ function bindings(){
   try{localStorage.setItem(SYNTH_RENDER_PREFS_KEY,synthRenderDestination())}
   catch(e){console.warn('Synth render preference save:',e)}
  };
- $('songExportRate').onchange=saveSongExportSettings;
- $('songExportBits').onchange=saveSongExportSettings;
+ $('songExportRate').onchange=()=>{saveSongExportSettings();patternBounceAudioOptionsChanged()};
+ $('songExportBits').onchange=()=>{saveSongExportSettings();patternBounceAudioOptionsChanged()};
  $('songExportSource').onchange=()=>{updateSongStemOptions();saveSongExportSettings()};
  $('songExportIncludeMix').onchange=saveSongExportSettings;
  $('songExportTail').onchange=saveSongExportSettings;
- $('songExportNormalize').onchange=saveSongExportSettings;
- $('songExportDither').onchange=saveSongExportSettings;
+ $('songExportNormalize').onchange=()=>{saveSongExportSettings();patternBounceAudioOptionsChanged()};
+ $('songExportDither').onchange=()=>{saveSongExportSettings();patternBounceAudioOptionsChanged()};
  restorePatternBouncePrefs();
- $('patternBounceTail').onchange=()=>{updatePatternBounceCrossfadeState();persistPatternBouncePrefs()};
- $('patternBounceCrossfade').onchange=persistPatternBouncePrefs;
+ $('patternBounceTail').onchange=()=>{updatePatternBounceCrossfadeState();persistPatternBouncePrefs();patternBounceAudioOptionsChanged()};
+ $('patternBounceCrossfade').onchange=()=>{persistPatternBouncePrefs();patternBounceAudioOptionsChanged()};
  $('fileRenderSynth').onclick=()=>{$('fileMenu').open=false;renderSelectedSynthWav().catch(e=>notify('Render failed: '+e.message,true))};
  $('fileExportSong').onclick=()=>{$('fileMenu').open=false;runSongWavExport()};
  $('fileBouncePattern').onclick=()=>{$('fileMenu').open=false;runPatternBounce()};
