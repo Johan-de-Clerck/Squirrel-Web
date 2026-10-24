@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.57 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.58 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1111,19 +1111,19 @@ input[type="password"],textarea,
 .pattern-bounce-preview-actions button:disabled{opacity:.5;cursor:default}
 #patternBouncePreviewStatus{padding:0 10px 4px;color:#c7ad8c;font:700 10px Consolas,monospace;min-height:14px}
  .pad.has-parameter-lock:after{content:'●';position:absolute;top:0;right:2px;font-size:8px;color:var(--accent2);pointer-events:none}
- /* v0.2.57: per-track groove, velocity humanize and microtiming. */
+ /* v0.2.58: per-track groove, velocity humanize and microtiming. */
 .groove-track-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
 .groove-track-row{display:grid;grid-template-columns:minmax(90px,1fr) minmax(0,1fr);gap:8px;align-items:center;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
 .groove-track-row strong{font-size:11px}
 .groove-track-row label{display:grid;gap:3px;font-size:10px;color:var(--muted)}
 .groove-track-row input{width:100%}
 @media(max-width:900px){.groove-track-list{grid-template-columns:1fr}}
-/* v0.2.57: reusable VA/FM preset bank. */
+/* v0.2.58: reusable VA/FM preset bank. */
 .synth-presets{display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding:10px;margin:0 0 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
 .synth-presets>.field-head{margin-right:6px}.synth-presets select{flex:1 1 200px;min-width:145px;max-width:360px}
 .synth-presets .mini-btn{flex:0 0 auto}
 .synth-presets.hidden{display:none}
-/* v0.2.57: step-level synth filter locks, independent from tracker FX. */
+/* v0.2.58: step-level synth filter locks, independent from tracker FX. */
 .step-locks{margin:10px 0;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}
 .step-lock-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:6px}
 .step-lock-controls label{display:flex;flex-wrap:wrap;align-items:center;gap:7px;font-size:11px;color:var(--text)}
@@ -1156,7 +1156,7 @@ input[type="password"],textarea,
 .pad.on.track-colored .note-label{color:var(--note-ink,#221916)}
 .pad.on.track-colored .mini-bar{background:#211a1a88}
 @media(max-width:1100px){.transport-track-color{margin:0}}
-/* v0.2.57 — Keep Step FX tools beside the fields; no extra editor scroll. */
+/* v0.2.58 — Keep Step FX tools beside the fields; no extra editor scroll. */
 #view-seq .fx-compact-layout{display:grid;grid-template-columns:minmax(0,1fr) 148px;gap:10px;align-items:stretch;min-width:0}
 #view-seq .fx-main-fields{min-width:0}
 #view-seq .fx-main-fields .fx-controls{min-width:0;gap:5px 8px}
@@ -1177,7 +1177,7 @@ input[type="password"],textarea,
  #view-seq .fx-compact-layout .fx-actions{flex-direction:row;flex-wrap:wrap;justify-content:flex-start;margin-top:5px}
  #view-seq .fx-compact-layout .fx-actions .mini-btn{width:auto;flex:1 1 100px}
 }
-/* v0.2.57: separate File, Bounce and WAV Export dropdowns. */
+/* v0.2.58: separate File, Bounce and WAV Export dropdowns. */
 .file-menubar{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .file-menubar>.file-action-menu>summary{white-space:nowrap}
 .file-menubar>.file-action-menu .file-menu-items{width:min(405px,92vw)}
@@ -1343,7 +1343,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.57';
+const SQUIRREL_VERSION='0.2.58';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -3756,8 +3756,21 @@ function vaNoiseBuffer(ctx){
  vaNoiseBuffers.set(ctx,buffer);
  return buffer;
 }
+// Bound live VA/FM polyphony per track. Oldest voices are softly stolen only
+// when a dense chord/ratchet or external MIDI passage exceeds this limit.
+const MAX_SYNTH_VOICES_PER_TRACK=24;
+function ensureSynthVoiceRoom(trackIndex,when){
+ if(!audio||trackIndex<0)return;
+ let voices=[...scheduledVoices].filter(v=>v.trackIndex===trackIndex&&!v.drum&&!v.sampleVoice);
+ while(voices.length>=MAX_SYNTH_VOICES_PER_TRACK){
+  const oldest=voices.shift();
+  if(!oldest)break;
+  fadeTransportVoice(oldest,Math.max(audio.ctx.currentTime,when),.02);
+ }
+}
 function synthVoice(track,note,velocity,when,gate=null){
  const c=audio.ctx,s=track.sound,trackIndex=state.tracks.indexOf(track);
+ ensureSynthVoiceRoom(trackIndex,when);
  note=clamp(note+Number(s.transpose||0),0,127);
  const f=hz(note);
  if(s.engine==='fm')return s.fmMode==='four'?fmFourSynthVoice(track,note,velocity,when,gate):fmSynthVoice(track,note,velocity,when,gate);
@@ -3766,7 +3779,7 @@ function synthVoice(track,note,velocity,when,gate=null){
  if(nativeVAEnabled() && trackIndex>=3 && trackIndex<=5 && isSynth(trackIndex)){
   const nativeId=++nativeVoiceSerial;
   nativeVAMessage('on',{id:nativeId,track:trackIndex,note,velocity,patch:nativeVAPatch(trackIndex)},when);
-  const voice={nativeId,trackIndex,released:false,release:Math.max(.02,s.release),oscs:[],pitchParams:[],drum:false,
+  const voice={nativeId,trackIndex,startTime:when,released:false,release:Math.max(.02,s.release),oscs:[],pitchParams:[],drum:false,
    soundNote:note,transposeAtStart:Number(s.transpose)||0,fxPitchCents:0,fxLevel:1};
   scheduledVoices.add(voice);
   if(gate!==null)releaseVoiceScheduled(voice,when+Math.max(.035,gate));
@@ -3821,7 +3834,7 @@ function synthVoice(track,note,velocity,when,gate=null){
  for(const osc of [osc1,osc2,subOsc])osc.start(when);
  const v={env:out,oscs:[osc1,osc2,subOsc],pitchParams:[osc1.detune,osc2.detune,subOsc.detune],
   modGain,oscGains:[g1,g2,subGain,noiseGain],noiseSource,noiseFilter,pwmParts,engine:'va',release:Math.max(.02,s.release),released:false,trackIndex,filter:filt,filterEnvelopes,
-  soundNote:note,transposeAtStart:Number(s.transpose)||0,fxPitchCents:0,fxLevel:1,
+  soundNote:note,transposeAtStart:Number(s.transpose)||0,fxPitchCents:0,fxLevel:1,startTime:when,
   ampEnvelope:{start:when,peak:Math.max(.0002,velocity/127*.5),attack:Math.max(.003,s.attack),
                decay:Math.max(.01,s.decay),sustain:s.sustain}};
  scheduledVoices.add(v);
@@ -3864,7 +3877,7 @@ function releaseVoiceScheduled(v,when){if(v.released)return;
   }
   return;
  }
- if(v.nativeId){v.released=true;v.releaseScheduled=when;nativeVAMessage('off',{id:v.nativeId},when);return;}v.released=true;v.releaseScheduled=when;const p=v.env.gain;const val=voiceGainAt(v,when);p.cancelScheduledValues(when);p.setValueAtTime(val,when);p.exponentialRampToValueAtTime(.0001,when+v.release);releaseFMModulation(v,when);releaseFilterEnvelopes(v,when);if(v.engine==='fm4'&&v.fmOperatorReleases){for(const {from,gain} of v.fmModLinks){const t=Math.max(.01,v.fmOperatorReleases[from]);const p=gain.gain;try{if(typeof p.cancelAndHoldAtTime==='function')p.cancelAndHoldAtTime(when);else{p.cancelScheduledValues(when);p.setValueAtTime(Math.max(0,p.value),when)}p.linearRampToValueAtTime(0,when+t)}catch(_){}}for(const {index,gain} of v.fmCarrierGains){const t=Math.max(.01,v.fmOperatorReleases[index]);const p=gain.gain;try{if(typeof p.cancelAndHoldAtTime==='function')p.cancelAndHoldAtTime(when);else{p.cancelScheduledValues(when);p.setValueAtTime(Math.max(0,p.value),when)}p.linearRampToValueAtTime(0,when+t)}catch(_){}}}v.oscs.forEach(o=>o.stop(when+Math.max(v.release,...(v.fmOperatorReleases||[]))+.04))}
+ if(v.nativeId){v.released=true;v.releaseScheduled=when;nativeVAMessage('off',{id:v.nativeId},when);scheduledVoices.delete(v);return;}v.released=true;v.releaseScheduled=when;const p=v.env.gain;const val=voiceGainAt(v,when);p.cancelScheduledValues(when);p.setValueAtTime(val,when);p.exponentialRampToValueAtTime(.0001,when+v.release);releaseFMModulation(v,when);releaseFilterEnvelopes(v,when);if(v.engine==='fm4'&&v.fmOperatorReleases){for(const {from,gain} of v.fmModLinks){const t=Math.max(.01,v.fmOperatorReleases[from]);const p=gain.gain;try{if(typeof p.cancelAndHoldAtTime==='function')p.cancelAndHoldAtTime(when);else{p.cancelScheduledValues(when);p.setValueAtTime(Math.max(0,p.value),when)}p.linearRampToValueAtTime(0,when+t)}catch(_){}}for(const {index,gain} of v.fmCarrierGains){const t=Math.max(.01,v.fmOperatorReleases[index]);const p=gain.gain;try{if(typeof p.cancelAndHoldAtTime==='function')p.cancelAndHoldAtTime(when);else{p.cancelScheduledValues(when);p.setValueAtTime(Math.max(0,p.value),when)}p.linearRampToValueAtTime(0,when+t)}catch(_){}}}v.oscs.forEach(o=>o.stop(when+Math.max(v.release,...(v.fmOperatorReleases||[]))+.04))}
 function oneShot(type,track,velocity,when,pitch=0){
  // Embedded Windows desktop: Kick/Snare/Hi-Hat now use the same JUCE/ASIO
  // audio device as Bass/Lead/Chord. Browser mode keeps Web Audio unchanged.
