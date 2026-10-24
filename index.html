@@ -6248,6 +6248,106 @@ async function saveBouncedPatternToLibrary(wav,slot,expectedState,expectedGenera
 // relevant changed, preserving the Chance/random-noise choices.
 let patternBouncePreview=null,patternBouncePreviewSerial=0;
 let patternBouncePreviewRendering=false,patternBouncePreviewCache=null;
+// v0.2.48: Build an accurate stereo min/max envelope FROM decoded PCM WAV,
+// using constant-size peak arrays instead of retaining extra audio buffers.
+const PATTERN_BOUNCE_WAVE_COLUMNS=576;
+let patternBounceWaveAnimation=0;
+function analyzePatternBounceWaveform(buffer){
+ if(!buffer?.length||typeof buffer.getChannelData!=='function')return null;
+ const cols=PATTERN_BOUNCE_WAVE_COLUMNS,channels=[];
+ for(let c=0;c<2;c++){
+  const values=buffer.getChannelData(Math.min(c,(buffer.numberOfChannels||1)-1));
+  const lo=new Float32Array(cols),hi=new Float32Array(cols);
+  for(let x=0;x<cols;x++){
+   const from=Math.floor(x*values.length/cols);
+   const to=Math.min(values.length,Math.max(from+1,Math.floor((x+1)*values.length/cols)));
+   let min=1,max=-1;
+   for(let i=from;i<to;i++){const value=Number.isFinite(values[i])?values[i]:0;min=Math.min(min,value);max=Math.max(max,value)}
+   lo[x]=min<=max?min:0;hi[x]=min<=max?max:0;
+  }
+  channels.push({lo,hi});
+ }
+ return {channels,frames:buffer.length,duration:buffer.duration||buffer.length/buffer.sampleRate,rate:buffer.sampleRate};
+}
+function stopPatternBounceWaveAnimation(){
+ if(patternBounceWaveAnimation&&typeof cancelAnimationFrame==='function')cancelAnimationFrame(patternBounceWaveAnimation);
+ patternBounceWaveAnimation=0;
+}
+function drawPatternBounceWaveform(){
+ const canvas=$('patternBounceWaveform');
+ if(!canvas)return;
+ const ctx=canvas.getContext('2d');
+ if(!ctx)return;
+ const width=canvas.width,height=canvas.height;
+ ctx.clearRect(0,0,width,height);
+ ctx.fillStyle='#191510';ctx.fillRect(0,0,width,height);
+ const left=28,right=width-14,plotWidth=right-left;
+ const selected=patternBouncePreviewCache;
+ const settings=currentPatternBounceSettings();
+ const valid=selected&&selected.project===state&&selected.key===patternBouncePreviewKey(state.pattern,settings);
+ const wave=valid?selected.waveform:null;
+ const durationLabel=$('patternBounceWaveDuration'),seamLabel=$('patternBounceWaveSeam'),endLabel=$('patternBounceWaveEnd');
+ if(!wave){
+  const stale=!!selected&&!valid;
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 18px Consolas,monospace';ctx.fillStyle='#aa896e';
+  ctx.fillText(stale?'SETTINGS CHANGED':'NO WAVEFORM YET',width/2,height/2-9);
+  ctx.font='13px Consolas,monospace';ctx.fillStyle='#866c56';
+  ctx.fillText('PRESS PREVIEW BOUNCE',width/2,height/2+17);
+  if(durationLabel)durationLabel.textContent=stale?'PREVIEW OUT OF DATE':'NO AUDIO · PREVIEW TO ANALYZE';
+  if(seamLabel)seamLabel.textContent='CROSSFADE '+(settings.loopCrossfadeMs?settings.loopCrossfadeMs+' MS':'OFF');
+  if(endLabel)endLabel.textContent='END · —';
+  canvas.setAttribute('aria-label',stale?'Bounce waveform outdated. Preview again after changing pattern or render options.':'No bounced audio yet. Preview the pattern to display its stereo waveform.');
+  return;
+ }
+ const seamMs=settings.tail===0?settings.loopCrossfadeMs:0;
+ const seamPixels=seamMs?Math.max(4,Math.min(plotWidth/4,plotWidth*(seamMs/1000)/wave.duration)):0;
+ for(let c=0;c<2;c++){
+  const center=c===0?60:151,amplitude=34;
+  ctx.fillStyle=c===0?'#221d17':'#201a15';
+  ctx.fillRect(left,center-39,plotWidth,78);
+  if(seamPixels){
+   ctx.fillStyle='rgba(239,169,74,.2)';
+   ctx.fillRect(left,center-39,seamPixels,78);
+   ctx.fillRect(right-seamPixels,center-39,seamPixels,78);
+  }
+  ctx.strokeStyle='#66523b';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(left,center);ctx.lineTo(right,center);ctx.stroke();
+  ctx.fillStyle='#ad8660';ctx.font='bold 15px Consolas,monospace';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(c===0?'L':'R',7,center);
+  const values=wave.channels[c];ctx.strokeStyle=c===0?'#ebbd7e':'#bcd7c0';ctx.lineWidth=1;ctx.beginPath();
+  for(let x=0;x<PATTERN_BOUNCE_WAVE_COLUMNS;x++){
+   const px=left+(x+.5)*plotWidth/PATTERN_BOUNCE_WAVE_COLUMNS;
+   const lo=Math.max(-1,Math.min(1,values.lo[x])),hi=Math.max(-1,Math.min(1,values.hi[x]));
+   ctx.moveTo(px,center-hi*amplitude);ctx.lineTo(px,center-lo*amplitude);
+  }
+  ctx.stroke();
+ }
+ ctx.lineWidth=2;ctx.strokeStyle='#f5c176';ctx.beginPath();ctx.moveTo(left,17);ctx.lineTo(left,height-10);ctx.moveTo(right,17);ctx.lineTo(right,height-10);ctx.stroke();
+ ctx.font='bold 11px Consolas,monospace';ctx.fillStyle='#f5c176';ctx.textBaseline='top';ctx.textAlign='left';ctx.fillText('START',left+4,1);ctx.textAlign='right';ctx.fillText('END',right-4,1);
+ if(seamPixels){
+  ctx.font='bold 11px Consolas,monospace';ctx.fillStyle='#f5c176';ctx.textAlign='center';
+  ctx.fillText('CROSSFADE '+seamMs+'ms',width/2,1);
+ }
+ const preview=patternBouncePreview;
+ if(preview?.source&&preview.serial===patternBouncePreviewSerial&&preview.startedAt!==undefined&&wave.duration>0&&selected===patternBouncePreviewCache){
+  const elapsed=Math.max(0,preview.context.currentTime-preview.startedAt);
+  const at=preview.loop?elapsed%wave.duration:Math.min(elapsed,wave.duration);
+  const x=left+Math.min(1,at/wave.duration)*plotWidth;
+  ctx.strokeStyle='#92e2c9';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,20);ctx.lineTo(x,height-9);ctx.stroke();
+ }
+ if(durationLabel)durationLabel.textContent=wave.duration.toFixed(2)+' S · '+(wave.rate/1000).toFixed(1)+' KHZ · STEREO';
+ if(seamLabel)seamLabel.textContent=seamMs?'CROSSFADE '+seamMs+' MS · EDGES SHADED':settings.tail?'FX TAIL '+settings.tail+' S':'CROSSFADE OFF';
+ if(endLabel)endLabel.textContent='END · '+wave.duration.toFixed(2)+' S';
+ canvas.setAttribute('aria-label','Stereo bounce waveform, length '+wave.duration.toFixed(2)+' seconds, left and right channel. Start and end markers shown'+(seamMs?', with '+seamMs+' millisecond crossfade zones at both ends':'')+'.');
+}
+function animatePatternBounceWaveform(){
+ stopPatternBounceWaveAnimation();
+ if(typeof requestAnimationFrame!=='function')return;
+ const paint=()=>{
+  patternBounceWaveAnimation=0;
+  drawPatternBounceWaveform();
+  if(patternBouncePreview?.source)patternBounceWaveAnimation=requestAnimationFrame(paint);
+ };
+ patternBounceWaveAnimation=requestAnimationFrame(paint);
+}
 function currentPatternBounceSettings(){
  const rawTail=Number($('patternBounceTail')?.value??0);
  const tail=[0,3,6,10].includes(rawTail)?rawTail:0;
@@ -6270,8 +6370,10 @@ function updatePatternBouncePreviewUI(){
  if(status)status.textContent=patternBouncePreviewRendering?'RENDERING PREVIEW…':
   patternBouncePreview?.source?'▶ PREVIEW PLAYING · '+(patternBouncePreview.loop?'LOOP':'ONE SHOT'):
   'PREVIEW READY'+(reusablePatternBouncePreview(state.pattern,currentPatternBounceSettings())?' · AUDIO CACHED':'');
+ drawPatternBounceWaveform();
 }
 function stopPatternBouncePreview(silent=false){
+ stopPatternBounceWaveAnimation();
  ++patternBouncePreviewSerial;
  const active=patternBouncePreview;
  patternBouncePreview=null;
@@ -6323,6 +6425,10 @@ async function previewPatternBounce(){
   if(project!==state||key!==patternBouncePreviewKey(pattern,settings))
    throw Error('The pattern or audio settings changed during decoding. Preview again.');
   if(!buffer?.length)throw Error('Preview buffer is empty.');
+  // Peak extraction runs once per actual WAV. The cache stores tiny min/max
+  // arrays, not the large decoded AudioBuffer, and survives stopping playback.
+  const waveform=analyzePatternBounceWaveform(buffer);
+  if(serial!==patternBouncePreviewSerial)return;
   const source=context.createBufferSource();
   source.buffer=buffer;source.loop=settings.tail===0;
   source.connect(context.destination);
@@ -6331,8 +6437,10 @@ async function previewPatternBounce(){
     stopPatternBouncePreview(true);
   };
   patternBouncePreview.source=source;
-  patternBouncePreviewCache={project,key,wav};
+  patternBouncePreviewCache={project,key,wav,waveform};
+  patternBouncePreview.startedAt=context.currentTime;
   source.start();
+  animatePatternBounceWaveform();
   notify('Preview '+patternName(pattern)+' · '+(source.loop?'looping until STOP':'one shot with FX tail')+'.');
  }catch(e){
   if(serial===patternBouncePreviewSerial){
