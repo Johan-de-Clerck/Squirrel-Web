@@ -1,6 +1,10 @@
-# Squirrel Studio Web 0.2.62 — User Manual
+# Squirrel Studio Web 0.2.63 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.63 — Detailed waveform and smooth zoom
+
+The **SAMPLE EDITOR** now has a continuous logarithmic **ZOOM** slider from **1× to 4096×**, with roughly 0.7% resolution per slider step. The mouse wheel or trackpad also zooms in small proportional increments around the pointer. At high magnification, the waveform is drawn as a connected trace interpolated between the original PCM samples; at wider views, cached exact minimum/maximum peaks preserve short transients without skipping data. The **POSITION** slider has finer precision for navigating highly zoomed samples, and the timeline gains more decimal places automatically. **FIT** still returns to the full waveform. This affects the waveform display only, not the audio samples or playback processing.
 
 ### Fixed in 0.2.62 — Sample / Drum Slot selection
 
