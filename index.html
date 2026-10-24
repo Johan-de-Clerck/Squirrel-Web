@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.52 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.53 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1111,12 +1111,19 @@ input[type="password"],textarea,
 .pattern-bounce-preview-actions button:disabled{opacity:.5;cursor:default}
 #patternBouncePreviewStatus{padding:0 10px 4px;color:#c7ad8c;font:700 10px Consolas,monospace;min-height:14px}
  .pad.has-parameter-lock:after{content:'●';position:absolute;top:0;right:2px;font-size:8px;color:var(--accent2);pointer-events:none}
- /* v0.2.52: reusable VA/FM preset bank. */
+ /* v0.2.53: per-track groove, velocity humanize and microtiming. */
+.groove-track-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.groove-track-row{display:grid;grid-template-columns:minmax(90px,1fr) minmax(0,1fr);gap:8px;align-items:center;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
+.groove-track-row strong{font-size:11px}
+.groove-track-row label{display:grid;gap:3px;font-size:10px;color:var(--muted)}
+.groove-track-row input{width:100%}
+@media(max-width:900px){.groove-track-list{grid-template-columns:1fr}}
+/* v0.2.53: reusable VA/FM preset bank. */
 .synth-presets{display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding:10px;margin:0 0 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
 .synth-presets>.field-head{margin-right:6px}.synth-presets select{flex:1 1 200px;min-width:145px;max-width:360px}
 .synth-presets .mini-btn{flex:0 0 auto}
 .synth-presets.hidden{display:none}
-/* v0.2.52: step-level synth filter locks, independent from tracker FX. */
+/* v0.2.53: step-level synth filter locks, independent from tracker FX. */
 .step-locks{margin:10px 0;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}
 .step-lock-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:6px}
 .step-lock-controls label{display:flex;flex-wrap:wrap;align-items:center;gap:7px;font-size:11px;color:var(--text)}
@@ -1242,7 +1249,7 @@ input[type="password"],textarea,
           
         </section>
         <div class="two-cols">
-          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step editor</h2></div><span class="pill" id="stepOnLabel">STEP OFF</span></div><div class="control-grid"><label class="field"><span class="field-head">INSTRUMENT TYPE</span><select id="stepTrackKind" aria-label="Instrument type for selected track"><option value="drum">DRUM</option><option value="bass">BASS</option><option value="lead">LEAD</option><option value="sample">SAMPLE</option><option value="chord">CHORD</option></select></label><label class="field hidden" id="stepDrumSampleField"><span class="field-head"><span>SAMPLE</span></span><select id="stepDrumSample" aria-label="Sample for the selected drum step"></select><div class="step-drum-quick" id="stepDrumQuick" role="group" aria-label="Drum slot quick selection"></div></label><label class="field" id="stepNoteField"><span class="field-head"><span>NOTE</span><output id="stepNoteOut">C3</output></span><select id="stepNote"></select></label><label class="field"><span class="field-head"><span>VELOCITY</span><output id="velocityOut">110</output></span><input id="velocity" type="range" min="1" max="127" value="110"></label><label class="field" id="stepGateField"><span class="field-head"><span>GATE</span><output id="gateOut">85%</output></span><input id="gate" type="range" min="10" max="180" value="85"></label><label class="field"><span class="field-head"><span>CHANCE</span><output id="chanceOut">100%</output></span><input id="chance" type="range" min="0" max="100" value="100"></label><label class="field"><span class="field-head"><span>RATCHET</span><output id="ratchetOut">1×</output></span><input id="ratchet" type="range" min="1" max="6" step="1" value="1"></label></div><div class="setup-actions"><button class="mini-btn" id="toggleStepBtn">TOGGLE STEP</button><button class="mini-btn" id="copyStepBtn" type="button">COPY STEP</button><button class="mini-btn" id="pasteStepBtn" type="button" disabled>PASTE STEP</button><button class="mini-btn" id="undoStepBtn" type="button" disabled>↶ UNDO</button><button class="mini-btn" id="redoStepBtn" type="button" disabled>↷ REDO</button><button class="mini-btn" id="auditionStepBtn">♪ AUDITION</button></div></section>
+          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step editor</h2></div><span class="pill" id="stepOnLabel">STEP OFF</span></div><div class="control-grid"><label class="field"><span class="field-head">INSTRUMENT TYPE</span><select id="stepTrackKind" aria-label="Instrument type for selected track"><option value="drum">DRUM</option><option value="bass">BASS</option><option value="lead">LEAD</option><option value="sample">SAMPLE</option><option value="chord">CHORD</option></select></label><label class="field hidden" id="stepDrumSampleField"><span class="field-head"><span>SAMPLE</span></span><select id="stepDrumSample" aria-label="Sample for the selected drum step"></select><div class="step-drum-quick" id="stepDrumQuick" role="group" aria-label="Drum slot quick selection"></div></label><label class="field" id="stepNoteField"><span class="field-head"><span>NOTE</span><output id="stepNoteOut">C3</output></span><select id="stepNote"></select></label><label class="field"><span class="field-head"><span>VELOCITY</span><output id="velocityOut">110</output></span><input id="velocity" type="range" min="1" max="127" value="110"></label><label class="field" id="stepGateField"><span class="field-head"><span>GATE</span><output id="gateOut">85%</output></span><input id="gate" type="range" min="10" max="180" value="85"></label><label class="field"><span class="field-head"><span>CHANCE</span><output id="chanceOut">100%</output></span><input id="chance" type="range" min="0" max="100" value="100"></label><label class="field"><span class="field-head"><span>RATCHET</span><output id="ratchetOut">1×</output></span><input id="ratchet" type="range" min="1" max="6" step="1" value="1"></label><label class="field"><span class="field-head"><span>MICROTIMING</span><output id="microTimingOut">0%</output></span><input id="microTiming" type="range" min="-25" max="25" step="1" value="0" aria-label="Shift selected step timing by percentage of one step"></label></div><div class="setup-actions"><button class="mini-btn" id="toggleStepBtn">TOGGLE STEP</button><button class="mini-btn" id="copyStepBtn" type="button">COPY STEP</button><button class="mini-btn" id="pasteStepBtn" type="button" disabled>PASTE STEP</button><button class="mini-btn" id="undoStepBtn" type="button" disabled>↶ UNDO</button><button class="mini-btn" id="redoStepBtn" type="button" disabled>↷ REDO</button><button class="mini-btn" id="auditionStepBtn">♪ AUDITION</button></div></section>
           <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step FX</h2></div><span class="pill" id="fxStatus">FX OFF</span></div><div class="control-grid fx-controls"><label class="field"><span class="field-head"><span>FX COMMAND</span></span><select id="stepFx" aria-label="Effect for the selected step"><option value="0">0 · NO EFFECT</option><option value="1">1 · PORTAMENTO UP</option><option value="2">2 · PORTAMENTO DOWN</option><option value="3">3 · OCTAVE UP</option><option value="4">4 · VIBRATO</option><option value="5">5 · OCTAVE DOWN</option><option value="9">9 · SAMPLE OFFSET (%)</option><option value="10">A · VOLUME SLIDE DOWN</option><option value="11">B · VOLUME SLIDE UP</option><option value="12">C · NOTE OFF</option><option value="13">D · SAMPLE CONTINUE → NEXT PATTERN</option></select></label><label class="field step-continue-field step-continue-fx" id="stepContinueField"><span class="field-head">SAMPLE PLAYBACK</span><span class="step-continue-control"><input id="stepContinue" type="checkbox" aria-label="Continue sample or drum after pattern"><span>CONTINUE INTO NEXT PATTERN</span></span></label><label class="field hidden" id="stepChordField"><span class="field-head"><span>CHORD MODE</span><output id="chordModeOutput">MIN</output></span><select id="stepChordMode" aria-label="Chord quality for the selected CHORD step"></select></label><label class="field" id="fxAmountField"><span class="field-head"><span id="fxAmountLabel">PERIOD/TICK · HEX</span><output id="fxAmountOut">02</output></span><div class="fx-amount-row"><input id="fxAmount" aria-label="FX amount" type="range" min="0" max="255" step="1" value="2"><input id="fxHex" type="text" maxlength="2" spellcheck="false" autocomplete="off" inputmode="text" aria-label="FX parameter in hex" value="02"></div></label></div><div class="step-locks" id="stepLocksPanel"><div class="field-head">PARAMETER LOCKS · SYNTH FILTER</div><div class="step-lock-controls"><label><input type="checkbox" id="stepLockCutoffOn"> CUTOFF <output id="stepLockCutoffOut">4000 Hz</output><input id="stepLockCutoff" type="range" min="80" max="18000" step="10"></label><label><input type="checkbox" id="stepLockResoOn"> RESONANCE <output id="stepLockResoOut">0.7</output><input id="stepLockReso" type="range" min="0.1" max="18" step="0.1"></label></div></div><div class="setup-actions fx-actions"><button class="mini-btn" type="button" id="applyCarryRange" disabled>APPLY CARRY TO RANGE</button><button class="mini-btn" id="clearStepFx">CLEAR FX</button><button class="mini-btn" id="clearTrackFx">CLEAR TRACK FX</button></div></section>
         </div>
       </div>
@@ -1267,7 +1274,7 @@ input[type="password"],textarea,
       <div id="view-send" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Track effects · Delay / Reverb / Chorus / Distortion</h2><span class="pill">8 TRACKS</span></div><div class="sends-grid" id="sendsGrid"></div><div class="send-global" id="sendGlobal"></div></section></div>
       <div id="view-options" class="hidden"><section class="panel options-panel"><div class="panel-head"><h2 class="section-title">Pattern options</h2><span class="pill">MAX 32 STEPS</span></div><div id="optionsPatterns" class="options-patterns"></div>
         <div class="options-slots-head"><h3>TRACK INSTRUMENT TYPES</h3><span class="pill">ANY TRACK · ANY INSTRUMENT</span></div>
-        <div id="optionsSlots" class="options-slots"></div>
+        <div id="optionsSlots" class="options-slots"></div><div class="options-demo"><h3>GROOVE &amp; HUMANIZE PER TRACK</h3><div id="optionsGrooveTracks" class="groove-track-list"></div></div>
 <div class="options-demo midi-track-panel"><h3>TRACK AUDIO / MIDI OUTPUT</h3>
 <div class="midi-track-list" id="optionsMidiTracks"></div>
 <p class="midi-mode-help">MIDI-only tracks do not make internal sound. Connect a MIDI output and switch MIDI OUT ON in MIDI &amp; AUDIO to hear them.</p>
@@ -1297,7 +1304,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.52';
+const SQUIRREL_VERSION='0.2.53';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -1463,7 +1470,7 @@ function setPatternName(bank,value){
 }
 const AUDIO_TRACK_COUNT=6;
 const TRACK_COUNT=bases.length;
-const makeStep=(track,on=false,note=null)=>({on,note:note??bases[track].note,sampleSlot:0,velocity:track<3?112:104,gate:track<3?70:92,ratchet:1,chance:100,continueSample:false,locks:null,fx:0,fxAmount:2,chordMode:track===5?'minor':null});
+const makeStep=(track,on=false,note=null)=>({on,note:note??bases[track].note,sampleSlot:0,velocity:track<3?112:104,gate:track<3?70:92,ratchet:1,chance:100,microTiming:0,continueSample:false,locks:null,fx:0,fxAmount:2,chordMode:track===5?'minor':null});
 // Trackereffecten per rij (ProTracker-timing): tick 0 behoudt de beginwaarde,
 // ticks 1..5 voeren de slide uit; lege FX-rijen stoppen de slide, maar behouden
 // de laatste period/volume. 1xx/2xx gebruiken period-units, Axx/Bxx volume-units.
@@ -1882,7 +1889,7 @@ function resetDrumSlotEnvelope(track,slot){
  item.slotAttack=2;item.slotDecay=0;item.slotRelease=18;
  persist();renderDrumSamples();
 }
-function fresh(withDemo=true){const tracks=bases.map((b,i)=>({...b,trackKind:i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample',drumType:['kick','snare','hat'][i%3],name:kindName(i,i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample'),volume:i>=6?78:b.volume,muted:false,solo:false,slotKind:i>=6?'sampler':'empty',sound:defaultSound(b),kindPatches:{},midiOnly:false,midiChannel:clamp(b.channel-1,0,15),sampleName:'',sampleRoot:48,sampleData:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,sampleCutoff:12000,sampleResonance:.7,sampleRelease:65,chorusSend:0,distortion:0}));const patterns=Array.from({length:PATTERN_COUNT},()=>tracks.map((_,t)=>Array.from({length:MAX_STEPS},()=>makeStep(t))));
+function fresh(withDemo=true){const tracks=bases.map((b,i)=>({...b,trackKind:i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample',drumType:['kick','snare','hat'][i%3],name:kindName(i,i<3?'drum':i===3?'bass':i===4?'lead':i===5?'chord':'sample'),volume:i>=6?78:b.volume,muted:false,solo:false,slotKind:i>=6?'sampler':'empty',sound:defaultSound(b),kindPatches:{},midiOnly:false,midiChannel:clamp(b.channel-1,0,15),sampleName:'',sampleRoot:48,sampleData:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,sampleCutoff:12000,sampleResonance:.7,sampleRelease:65,chorusSend:0,distortion:0,trackSwing:0,velocityHumanize:0}));const patterns=Array.from({length:PATTERN_COUNT},()=>tracks.map((_,t)=>Array.from({length:MAX_STEPS},()=>makeStep(t))));
  const set=(t,ns,note=null,vel=null)=>{for(const s of ns){const p=patterns[0][t][s];p.on=true;if(note!==null)p.note=note;if(vel!==null)p.velocity=vel;}};
  if(withDemo){set(0,[0,4,8,12]);set(1,[4,12]);set(2,[2,6,10,14],90);set(2,[0,4,8,12],75);set(3,[0,3,6,8,11,14]);[36,36,39,43,36,41,39].forEach((n,i)=>{const idx=[0,3,6,8,11,14,15][i];patterns[0][3][idx].on=true;patterns[0][3][idx].note=n;});
  set(4,[2,7,10,15]);patterns[0][3][3].fx=1;patterns[0][3][3].fxAmount=5;patterns[0][3][4].fx=1;patterns[0][3][4].fxAmount=0;patterns[0][3][11].fx=2;patterns[0][3][11].fxAmount=5;patterns[0][3][12].fx=2;patterns[0][3][12].fxAmount=0;patterns[0][4][10].fx=3;[60,62,67,64].forEach((n,i)=>patterns[0][4][[2,7,10,15][i]].note=n);set(5,[0,8]);patterns[0][5][0].note=48;patterns[0][5][8].note=53;}
@@ -2858,7 +2865,9 @@ s.drumSamples=Array.from({length:TRACK_COUNT},(_,t)=>Array.from({length:5},(_,sl
   return normalized;
  }));
  s.projectName=typeof data.projectName==='string'?data.projectName.slice(0,80):'';s.patternNames=Array.from({length:PATTERN_COUNT},(_,i)=>typeof data.patternNames?.[i]==='string'?(data.patternNames[i].trim().replace(/\s+/g,' ').slice(0,24)||defaultPatternName(i)):defaultPatternName(i));s.songSequence=Array.isArray(data.songSequence)?data.songSequence.slice(0,256).filter(n=>Number.isInteger(n)&&n>=0&&n<PATTERN_COUNT):[];s.songModeEnabled=!!data.songModeEnabled&&s.songSequence.length>0;s.bpm=normalizeBpm(data.bpm);s.swing=clamp(Number(data.swing)||0,0,65);s.master=clamp(Number(data.master)??75,0,100);s.keyboardOctave=clamp(Math.round(Number(data.keyboardOctave??3)),1,6);s.editMode=!!data.editMode;s.pattern=clamp(Number(data.pattern)||0,0,PATTERN_COUNT-1);s.selectedTrack=clamp(Number(data.selectedTrack)||3,0,TRACK_COUNT-1);s.trackLengths=Array.from({length:PATTERN_COUNT},(_,b)=>Array.from({length:TRACK_COUNT},(_,t)=>{const value=data.trackLengths?.[b]?.[t]??data.patternLengths?.[b]??(data.version>=14?32:16);return clamp(Math.round(Number(value)||32),1,MAX_STEPS)}));s.patternLengths=s.trackLengths.map(row=>Math.max(...row));s.selectedStep=clamp(Number(data.selectedStep)||0,0,s.trackLengths[s.pattern][s.selectedTrack]-1);
- for(let t=0;t<TRACK_COUNT;t++){const src=data.tracks[t];if(!src||typeof src!=='object')continue;const target=s.tracks[t];target.stepColor=['red','orange','yellow','green','blue','magenta','cyan','gray'].includes(src.stepColor)?src.stepColor:'orange';target.volume=clamp(Number(src.volume??target.volume),0,100);target.pan=clamp(Number(src.pan??target.pan),-100,100);target.muted=!!src.muted;target.solo=!!src.solo;target.midiOnly=!!src.midiOnly;target.midiChannel=clamp(Math.round(Number(src.midiChannel??(t%16))||0),0,15);
+ for(let t=0;t<TRACK_COUNT;t++){const src=data.tracks[t];if(!src||typeof src!=='object')continue;const target=s.tracks[t];target.stepColor=['red','orange','yellow','green','blue','magenta','cyan','gray'].includes(src.stepColor)?src.stepColor:'orange';target.trackSwing=clamp(Number(src.trackSwing??0),0,60);
+ target.velocityHumanize=clamp(Number(src.velocityHumanize??0),0,30);
+ target.volume=clamp(Number(src.volume??target.volume),0,100);target.pan=clamp(Number(src.pan??target.pan),-100,100);target.muted=!!src.muted;target.solo=!!src.solo;target.midiOnly=!!src.midiOnly;target.midiChannel=clamp(Math.round(Number(src.midiChannel??(t%16))||0),0,15);
  const kind=kindAllowed(src.trackKind)?src.trackKind:(src.type==='chord'?'chord':['kick','snare','hat'].includes(src.type)?'drum':src.slotKind==='sampler'||src.type==='empty'?'sample':t===3?'bass':'lead');
   target.trackKind=kind;target.type=kind==='drum'?'kick':kind==='chord'?'chord':kind==='sample'?'empty':'synth';
   target.slotKind=kind==='sample'?'sampler':'empty';
@@ -2900,7 +2909,7 @@ s.drumSamples=Array.from({length:TRACK_COUNT},(_,t)=>Array.from({length:5},(_,sl
 // so the mixer and its visible temporary mutes always match audio routing.
 const restoredSolo=s.tracks.findIndex(t=>t.solo);
 if(restoredSolo>=0)s.tracks.forEach((t,i)=>{t.solo=i===restoredSolo});
-for(let b=0;b<PATTERN_COUNT;b++){if(!Array.isArray(data.patterns[b])||data.patterns[b].length<AUDIO_TRACK_COUNT)continue;for(let t=0;t<TRACK_COUNT;t++){if(!Array.isArray(data.patterns[b][t])||data.patterns[b][t].length<16)continue;for(let i=0;i<Math.min(MAX_STEPS,data.patterns[b][t].length);i++){const p=data.patterns[b][t][i];if(!p||typeof p!=='object')continue;s.patterns[b][t][i]={on:!!p.on,note:clamp(Math.round(Number(p.note)||bases[t].note),24,95),sampleSlot:clamp(Math.round(Number(p.sampleSlot)||0),0,4),velocity:clamp(Math.round(Number(p.velocity)||100),1,127),gate:clamp(Number(p.gate)||85,10,180),ratchet:clamp(Math.round(Number(p.ratchet)||1),1,6),chance:clamp(Number(p.chance??100),0,100),continueSample:!!p.continueSample,fx:FX_OPTIONS.some(x=>x.id===(data.version===1&&Number(p.fx)===4?5:Number(p.fx)))?(data.version===1&&Number(p.fx)===4?5:Number(p.fx)):0,fxAmount:data.version===1?clamp(Math.round(Number(p.fxAmount)||2)*3,1,255):clamp(Math.round(Number(p.fxAmount??2))||0,0,255),
+for(let b=0;b<PATTERN_COUNT;b++){if(!Array.isArray(data.patterns[b])||data.patterns[b].length<AUDIO_TRACK_COUNT)continue;for(let t=0;t<TRACK_COUNT;t++){if(!Array.isArray(data.patterns[b][t])||data.patterns[b][t].length<16)continue;for(let i=0;i<Math.min(MAX_STEPS,data.patterns[b][t].length);i++){const p=data.patterns[b][t][i];if(!p||typeof p!=='object')continue;s.patterns[b][t][i]={on:!!p.on,note:clamp(Math.round(Number(p.note)||bases[t].note),24,95),sampleSlot:clamp(Math.round(Number(p.sampleSlot)||0),0,4),velocity:clamp(Math.round(Number(p.velocity)||100),1,127),gate:clamp(Number(p.gate)||85,10,180),ratchet:clamp(Math.round(Number(p.ratchet)||1),1,6),chance:clamp(Number(p.chance??100),0,100),microTiming:clamp(Number(p.microTiming??0),-25,25),locks:p.locks&&typeof p.locks==='object'?Object.fromEntries(['cutoff','resonance'].filter(k=>typeof p.locks[k]==='number'&&Number.isFinite(p.locks[k])).map(k=>[k,clamp(p.locks[k],k==='cutoff'?80:.1,k==='cutoff'?18000:18)])):null,continueSample:!!p.continueSample,fx:FX_OPTIONS.some(x=>x.id===(data.version===1&&Number(p.fx)===4?5:Number(p.fx)))?(data.version===1&&Number(p.fx)===4?5:Number(p.fx)):0,fxAmount:data.version===1?clamp(Math.round(Number(p.fxAmount)||2)*3,1,255):clamp(Math.round(Number(p.fxAmount??2))||0,0,255),
   chordMode:CHORD_MODES_BY_ID.has(p.chordMode)?p.chordMode:srcChordDefault(data)}}}}
  if(Array.isArray(data.lfos)){data.lfos.slice(0,4).forEach((x,i)=>{if(!x||typeof x!=='object')return;const l=s.lfos[i];l.enabled=!!x.enabled;l.target=LFO_TARGETS.some(t=>t[0]===migrateModTarget(x.target))?migrateModTarget(x.target):l.target;l.wave=LFO_WAVES.includes(x.wave)?x.wave:l.wave;l.rate=clamp(Number(x.rate)||l.rate,.05,20);l.sync=LFO_DIVISIONS.includes(x.sync)?x.sync:'free';l.depth=clamp(Number(x.depth??l.depth),0,100)})}
  if(Array.isArray(data.envelopes)){
@@ -3975,6 +3984,19 @@ function shouldHoldFXVoice(trackIndex, stepIndex, pattern=state.pattern){
  }
  return false;
 }
+function grooveHash(pattern,track,step){
+ let x=(Math.imul(pattern+1,2654435761)^Math.imul(track+1,2246822519)^Math.imul(step+1,3266489917))>>>0;
+ x^=x>>>16;x=Math.imul(x,2246822519);x^=x>>>13;x=Math.imul(x,3266489917);x^=x>>>16;
+ return (x>>>0)/4294967295;
+}
+function grooveVelocity(velocity,track,pattern,trackIndex,stepIndex){
+ const depth=clamp(Number(track.velocityHumanize??0),0,30)/100;
+ const variation=(grooveHash(pattern,trackIndex,stepIndex)*2-1)*depth;
+ return clamp(Math.round(velocity*(1+variation)),1,127);
+}
+function grooveOffset(step,track,stepIndex,duration){
+ return duration*((stepIndex%2?clamp(Number(track.trackSwing??0),0,60)/200:0)+clamp(Number(step.microTiming??0),-25,25)/100);
+}
 function scheduleStep(idx,when){
  const dur=stepDuration(),tickTime=dur/TICKS_PER_STEP;
  for(let t=0;t<TRACK_COUNT;t++){
@@ -4034,21 +4056,23 @@ function scheduleStep(idx,when){
    // (eventueel na lege steps) een effect op diezelfde noot gaat uitvoeren.
    const hold=(isSample(t)||kindOf(track)==='bass'||kindOf(track)==='lead')||(kindOf(track)==='chord'&&shouldHoldFXVoice(t,laneStep));
    const hits=clamp(step.ratchet||1,1,6);
+   const grooveTime=Math.max(audio.ctx.currentTime+.002,when+grooveOffset(step,track,idx,dur));
+   const grooveVel=grooveVelocity(step.velocity,track,state.pattern,t,laneStep);
    const swingStep=dur*(idx%2===0?1+state.swing/200:1-state.swing/200);
    const subDuration=swingStep/hits;
    for(let hit=0;hit<hits;hit++){
-    const hitTime=when+hit*subDuration;
+    const hitTime=grooveTime+hit*subDuration;
     // Ratchet-herhalingen zijn korte retriggers; de laatste Bass/Lead
     // trigger houdt sustain aan totdat C00 of de volgende noot volgt.
     const hitHold=hold&&hit===hits-1;
     const gateDuration=hits===1?clamp(step.gate/100*dur,.025,.8):clamp(subDuration*step.gate/100,.004,subDuration*.94);
     const carry=stepContinuesSample(step)&&stepCanContinue(t);
-    const voices=playTrack(t,step.note,step.velocity,hitTime,carry&&hit===hits-1?null:hitHold?null:gateDuration,0,step.chordMode,step.sampleSlot||0,sampleOffsetFraction(step.fx,step.fxAmount))||[];
+    const voices=playTrack(t,step.note,grooveVel,hitTime,carry&&hit===hits-1?null:hitHold?null:gateDuration,0,step.chordMode,step.sampleSlot||0,sampleOffsetFraction(step.fx,step.fxAmount))||[];
     if(isSynth(t))applySynthStepLocks(voices,synthStepLocks(step),hitTime);
     // Only the final ratchet hit carries into a subsequent pattern.
     // Earlier hits retain their gate and must not become indefinite voices.
     if(carry&&hit===hits-1)for(const voice of voices)markSampleContinuation(t,voice,hitTime);
-    midiPlayStep(t,step.note,step.velocity,hitTime,hitHold,gateDuration,step.chordMode);
+    midiPlayStep(t,step.note,grooveVel,hitTime,hitHold,gateDuration,step.chordMode);
     rt.voices.push(...voices);
    }
   }
@@ -4068,7 +4092,8 @@ function scheduleStep(idx,when){
 }
 function scheduler(){
  if(!audio||!playing)return;
- const horizon=audio.ctx.currentTime+.115;let safety=0;
+ // Allow enough lookahead for negative per-step microtiming at slow tempos.
+ const horizon=audio.ctx.currentTime+Math.max(.115,stepDuration()*.3+.05);let safety=0;
  while(nextNoteTime<horizon&&safety++<30){
   const length=patternLength();
   scheduleStep(currentStep,nextNoteTime);
@@ -4464,14 +4489,16 @@ function renderStepEditor(){const step=selectedStep(),t=state.tracks[state.selec
     button.onclick=()=>selectDrumStepSlot(state.selectedTrack,slot);quick.append(button);
    }
  }
-$('stepOnLabel').textContent=step.on?'STEP ON':'STEP OFF';
+$('microTiming').value=String(clamp(Number(step.microTiming??0),-25,25));
+ $('microTimingOut').textContent=(Number(step.microTiming??0)>0?'+':'')+String(clamp(Number(step.microTiming??0),-25,25))+'%';
+ $('stepOnLabel').textContent=step.on?'STEP ON':'STEP OFF';
  syncStepContinueControl(step);$('stepNoteField').classList.toggle('hidden',!t.midiOnly&&drum);$('gate').disabled=kindOf(t)==='bass'||kindOf(t)==='lead';$('gateOut').textContent=$('gate').disabled?'HOLD':step.gate+'%';$('stepNote').value=String(step.note);$('stepNoteOut').textContent=noteName(step.note);$('velocity').value=step.velocity;$('velocityOut').textContent=step.velocity;$('gate').value=step.gate;$('ratchet').value=step.ratchet||1;$('ratchetOut').textContent=(step.ratchet||1)+'×';$('chance').value=step.chance;$('chanceOut').textContent=step.chance+'%';}
 function synthStepLocks(step){
  const locks=step?.locks;
  return locks&&typeof locks==='object'?locks:{};
 }
 function applySynthStepLocks(voices,locks,when){
- if(!locks||(!typeof locks.cutoff==='number'&&Number.isFinite(locks.cutoff)&&!typeof locks.resonance==='number'&&Number.isFinite(locks.resonance)))return;
+ if(!locks||(!Number.isFinite(locks.cutoff)&&!Number.isFinite(locks.resonance)))return;
  for(const v of voices||[]){
   if(!v?.filter||v.released)continue;
   if(typeof locks.cutoff==='number'&&Number.isFinite(locks.cutoff)){
@@ -5978,6 +6005,21 @@ function renderMidiTrackOptions(){
 }
 function renderOptions(){
  renderMidiTrackOptions();
+ const groove=$('optionsGrooveTracks');groove.replaceChildren();
+ state.tracks.forEach((track,i)=>{
+  const row=document.createElement('div');row.className='groove-track-row';
+  const name=document.createElement('strong');name.textContent=(i+1)+' · '+track.name;row.append(name);
+  for(const [key,caption,max] of [['trackSwing','SWING',60],['velocityHumanize','VELOCITY ±',30]]){
+   const label=document.createElement('label'),output=document.createElement('output'),input=document.createElement('input');
+   input.type='range';input.min=0;input.max=max;input.step=1;
+   input.value=clamp(Number(track[key]??0),0,max);
+   output.textContent=caption+' '+input.value+'%';
+   input.setAttribute('aria-label',track.name+' '+caption);
+   input.oninput=()=>{track[key]=Number(input.value);output.textContent=caption+' '+input.value+'%';persist()};
+   label.append(output,input);row.append(label);
+  }
+  groove.append(row);
+ });
  const slots=$('optionsSlots');slots.replaceChildren();state.tracks.forEach((_,i)=>slots.append(slotSelect(i)));
  const grid=$('optionsPatterns');grid.replaceChildren();
  const selectRow=document.createElement('label');selectRow.className='options-pattern-select';
@@ -7841,7 +7883,8 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
      const hits=clamp(Math.round(Number(step.ratchet??1)),1,6);
      const subDuration=swingStep/hits;
      for(let hit=0;hit<hits;hit++){
-      const hitTime=at+hit*subDuration;
+      const grooveAt=Math.max(0,at+grooveOffset(step,state.tracks[t],stepIndex,stepSeconds));
+      const hitTime=grooveAt+hit*subDuration;
       const gateSeconds=hits===1
        ?clamp(Number(step.gate??90)/100*stepSeconds,.025,.8)
        :clamp(subDuration*Number(step.gate??90)/100,.004,subDuration*.94);
@@ -7851,9 +7894,10 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
        if(activeExportSamples[t].some(v=>!v.stopped&&v.naturalEnd>hitTime))
         stopExportSample(t,hitTime,null,hits>1?.008:null);
       }
-      const renderedStep=hits>1&&hit<hits-1&&stepContinuesSample(step)
+      const renderedStepBase=hits>1&&hit<hits-1&&stepContinuesSample(step)
        ?{...step,continueSample:false,fx:step.fx===13?0:step.fx}
        :step;
+      const renderedStep={...renderedStepBase,velocity:grooveVelocity(step.velocity,state.tracks[t],pattern,t,stepIndex%trackLength(pattern,t))};
       const instrumentKind=kindOf(state.tracks[t]);
       const holdSynth=isSynth(t)&&(instrumentKind==='bass'||instrumentKind==='lead'||
        (instrumentKind==='chord'&&shouldHoldFXVoice(t,stepIndex%trackLength(pattern,t),pattern)))&&hit===hits-1;
@@ -7863,7 +7907,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
        // amplitude between its notes, rather than playing only the root.
        const sound=state.tracks[t].sound||{};
        const notes=chordNotes(Number(step.note),step.chordMode||sound.chord);
-       const voiceVelocity=Number(step.velocity??100)*Math.sqrt(3/notes.length)*.72;
+       const voiceVelocity=Number(renderedStep.velocity??100)*Math.sqrt(3/notes.length)*.72;
        for(const chordNote of notes)
         addVoice(t,renderedStep,hitTime,noteOffTime,chordNote,voiceVelocity,holdSynth);
       }else{
@@ -7999,6 +8043,10 @@ function bindings(){
    persist();renderGrid();renderStepLocks();
   };
  }
+ $('microTiming').oninput=()=>{
+  const v=Number($('microTiming').value);selectedStep().microTiming=v;
+  $('microTimingOut').textContent=(v>0?'+':'')+v+'%';persist();
+ };
  $('stepFx').onchange=()=>{const step=selectedStep(),prev=step.fx;step.fx=Number($('stepFx').value);if(step.fx===12){step.fxAmount=0;step.on=false;step.continueSample=false;}else if(step.fx===13){step.fxAmount=0;}else if(step.fx===9&&prev!==9)step.fxAmount=0;else if(step.fx===4&&prev!==4)step.fxAmount=0x47;else if([10,11].includes(step.fx)&&![10,11].includes(prev))step.fxAmount=0x02;else if([1,2].includes(step.fx)&&![1,2].includes(prev))step.fxAmount=0x02;persist();renderAll();focusSelectedPad(false)};
  $('fxAmount').oninput=()=>{const st=selectedStep();st.fxAmount=Number($('fxAmount').value);const label=fxAmountText(st.fx,st.fxAmount);$('fxAmountOut').textContent=st.fx===9?label+'%':label;$('fxHex').value=label;$('fxStatus').textContent=fxCode(st.fx)+label;persist();renderGrid()};
  $('fxHex').oninput=()=>{const raw=$('fxHex').value.trim(),st=selectedStep(),offset=st.fx===9;
