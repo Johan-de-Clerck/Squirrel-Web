@@ -1,6 +1,10 @@
-# Squirrel Studio Web 0.2.63 — User Manual
+# Squirrel Studio Web 0.2.64 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Fixed in 0.2.64 — Mouse selection in dropdowns
+
+The **DRUM SAMPLES → DRUM TRACK** and **DRUM SLOT** selectors, as well as **SAMPLE EDITOR → SAMPLE / DRUM SLOT**, now remain open normally after a mouse click. A document-level pointer-up/change handler previously removed focus from native `select` elements, closing their menus before the user could click an option. The focus handler now leaves dropdowns alone while preserving automatic focus release for sliders and numeric fields. Drum track/slot option lists are also updated only when their contents really change, and edits that arrive while a dropdown is focused are deferred until it closes. You can use either the mouse or the arrow keys to select tracks and slots.
 
 ### New in 0.2.63 — Detailed waveform and smooth zoom
 
