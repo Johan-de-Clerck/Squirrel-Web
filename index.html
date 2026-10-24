@@ -7163,8 +7163,9 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  // The PCM WAV plus stereo Web Audio buffers may consume hundreds of MB for
  // a long song. Warn early instead of allocating a truncated or invalid file.
  const frames=Math.ceil(duration*rate);
- if(bouncePattern!==null&&collectWav&&wavSongExportBytes(frames,bitDepth)>MAX_SAMPLE_BYTES)
-  throw new Error('Bounce exceeds the 16 MB slot limit. Use 16-bit / 44.1 kHz or a shorter FX tail.');
+ // A long complete pattern can now be previewed and trimmed before going
+ // into a 16 MB library slot. Validate slot size on the FINAL cropped WAV,
+ // not here, or selecting a short section would be impossible.
  wavSongExportBytes(frames,bitDepth);
  songExportProgress('SCHEDULING '+(duration).toFixed(1)+'s AUDIO',null);
  const ctx=new OfflineAudioContext(2,frames,rate);
