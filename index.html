@@ -6481,6 +6481,18 @@ function drawPatternBounceWaveform(){
   }
   ctx.stroke();
  }
+ // Display selection across both stereo lanes without changing the PCM.
+ const area=patternBounceDragging||activePatternBounceSelection();
+ if(area&&wave.frames){
+  const from=Math.max(0,Math.min(wave.frames,area.startFrame));
+  const to=Math.max(0,Math.min(wave.frames,area.endFrame));
+  const x1=left+Math.min(from,to)/wave.frames*plotWidth;
+  const x2=left+Math.max(from,to)/wave.frames*plotWidth;
+  ctx.fillStyle='rgba(123,213,186,.22)';
+  ctx.fillRect(x1,19,Math.max(1,x2-x1),height-28);
+  ctx.strokeStyle='#a4e4d2';ctx.lineWidth=2;ctx.beginPath();
+  ctx.moveTo(x1,20);ctx.lineTo(x1,height-10);ctx.moveTo(x2,20);ctx.lineTo(x2,height-10);ctx.stroke();
+ }
  ctx.lineWidth=2;ctx.strokeStyle='#f5c176';ctx.beginPath();ctx.moveTo(left,17);ctx.lineTo(left,height-10);ctx.moveTo(right,17);ctx.lineTo(right,height-10);ctx.stroke();
  ctx.font='bold 11px Consolas,monospace';ctx.fillStyle='#f5c176';ctx.textBaseline='top';ctx.textAlign='left';ctx.fillText('START',left+4,1);ctx.textAlign='right';ctx.fillText('END',right-4,1);
  if(seamPixels){
@@ -6497,7 +6509,9 @@ function drawPatternBounceWaveform(){
  if(durationLabel)durationLabel.textContent=wave.duration.toFixed(2)+' S · '+(wave.rate/1000).toFixed(1)+' KHZ · STEREO';
  if(seamLabel)seamLabel.textContent=seamMs?'CROSSFADE '+seamMs+' MS · EDGES SHADED':settings.tail?'FX TAIL '+settings.tail+' S':'CROSSFADE OFF';
  if(endLabel)endLabel.textContent='END · '+wave.duration.toFixed(2)+' S';
- canvas.setAttribute('aria-label','Stereo bounce waveform, length '+wave.duration.toFixed(2)+' seconds, left and right channel. Start and end markers shown'+(seamMs?', with '+seamMs+' millisecond crossfade zones at both ends':'')+'.');
+ const range=activePatternBounceSelection();
+ canvas.setAttribute('aria-label','Stereo bounce waveform, length '+wave.duration.toFixed(2)+' seconds, left and right channel. Start and end markers shown'+(seamMs?', with '+seamMs+' millisecond crossfade zones at both ends':'')+
+  (range?', selected from '+(range.startFrame/wave.rate).toFixed(3)+' to '+(range.endFrame/wave.rate).toFixed(3)+' seconds':'')+'. Drag to select audio.');
 }
 function animatePatternBounceWaveform(){
  stopPatternBounceWaveAnimation();
@@ -6538,6 +6552,7 @@ function updatePatternBouncePreviewUI(){
   patternBouncePreview?.source?'▶ PREVIEW PLAYING · '+(patternBouncePreview.loop?'LOOP':'ONE SHOT'):
   'PREVIEW READY'+(reusablePatternBouncePreview(state.pattern,currentPatternBounceSettings())?' · AUDIO CACHED':'');
  drawPatternBounceWaveform();
+ updatePatternBounceRangeControls();
 }
 function stopPatternBouncePreview(silent=false){
  stopPatternBounceWaveAnimation();
@@ -6606,6 +6621,7 @@ async function previewPatternBounce(){
   };
   patternBouncePreview.source=source;
   patternBouncePreviewCache={project,key,wav,waveform};
+  if(patternBounceSelection&&patternBounceSelection.wav!==wav)clearPatternBounceSelection();
   patternBouncePreview.startedAt=context.currentTime;
   source.start();
   animatePatternBounceWaveform();
@@ -7839,6 +7855,9 @@ function bindings(){
  $('filePreviewPattern').onclick=()=>{previewPatternBounce()};
  $('fileStopPatternPreview').onclick=()=>{stopPatternBouncePreview()};
  $('fileMenu').addEventListener('toggle',()=>{if($('fileMenu').open){syncPatternBounceOptions();updatePatternBouncePreviewUI()}});
+ $('patternBounceClearSelection').onclick=clearPatternBounceSelection;
+ $('patternBounceUseSelection').onchange=()=>{updatePatternBounceRangeControls();drawPatternBounceWaveform()};
+ bindPatternBounceSelection();
  syncPatternBounceOptions();updatePatternBouncePreviewUI();
  $('saveBtn').onclick=saveProject;$('loadBtn').onclick=()=>$('loadFile').click();
  $('loadFile').onchange=async e=>{
