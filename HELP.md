@@ -1,6 +1,10 @@
-# Squirrel Studio Web 0.2.55 — User Manual
+# Squirrel Studio Web 0.2.56 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.56 — Dedicated Bounce and Export WAV menus
+
+The top menu bar now has three menus: **FILE**, **BOUNCE**, and **EXPORT WAV**. FILE keeps song/project/sample actions and VA/FM synth-to-sample rendering. BOUNCE contains the selected-pattern bounce button, preview transport, waveform/range selection, destination, FX tail and loop crossfade settings. EXPORT WAV contains the full-song/selected-track/stems export button and its rate, bit depth, source, tail, normalize, dither and optional reference-mix controls. The audio generation behavior is unchanged; only the menu placement has moved.
 
 ### New in 0.2.55 — Compact Step FX layout
 
