@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.2.48 — User Manual
+# Squirrel Studio Web 0.2.49 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -311,6 +311,16 @@ In **FILE → RENDER / EXPORT**, press **PREVIEW BOUNCE**. Directly underneath t
 Press **STOP PREVIEW** to stop listening without deleting the displayed waveform. If the selected pattern, mixer state or export options have changed, the waveform displays **SETTINGS CHANGED / PRESS PREVIEW BOUNCE**; render a new preview for an accurate view. Changes to sample rate, bit depth, normalization, dithering, FX-tail length and loop-crossfade automatically stop the previous preview. Opening a new project or creating a New Song clears the previous cached waveform.
 
 The panel is a **read-only visualization**. For editing waveform trim and loop markers, use **SAMPLE EDITOR** after saving to a slot. There is no audio-length change from the visualization.
+
+### Select part of the bounce waveform (new in 0.2.49)
+
+The waveform under **FILE → RENDER / EXPORT → PREVIEW BOUNCE** supports **drag-to-select**. Click and hold on either L or R waveform and drag horizontally to mark the part of the rendered pattern that you want to keep. A mint-colored overlay highlights the selected range across both stereo channels, and the timing readout shows its start, end, and duration in seconds (to 1 ms in the UI). The internal selection is aligned to exact PCM sample frames, not rounded milliseconds.
+
+**BOUNCE RANGE ONLY** turns on automatically when a valid range is selected. With it checked, **BOUNCE** downloads only that portion as a new WAV, or saves it to the chosen **SLOT 01–15**. To export the full pattern without deleting the selection, uncheck this option. Choose **CLEAR RANGE** to remove the selection entirely. The destination selector, overwrite confirmation and existing Mute/Solo inclusion rules are unchanged.
+
+The cropped WAV is created by copying the original stereo 16-bit or 24-bit PCM frames and adjusting its WAV RIFF/data sizes. Sample rate and bit depth remain unchanged, and no lossy encoding or second render is involved. This means the actual selected section sounds exactly like the corresponding section of the waveform preview. A selected segment does not automatically receive a new loop crossfade or tempo alignment; if you trim through the middle of a kick or long note and loop it, a click may occur. The full original bounce remains unchanged.
+
+You can preview a complete pattern longer than the 16 MB sample-library quota, then save a sufficiently short selected segment to one of the 15 slots. The 16 MB limit applies to **the final WAV written to the slot**. Existing slot replacement still asks for confirmation. If the pattern or export settings change, the previous range is marked **OUT OF DATE** and cannot be bounced until you clear it or make a fresh preview/selection. A completed bounce resets the range controls; use **PREVIEW BOUNCE** again for another segment.
 
 ### Stereo song WAV and stem export
 
