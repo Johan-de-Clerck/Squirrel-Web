@@ -1,4 +1,4 @@
-# Squirrel Studio Web 0.2.47 — User Manual
+# Squirrel Studio Web 0.2.48 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
 
@@ -298,6 +298,19 @@ In **FILE → RENDER / EXPORT**, use **PREVIEW BOUNCE** to audition the *current
 After listening, you can change **BOUNCE DESTINATION** to a WAV file or any of the 15 slots. **BOUNCE** reuses the exact WAV audio that was previewed, including probabilistic notes and generated noise, as long as the selected pattern, project and relevant bounce/audio-quality settings are unchanged. If you edit the song or change those settings, the next Bounce is rendered again. The cache also clears on New Song / Open Song.
 
 **STOP PREVIEW** also cancels playback when the preview is still rendering; the background Offline Audio work must finish before another export can begin, but canceled audio is not played. No slot is changed by Preview itself, and a populated slot still requires explicit overwrite confirmation when bounced. The preview plays through a dedicated browser audio context, independent of the normal sequencer transport. Modern Chrome or Edge is recommended; Web Audio playback requires normal browser audio permissions.
+
+### Stereo waveform preview of a bounced pattern (new in 0.2.48)
+
+In **FILE → RENDER / EXPORT**, press **PREVIEW BOUNCE**. Directly underneath the playback controls, the waveform panel shows the rendered WAV as two separate **L** and **R** channels. The display comes from the decoded PCM WAV itself (including normalization, dither and the chosen crossfade), not a graphical approximation of the step sequencer.
+
+- **START** and **END** vertical gold markers identify the exact sample boundaries.
+- When **EXACT PATTERN · LOOP** and a crossfade of 2, 5 or 10 ms are selected, the first and last crossfade regions are lightly highlighted in gold. Very short regions are displayed at least four pixels wide for visibility; the actual audio crossfade duration is unchanged.
+- A mint-colored playback cursor moves along the waveform while the preview is playing and wraps at the loop boundary. With an FX tail, preview plays once and the cursor stops when the sound finishes.
+- The labels display the WAV duration, sample rate, crossfade length or FX tail, and end timestamp.
+
+Press **STOP PREVIEW** to stop listening without deleting the displayed waveform. If the selected pattern, mixer state or export options have changed, the waveform displays **SETTINGS CHANGED / PRESS PREVIEW BOUNCE**; render a new preview for an accurate view. Changes to sample rate, bit depth, normalization, dithering, FX-tail length and loop-crossfade automatically stop the previous preview. Opening a new project or creating a New Song clears the previous cached waveform.
+
+The panel is a **read-only visualization**. For editing waveform trim and loop markers, use **SAMPLE EDITOR** after saving to a slot. There is no audio-length change from the visualization.
 
 ### Stereo song WAV and stem export
 
