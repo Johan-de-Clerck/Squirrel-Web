@@ -6295,7 +6295,7 @@ function cropPatternBounceWav(wav,startFrame,endFrame){
  header.setUint32(4,36+bytes,true);
  header.setUint32(40,bytes,true);
  const suffix='_RANGE_'+(first/info.rate).toFixed(3)+'s-'+(last/info.rate).toFixed(3)+'s';
- return {name:wav.name.replace(/\\.wav$/i,'')+suffix+'.wav',buffer:output};
+ return {name:wav.name.replace(/\.wav$/i,'')+suffix+'.wav',buffer:output};
 }
 function activePatternBounceSelection(){
  const selection=patternBounceSelection,cached=patternBouncePreviewCache;
@@ -6651,6 +6651,9 @@ async function runPatternBounce(){
   notify('Choose DOWNLOAD WAV or a sample slot from 01 to 15.',true);return;
  }
  const settings=currentPatternBounceSettings();
+ const rangeRequested=!!$('patternBounceUseSelection')?.checked;
+ const range=rangeRequested?activePatternBounceSelection():null;
+ if(rangeRequested&&!range){notify('The selected range is outdated. PREVIEW BOUNCE again or CLEAR RANGE.',true);return}
  const expectedState=state,expectedGeneration=sampleSession,expectedRevision=patternBounceProjectRevision;
  const button=$('fileBouncePattern'),oldLabel=button?.textContent;
  songExportBusy=true;
@@ -6666,15 +6669,17 @@ async function runPatternBounce(){
   const cached=reusablePatternBouncePreview(pattern,settings);
   stopPatternBouncePreview(true);
   await yieldSongExportUI();
-  const wav=cached||await exportSongStereoWav({bouncePattern:pattern,settingsOverride:settings,collectWav:!toFile});
+  const fullWav=cached||await exportSongStereoWav({bouncePattern:pattern,settingsOverride:settings,collectWav:!toFile});
+  const wav=range?cropPatternBounceWav(fullWav,range.startFrame,range.endFrame):fullWav;
   if(!toFile){
    if(!wav)throw Error('No pattern WAV was produced.');
    await saveBouncedPatternToLibrary(wav,slot,expectedState,expectedGeneration,previousData,patternLabel,expectedRevision);
-  }else if(cached){
-   downloadSongBlob(new Blob([cached.buffer],{type:'audio/wav'}),cached.name);
-   notify('Pattern '+patternLabel+' downloaded from the exact audio you previewed.');
+  }else if(cached||range){
+   downloadSongBlob(new Blob([wav.buffer],{type:'audio/wav'}),wav.name);
+   notify('Pattern '+patternLabel+(range?' · selected range':'')+' downloaded from the exact audio you previewed.');
   }
   patternBouncePreviewCache=null;
+  clearPatternBounceSelection();
  }catch(e){console.error('Pattern bounce:',e);notify('Pattern bounce failed: '+e.message,true)}
  finally{
   songExportBusy=false;songExportProgressDone();
