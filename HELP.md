@@ -1,6 +1,10 @@
-# Squirrel Studio Web 0.2.59 — User Manual
+# Squirrel Studio Web 0.2.60 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.60 — Compact desktop sequencer
+
+At typical desktop heights (approximately 760–1100 CSS pixels), the eight NOTE/FX track pairs are more compact so the full sequencer should fit without the right-hand vertical scrollbar at normal browser zoom. The 32-step layout and note/FX controls are unchanged. The sequencer retains scrolling as a fallback for smaller windows or increased browser zoom.
 
 ### New in 0.2.59 — Audio status and timing diagnostics
 
