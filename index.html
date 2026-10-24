@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.62 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.63 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1040,7 +1040,8 @@ input[type="password"],textarea,
 /* v0.2.18: timeline navigation is independent of the playhead and markers. */
 #view-sample .sample-wave-toolbar{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin:0 0 7px;padding:7px 10px;border:1px solid #604a36;border-radius:7px;background:#2d241d}
 #view-sample .sample-wave-zoom-label,#view-sample .sample-wave-pan-label{display:flex;align-items:center;gap:8px;font:700 10px Consolas,monospace;color:#d7b188;white-space:nowrap}
-#view-sample .sample-wave-zoom-label select{min-width:74px;padding:5px;background:#211914;color:#f3d0a6;border:1px solid #76553b;border-radius:5px}
+#view-sample .sample-wave-zoom-label input[type=range]{width:clamp(105px,10vw,165px);min-width:90px;accent-color:#e4b17c;cursor:ew-resize}
+#view-sample .sample-wave-zoom-label output{min-width:62px;color:#f3d0a6;font-variant-numeric:tabular-nums;text-align:right}
 #view-sample .sample-wave-pan-label{flex:1 1 135px;max-width:440px}
 #view-sample .sample-wave-pan-label input{flex:1;min-width:80px}
 #view-sample .sample-wave-pan-label input:disabled{opacity:.4;cursor:default}
@@ -1292,7 +1293,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.62</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.63</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label">BPM</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1319,12 +1320,12 @@ input[type="password"],textarea,
 <div id="drumSlotList" class="drum-slot-list" aria-label="Selected drum slot editor"></div>
 <input id="drumSampleFileInput" type="file" accept="audio/*,.wav,.wave,.aiff,.aif,.mp3,.ogg" class="hidden"></section></div>
 <div id="view-sample" class="hidden"><section class="panel sample-editor-panel"><div class="panel-head"><h2 class="section-title">Waveform sample editor</h2><span class="pill">8 FLEXIBLE TRACKS</span></div><div class="sample-editor-top"><label class="field"><span class="field-head">SAMPLE / DRUM SLOT</span><select id="sampleEditTrack"><option value="6">07 · SAMPLER</option><option value="7">08 · SAMPLER</option></select></label><button class="btn" id="sampleEditorLoad">↑ LOAD WAV</button><button class="mini-btn hidden" id="sampleEditorLibrary" type="button">♬ DRUM LIBRARY</button><button class="btn" id="sampleEditorPreview">▶ AUDITION</button><span id="sampleEditorFile" class="sample-filename">NO SAMPLE</span><span id="samplePlayStatus" class="sample-play-status" aria-live="off">POS —</span></div><div class="sample-wave-toolbar" role="group" aria-label="Waveform zoom and navigation">
- <label class="sample-wave-zoom-label">ZOOM <select id="sampleWaveZoom" aria-label="Waveform zoom"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option><option value="16">16×</option></select></label>
- <label class="sample-wave-pan-label">POSITION <input id="sampleWavePan" type="range" min="0" max="1000" value="0" aria-label="Waveform horizontal position"></label>
+ <label class="sample-wave-zoom-label">ZOOM <input id="sampleWaveZoom" type="range" min="0" max="1200" step="1" value="0" aria-label="Continuous waveform zoom from 1x to 4096x"><output id="sampleWaveZoomValue">1.00×</output></label>
+ <label class="sample-wave-pan-label">POSITION <input id="sampleWavePan" type="range" min="0" max="1000000" step="1" value="0" aria-label="Waveform horizontal position"></label>
  <button class="mini-btn" type="button" id="sampleWaveFit">FIT</button>
  <span class="sample-wave-mouse-hint">WHEEL: ZOOM · MIDDLE-DRAG: PAN</span>
  <output id="sampleWaveRange" class="sample-wave-time" aria-live="off">FULL WAVEFORM</output>
-</div><div class="waveform-wrap"><canvas id="sampleWaveCanvas" width="1200" height="230" aria-label="Waveform: mouse wheel zooms at cursor, middle-button drag pans, left-button drag moves START, END and LOOP markers"></canvas><div class="sample-wave-legend"><span>START</span><span>LOOP START</span><span>LOOP END</span><span>END</span><span style="color:#b2f1ce">◆ PLAYHEAD</span></div></div><div id="sampleEditControls" class="sample-editor-controls"></div><input id="sampleEditorFileInput" type="file" accept=".wav,.wave,.mp3,.ogg,.aiff,.aif,audio/*" class="hidden"></section></div>
+</div><div class="waveform-wrap"><canvas id="sampleWaveCanvas" width="1200" height="230" aria-label="Waveform: continuous mouse wheel zoom up to 4096x, middle-button drag pans, left-button drag moves START, END and LOOP markers"></canvas><div class="sample-wave-legend"><span>START</span><span>LOOP START</span><span>LOOP END</span><span>END</span><span style="color:#b2f1ce">◆ PLAYHEAD</span></div></div><div id="sampleEditControls" class="sample-editor-controls"></div><input id="sampleEditorFileInput" type="file" accept=".wav,.wave,.mp3,.ogg,.aiff,.aif,audio/*" class="hidden"></section></div>
       <div id="view-send" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Track effects · Delay / Reverb / Chorus / Distortion</h2><span class="pill">8 TRACKS</span></div><div class="sends-grid" id="sendsGrid"></div><div class="send-global" id="sendGlobal"></div></section></div>
       <div id="view-options" class="hidden"><section class="panel options-panel"><div class="panel-head"><h2 class="section-title">Pattern options</h2><span class="pill">MAX 32 STEPS</span></div><div id="optionsPatterns" class="options-patterns"></div>
         <div class="options-slots-head"><h3>TRACK INSTRUMENT TYPES</h3><span class="pill">ANY TRACK · ANY INSTRUMENT</span></div>
@@ -1358,7 +1359,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.62';
+const SQUIRREL_VERSION='0.2.63';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -5215,6 +5216,7 @@ function sampleMarkerChanges(track,key,value){
 // 0.2.17 — Static waveform cache; only the playhead is repainted at 30 fps.
 // Long stereo samples stay responsive during playback and drag operations.
 let sampleWaveStaticCache=null;
+const SAMPLE_WAVE_MAX_ZOOM=4096,SAMPLE_WAVE_ZOOM_TICKS_PER_OCTAVE=100,SAMPLE_WAVE_PAN_STEPS=1000000;
 let sampleWaveZoom=1,sampleWavePan=0;
 const sampleWaveWindow=()=>1/sampleWaveZoom;
 const sampleWaveStart=()=>sampleWavePan*(1-sampleWaveWindow());
@@ -5225,25 +5227,59 @@ function sampleWaveFractionAtPointer(event){
 }
 function syncSampleWaveToolbar(){
  const zoom=$('sampleWaveZoom'),pan=$('sampleWavePan');
- if(zoom)zoom.value=String(sampleWaveZoom);
- if(pan){pan.value=String(Math.round(sampleWavePan*1000));pan.disabled=sampleWaveZoom===1}
+ if(zoom)zoom.value=String(Math.round(Math.log2(sampleWaveZoom)*SAMPLE_WAVE_ZOOM_TICKS_PER_OCTAVE));
+ const zoomValue=$('sampleWaveZoomValue');
+ if(zoomValue)zoomValue.textContent=(sampleWaveZoom<10?sampleWaveZoom.toFixed(2):sampleWaveZoom<100?sampleWaveZoom.toFixed(1):Math.round(sampleWaveZoom))+'×';
+ if(pan){pan.value=String(Math.round(sampleWavePan*SAMPLE_WAVE_PAN_STEPS));pan.disabled=sampleWaveZoom===1}
 }
 // Anchor the pointed-to sample time under the cursor when changing zoom.
 function sampleWaveZoomAtPointer(nextZoom,clientX){
  const canvas=$('sampleWaveCanvas'),rect=canvas.getBoundingClientRect();
  const cursor=clamp((clientX-rect.left)/Math.max(1,rect.width),0,1);
  const anchor=sampleWaveStart()+cursor*sampleWaveWindow();
- sampleWaveZoom=clamp(nextZoom,1,16);
+ sampleWaveZoom=clamp(Number(nextZoom)||1,1,SAMPLE_WAVE_MAX_ZOOM);
  const span=sampleWaveWindow();
  const start=clamp(anchor-cursor*span,0,1-span);
  sampleWavePan=span>=1?0:start/(1-span);
  syncSampleWaveToolbar();drawSampleWaveform();
 }
 function sampleWaveResetView(){sampleWaveZoom=1;sampleWavePan=0;syncSampleWaveToolbar();sampleWaveStaticCache=null}
+// Cache exact min/max peaks in 256-frame blocks. Even at 1x long recordings
+// keep their transients; zoomed-in views switch to an interpolated sample trace.
+const SAMPLE_WAVE_PEAK_BLOCK=256;
+const sampleWavePeakCache=new WeakMap();
+function sampleWavePeakBlocks(buffer,channel){
+ let channels=sampleWavePeakCache.get(buffer);
+ if(!channels){channels=[];sampleWavePeakCache.set(buffer,channels)}
+ if(channels[channel])return channels[channel];
+ const samples=buffer.getChannelData(channel),count=Math.ceil(samples.length/SAMPLE_WAVE_PEAK_BLOCK);
+ const lows=new Float32Array(count),highs=new Float32Array(count);
+ for(let block=0;block<count;block++){
+  let lo=1,hi=-1;
+  const start=block*SAMPLE_WAVE_PEAK_BLOCK,end=Math.min(samples.length,start+SAMPLE_WAVE_PEAK_BLOCK);
+  for(let i=start;i<end;i++){const v=samples[i];if(v<lo)lo=v;if(v>hi)hi=v}
+  lows[block]=lo;highs[block]=hi;
+ }
+ channels[channel]={lows,highs};return channels[channel];
+}
+function sampleWaveExtrema(data,peaks,from,to){
+ const n=data.length,start=clamp(Math.floor(from),0,n-1),end=clamp(Math.ceil(to),start+1,n);
+ let lo=1,hi=-1;
+ const scan=(a,b)=>{for(let i=a;i<b;i++){const v=data[i];if(v<lo)lo=v;if(v>hi)hi=v}};
+ if(!peaks||end-start<SAMPLE_WAVE_PEAK_BLOCK){scan(start,end);return [lo,hi]}
+ const first=Math.ceil(start/SAMPLE_WAVE_PEAK_BLOCK),last=Math.floor(end/SAMPLE_WAVE_PEAK_BLOCK);
+ scan(start,Math.min(end,first*SAMPLE_WAVE_PEAK_BLOCK));
+ for(let block=first;block<last;block++){
+  if(peaks.lows[block]<lo)lo=peaks.lows[block];
+  if(peaks.highs[block]>hi)hi=peaks.highs[block];
+ }
+ scan(Math.max(first*SAMPLE_WAVE_PEAK_BLOCK,last*SAMPLE_WAVE_PEAK_BLOCK),end);
+ return [lo,hi];
+}
 function drawSampleWaveform(){
  const canvas=$('sampleWaveCanvas');if(!canvas)return;
  const cssW=canvas.clientWidth||1200,cssH=canvas.clientHeight||230;
- const dpr=Math.min(2,window.devicePixelRatio||1);
+ const dpr=Math.min(3,window.devicePixelRatio||1);
  const W=Math.max(320,Math.round(cssW*dpr)),H=Math.max(120,Math.round(cssH*dpr));
  if(canvas.width!==W||canvas.height!==H){canvas.width=W;canvas.height=H}
  const screen=canvas.getContext('2d');if(!screen)return;
@@ -5252,6 +5288,8 @@ function drawSampleWaveform(){
  const markers=track?[
   track.sampleStart,track.sampleEnd,track.sampleLoop,track.loopStart,track.loopEnd
  ].join(':'):'invalid';
+ const visibleSeconds=buffer?buffer.duration*sampleWaveWindow():0;
+ const timeDigits=buffer?Math.min(6,Math.max(2,Math.ceil(-Math.log10(Math.max(visibleSeconds/8,1e-6)))+1)):2;
  const cache=sampleWaveStaticCache;
  if(!cache||cache.width!==W||cache.height!==H||cache.dpr!==dpr||
     cache.track!==track||cache.buffer!==buffer||cache.markers!==markers||
@@ -5269,30 +5307,48 @@ function drawSampleWaveform(){
   ctx.strokeStyle=i%2===0?'#66503f':'#322821';ctx.lineWidth=Math.max(1,dpr*.8);
   ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();
   if(buffer){ctx.fillStyle='#b79473';ctx.font=Math.round(9*dpr)+'px Consolas,monospace';
-   const seconds=(fraction*buffer.duration).toFixed(buffer.duration<10?2:1)+'s';
+   const seconds=(fraction*buffer.duration).toFixed(timeDigits)+'s';
    ctx.fillText(seconds,Math.max(3*dpr,Math.min(W-40*dpr,x+3*dpr)),13*dpr)}
  }
- ctx.fillStyle='rgba(209,159,103,.12)';ctx.fillRect(sampleWaveX(track.sampleStart)*W,0,(track.sampleEnd-track.sampleStart)*sampleWaveZoom*W,H);
- if(track.sampleLoop){ctx.fillStyle='rgba(106,187,147,.15)';ctx.fillRect(sampleWaveX(track.loopStart)*W,0,(track.loopEnd-track.loopStart)*sampleWaveZoom*W,H)}
+ const startX=clamp(sampleWaveX(track.sampleStart)*W,0,W),endX=clamp(sampleWaveX(track.sampleEnd)*W,0,W);
+ if(endX>startX){ctx.fillStyle='rgba(209,159,103,.12)';ctx.fillRect(startX,0,endX-startX,H)}
+ if(track.sampleLoop){
+  const loopLeft=clamp(sampleWaveX(track.loopStart)*W,0,W),loopRight=clamp(sampleWaveX(track.loopEnd)*W,0,W);
+  if(loopRight>loopLeft){ctx.fillStyle='rgba(106,187,147,.15)';ctx.fillRect(loopLeft,0,loopRight-loopLeft,H)}
+ }
  if(buffer){
-  // Preserve peaks instead of sampling ~18 points from every large bucket.
-  // Mono uses the full height; stereo shows separate L / R lanes.
+  // Downsample large ranges with exact peaks; as soon as samples become
+  // resolvable, draw a continuous line between PCM frames, per stereo lane.
   const channels=Math.min(2,buffer.numberOfChannels);
-  const buckets=Math.max(1,Math.floor(W));
   for(let ch=0;ch<channels;ch++){
    const data=buffer.getChannelData(ch),n=data.length;
    const middle=(ch+.5)*H/channels,amplitude=.41*H/channels;
-   ctx.strokeStyle='#604b3a';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,middle);ctx.lineTo(W,middle);ctx.stroke();
-   ctx.strokeStyle=ch===0?'#e2ad79':'#9dd6b0';ctx.lineWidth=Math.max(1,dpr*.85);ctx.beginPath();
-   for(let x=0;x<buckets;x++){
-    const a=Math.floor((viewStart+x/buckets*viewSpan)*n),end=Math.min(n,Math.max(a+1,Math.floor((viewStart+(x+1)/buckets*viewSpan)*n)));
-    const stride=Math.max(1,Math.floor((end-a)/750));let lo=1,hi=-1;
-    for(let j=a;j<end;j+=stride){const v=data[j];if(v<lo)lo=v;if(v>hi)hi=v}
-    ctx.moveTo(x,middle-hi*amplitude);ctx.lineTo(x,middle-lo*amplitude);
+   ctx.strokeStyle='#604b3a';ctx.lineWidth=Math.max(1,dpr*.55);ctx.beginPath();ctx.moveTo(0,middle+.5);ctx.lineTo(W,middle+.5);ctx.stroke();
+   ctx.strokeStyle=ch===0?'#e9b987':'#a6dfbc';ctx.lineWidth=Math.max(1,dpr*.9);ctx.lineJoin='round';ctx.lineCap='round';
+   const framesPerPixel=n*viewSpan/W;
+   ctx.beginPath();
+   if(framesPerPixel<=1){
+    // At high magnification min/max bars look disconnected. Interpolate the
+    // true decoded samples instead; no smoothing of the source audio occurs.
+    for(let x=0;x<=W;x++){
+     const position=clamp((viewStart+x/W*viewSpan)*n,0,n-1);
+     const index=Math.floor(position),fraction=position-index;
+     const v=data[index]*(1-fraction)+data[Math.min(n-1,index+1)]*fraction;
+     if(x===0)ctx.moveTo(x,middle-v*amplitude);
+     else ctx.lineTo(x,middle-v*amplitude);
+    }
+   }else{
+    const peaks=framesPerPixel>=SAMPLE_WAVE_PEAK_BLOCK?sampleWavePeakBlocks(buffer,ch):null;
+    for(let x=0;x<W;x++){
+     const a=(viewStart+x/W*viewSpan)*n,b=(viewStart+(x+1)/W*viewSpan)*n;
+     const [lo,hi]=sampleWaveExtrema(data,peaks,a,b);
+     ctx.moveTo(x+.5,middle-hi*amplitude);ctx.lineTo(x+.5,middle-lo*amplitude);
+    }
    }
    ctx.stroke();
    if(channels===2){ctx.fillStyle='#ac9276';ctx.font=Math.round(10*dpr)+'px Consolas,monospace';ctx.fillText(ch?'R':'L',7*dpr,(ch+.12)*H/channels)}
   }
+
  }else{
   ctx.fillStyle='#947257';ctx.font=Math.round(18*dpr)+'px sans-serif';
   ctx.fillText('No waveform yet — select LOAD WAV',24*dpr,H/2);
@@ -5310,7 +5366,7 @@ function drawSampleWaveform(){
  screen.clearRect(0,0,W,H);
  screen.drawImage(sampleWaveStaticCache.layer,0,0);
  const range=$('sampleWaveRange');
- if(range)range.textContent=buffer?'VIEW '+(sampleWaveStart()*buffer.duration).toFixed(2)+'–'+((sampleWaveStart()+sampleWaveWindow())*buffer.duration).toFixed(2)+' s / '+buffer.duration.toFixed(2)+' s':'NO SAMPLE LOADED';
+ if(range)range.textContent=buffer?'VIEW '+(sampleWaveStart()*buffer.duration).toFixed(timeDigits)+'–'+((sampleWaveStart()+sampleWaveWindow())*buffer.duration).toFixed(timeDigits)+' s / '+buffer.duration.toFixed(2)+' s':'NO SAMPLE LOADED';
  const play=valid&&buffer?sampleCursorPosition(selectedSampleEditorTrack,sampleEditorIsDrum()?selectedSampleEditorDrumSlot:null):null;
  const status=$('samplePlayStatus');if(status)status.textContent=play?'POS '+play.seconds.toFixed(2)+'s · '+play.rate.toFixed(2)+'×':'POS —';
  if(play){
@@ -5488,13 +5544,12 @@ async function toggleSampleEditorAudition(){
  }catch(e){notify('Sample preview failed: '+e.message,true)}
 }
 function bindSampleEditor(){
- $('sampleWaveZoom').onchange=()=>{
-  const center=sampleWaveStart()+sampleWaveWindow()/2;
-  sampleWaveZoom=clamp(Number($('sampleWaveZoom').value)||1,1,16);
-  sampleWavePan=sampleWaveZoom===1?0:clamp((center-.5/sampleWaveZoom)/(1-1/sampleWaveZoom),0,1);
-  syncSampleWaveToolbar();drawSampleWaveform();
+ $('sampleWaveZoom').oninput=()=>{
+  const canvas=$('sampleWaveCanvas'),rect=canvas.getBoundingClientRect();
+  const nextZoom=Math.pow(2,Number($('sampleWaveZoom').value)/SAMPLE_WAVE_ZOOM_TICKS_PER_OCTAVE);
+  sampleWaveZoomAtPointer(nextZoom,rect.left+rect.width/2);
  };
- $('sampleWavePan').oninput=()=>{sampleWavePan=clamp(Number($('sampleWavePan').value)/1000,0,1);drawSampleWaveform()};
+ $('sampleWavePan').oninput=()=>{sampleWavePan=clamp(Number($('sampleWavePan').value)/SAMPLE_WAVE_PAN_STEPS,0,1);drawSampleWaveform()};
  $('sampleWaveFit').onclick=()=>{sampleWaveResetView();drawSampleWaveform()};
  $('sampleEditTrack').onchange=()=>{sampleWaveResetView();stopSampleEditorAudition();const choice=$('sampleEditTrack').value.split(':');selectedSampleEditorTrack=Number(choice[1]);selectedSampleEditorDrumSlot=choice[0]==='d'?Number(choice[2]):null;renderSampleEditor()};
  $('sampleEditorLoad').onclick=()=>{if($('sampleEditorLoad').disabled)return;$('sampleEditorFileInput').click()};
@@ -5529,10 +5584,9 @@ function bindSampleEditor(){
  canvas.addEventListener('wheel',e=>{
   if(!sampleEditorBuffer())return;
   e.preventDefault();
-  const steps=[1,2,4,8,16];
-  const next=e.deltaY<0?steps.find(z=>z>sampleWaveZoom):
-   [...steps].reverse().find(z=>z<sampleWaveZoom);
-  if(next!==undefined)sampleWaveZoomAtPointer(next,e.clientX);
+  const pixels=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);
+  const next=sampleWaveZoom*Math.exp(-clamp(pixels,-800,800)*.0015);
+  sampleWaveZoomAtPointer(next,e.clientX);
  },{passive:false});
  canvas.addEventListener('auxclick',e=>{if(e.button===1)e.preventDefault()});
  canvas.addEventListener('pointerdown',e=>{
