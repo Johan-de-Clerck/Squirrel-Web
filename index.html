@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.54 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.55 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1111,19 +1111,19 @@ input[type="password"],textarea,
 .pattern-bounce-preview-actions button:disabled{opacity:.5;cursor:default}
 #patternBouncePreviewStatus{padding:0 10px 4px;color:#c7ad8c;font:700 10px Consolas,monospace;min-height:14px}
  .pad.has-parameter-lock:after{content:'●';position:absolute;top:0;right:2px;font-size:8px;color:var(--accent2);pointer-events:none}
- /* v0.2.54: per-track groove, velocity humanize and microtiming. */
+ /* v0.2.55: per-track groove, velocity humanize and microtiming. */
 .groove-track-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
 .groove-track-row{display:grid;grid-template-columns:minmax(90px,1fr) minmax(0,1fr);gap:8px;align-items:center;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
 .groove-track-row strong{font-size:11px}
 .groove-track-row label{display:grid;gap:3px;font-size:10px;color:var(--muted)}
 .groove-track-row input{width:100%}
 @media(max-width:900px){.groove-track-list{grid-template-columns:1fr}}
-/* v0.2.54: reusable VA/FM preset bank. */
+/* v0.2.55: reusable VA/FM preset bank. */
 .synth-presets{display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding:10px;margin:0 0 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
 .synth-presets>.field-head{margin-right:6px}.synth-presets select{flex:1 1 200px;min-width:145px;max-width:360px}
 .synth-presets .mini-btn{flex:0 0 auto}
 .synth-presets.hidden{display:none}
-/* v0.2.54: step-level synth filter locks, independent from tracker FX. */
+/* v0.2.55: step-level synth filter locks, independent from tracker FX. */
 .step-locks{margin:10px 0;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}
 .step-lock-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:6px}
 .step-lock-controls label{display:flex;flex-wrap:wrap;align-items:center;gap:7px;font-size:11px;color:var(--text)}
@@ -1156,6 +1156,27 @@ input[type="password"],textarea,
 .pad.on.track-colored .note-label{color:var(--note-ink,#221916)}
 .pad.on.track-colored .mini-bar{background:#211a1a88}
 @media(max-width:1100px){.transport-track-color{margin:0}}
+/* v0.2.55 — Keep Step FX tools beside the fields; no extra editor scroll. */
+#view-seq .fx-compact-layout{display:grid;grid-template-columns:minmax(0,1fr) 148px;gap:10px;align-items:stretch;min-width:0}
+#view-seq .fx-main-fields{min-width:0}
+#view-seq .fx-main-fields .fx-controls{min-width:0;gap:5px 8px}
+#view-seq .fx-main-fields .field,#view-seq .fx-main-fields select{min-width:0;max-width:100%}
+#view-seq .fx-compact-layout .fx-actions{display:flex;flex-direction:column;flex-wrap:nowrap;gap:6px;margin:0;align-self:stretch;justify-content:center;min-width:0}
+#view-seq .fx-compact-layout .fx-actions .mini-btn{width:100%;min-width:0;min-height:30px;white-space:normal;line-height:1.15;padding:5px 6px;text-align:center;font-size:9px}
+#view-seq .fx-main-fields .step-locks{margin:6px 0 0;padding:7px 9px}
+#view-seq .fx-main-fields .step-lock-controls{gap:8px;margin-top:3px}
+#view-seq .fx-main-fields .step-lock-controls label{min-width:0;gap:4px}
+#view-seq .fx-main-fields .step-lock-controls input[type=range]{margin:0;height:16px}
+#view-seq .fx-main-fields .step-continue-control{min-width:0}
+@media(max-width:1050px){
+ #view-seq .fx-compact-layout{grid-template-columns:minmax(0,1fr) 126px;gap:7px}
+ #view-seq .fx-compact-layout .fx-actions .mini-btn{font-size:8px;padding:4px}
+}
+@media(max-width:890px){
+ #view-seq .fx-compact-layout{grid-template-columns:minmax(0,1fr)}
+ #view-seq .fx-compact-layout .fx-actions{flex-direction:row;flex-wrap:wrap;justify-content:flex-start;margin-top:5px}
+ #view-seq .fx-compact-layout .fx-actions .mini-btn{width:auto;flex:1 1 100px}
+}
 </style>
 </head>
 <body>
@@ -1250,7 +1271,7 @@ input[type="password"],textarea,
         </section>
         <div class="two-cols">
           <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step editor</h2></div><span class="pill" id="stepOnLabel">STEP OFF</span></div><div class="control-grid"><label class="field"><span class="field-head">INSTRUMENT TYPE</span><select id="stepTrackKind" aria-label="Instrument type for selected track"><option value="drum">DRUM</option><option value="bass">BASS</option><option value="lead">LEAD</option><option value="sample">SAMPLE</option><option value="chord">CHORD</option></select></label><label class="field hidden" id="stepDrumSampleField"><span class="field-head"><span>SAMPLE</span></span><select id="stepDrumSample" aria-label="Sample for the selected drum step"></select><div class="step-drum-quick" id="stepDrumQuick" role="group" aria-label="Drum slot quick selection"></div></label><label class="field" id="stepNoteField"><span class="field-head"><span>NOTE</span><output id="stepNoteOut">C3</output></span><select id="stepNote"></select></label><label class="field"><span class="field-head"><span>VELOCITY</span><output id="velocityOut">110</output></span><input id="velocity" type="range" min="1" max="127" value="110"></label><label class="field" id="stepGateField"><span class="field-head"><span>GATE</span><output id="gateOut">85%</output></span><input id="gate" type="range" min="10" max="180" value="85"></label><label class="field"><span class="field-head"><span>CHANCE</span><output id="chanceOut">100%</output></span><input id="chance" type="range" min="0" max="100" value="100"></label><label class="field"><span class="field-head"><span>RATCHET</span><output id="ratchetOut">1×</output></span><input id="ratchet" type="range" min="1" max="6" step="1" value="1"></label><label class="field"><span class="field-head"><span>MICROTIMING</span><output id="microTimingOut">0%</output></span><input id="microTiming" type="range" min="-25" max="25" step="1" value="0" aria-label="Shift selected step timing by percentage of one step"></label></div><div class="setup-actions"><button class="mini-btn" id="toggleStepBtn">TOGGLE STEP</button><button class="mini-btn" id="copyStepBtn" type="button">COPY STEP</button><button class="mini-btn" id="pasteStepBtn" type="button" disabled>PASTE STEP</button><button class="mini-btn" id="undoStepBtn" type="button" disabled>↶ UNDO</button><button class="mini-btn" id="redoStepBtn" type="button" disabled>↷ REDO</button><button class="mini-btn" id="auditionStepBtn">♪ AUDITION</button></div></section>
-          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step FX</h2></div><span class="pill" id="fxStatus">FX OFF</span></div><div class="control-grid fx-controls"><label class="field"><span class="field-head"><span>FX COMMAND</span></span><select id="stepFx" aria-label="Effect for the selected step"><option value="0">0 · NO EFFECT</option><option value="1">1 · PORTAMENTO UP</option><option value="2">2 · PORTAMENTO DOWN</option><option value="3">3 · OCTAVE UP</option><option value="4">4 · VIBRATO</option><option value="5">5 · OCTAVE DOWN</option><option value="9">9 · SAMPLE OFFSET (%)</option><option value="10">A · VOLUME SLIDE DOWN</option><option value="11">B · VOLUME SLIDE UP</option><option value="12">C · NOTE OFF</option><option value="13">D · SAMPLE CONTINUE → NEXT PATTERN</option></select></label><label class="field step-continue-field step-continue-fx" id="stepContinueField"><span class="field-head">SAMPLE PLAYBACK</span><span class="step-continue-control"><input id="stepContinue" type="checkbox" aria-label="Continue sample or drum after pattern"><span>CONTINUE INTO NEXT PATTERN</span></span></label><label class="field hidden" id="stepChordField"><span class="field-head"><span>CHORD MODE</span><output id="chordModeOutput">MIN</output></span><select id="stepChordMode" aria-label="Chord quality for the selected CHORD step"></select></label><label class="field" id="fxAmountField"><span class="field-head"><span id="fxAmountLabel">PERIOD/TICK · HEX</span><output id="fxAmountOut">02</output></span><div class="fx-amount-row"><input id="fxAmount" aria-label="FX amount" type="range" min="0" max="255" step="1" value="2"><input id="fxHex" type="text" maxlength="2" spellcheck="false" autocomplete="off" inputmode="text" aria-label="FX parameter in hex" value="02"></div></label></div><div class="step-locks" id="stepLocksPanel"><div class="field-head">PARAMETER LOCKS · SYNTH FILTER</div><div class="step-lock-controls"><label><input type="checkbox" id="stepLockCutoffOn"> CUTOFF <output id="stepLockCutoffOut">4000 Hz</output><input id="stepLockCutoff" type="range" min="80" max="18000" step="10"></label><label><input type="checkbox" id="stepLockResoOn"> RESONANCE <output id="stepLockResoOut">0.7</output><input id="stepLockReso" type="range" min="0.1" max="18" step="0.1"></label></div></div><div class="setup-actions fx-actions"><button class="mini-btn" type="button" id="applyCarryRange" disabled>APPLY CARRY TO RANGE</button><button class="mini-btn" id="clearStepFx">CLEAR FX</button><button class="mini-btn" id="clearTrackFx">CLEAR TRACK FX</button></div></section>
+          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step FX</h2></div><span class="pill" id="fxStatus">FX OFF</span></div><div class="fx-compact-layout"><div class="fx-main-fields"><div class="control-grid fx-controls"><label class="field"><span class="field-head"><span>FX COMMAND</span></span><select id="stepFx" aria-label="Effect for the selected step"><option value="0">0 · NO EFFECT</option><option value="1">1 · PORTAMENTO UP</option><option value="2">2 · PORTAMENTO DOWN</option><option value="3">3 · OCTAVE UP</option><option value="4">4 · VIBRATO</option><option value="5">5 · OCTAVE DOWN</option><option value="9">9 · SAMPLE OFFSET (%)</option><option value="10">A · VOLUME SLIDE DOWN</option><option value="11">B · VOLUME SLIDE UP</option><option value="12">C · NOTE OFF</option><option value="13">D · SAMPLE CONTINUE → NEXT PATTERN</option></select></label><label class="field step-continue-field step-continue-fx" id="stepContinueField"><span class="field-head">SAMPLE PLAYBACK</span><span class="step-continue-control"><input id="stepContinue" type="checkbox" aria-label="Continue sample or drum after pattern"><span>CONTINUE INTO NEXT PATTERN</span></span></label><label class="field hidden" id="stepChordField"><span class="field-head"><span>CHORD MODE</span><output id="chordModeOutput">MIN</output></span><select id="stepChordMode" aria-label="Chord quality for the selected CHORD step"></select></label><label class="field" id="fxAmountField"><span class="field-head"><span id="fxAmountLabel">PERIOD/TICK · HEX</span><output id="fxAmountOut">02</output></span><div class="fx-amount-row"><input id="fxAmount" aria-label="FX amount" type="range" min="0" max="255" step="1" value="2"><input id="fxHex" type="text" maxlength="2" spellcheck="false" autocomplete="off" inputmode="text" aria-label="FX parameter in hex" value="02"></div></label></div><div class="step-locks" id="stepLocksPanel"><div class="field-head">PARAMETER LOCKS · SYNTH FILTER</div><div class="step-lock-controls"><label><input type="checkbox" id="stepLockCutoffOn"> CUTOFF <output id="stepLockCutoffOut">4000 Hz</output><input id="stepLockCutoff" type="range" min="80" max="18000" step="10"></label><label><input type="checkbox" id="stepLockResoOn"> RESONANCE <output id="stepLockResoOut">0.7</output><input id="stepLockReso" type="range" min="0.1" max="18" step="0.1"></label></div></div></div><div class="setup-actions fx-actions"><button class="mini-btn" type="button" id="applyCarryRange" disabled>APPLY CARRY TO RANGE</button><button class="mini-btn" id="clearStepFx">CLEAR FX</button><button class="mini-btn" id="clearTrackFx">CLEAR TRACK FX</button></div></div></section>
         </div>
       </div>
       <div id="view-song" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Song mode</h2></div><span class="pill">A1–D8 · 32 PATTERNS</span></div>
@@ -1304,7 +1325,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.54';
+const SQUIRREL_VERSION='0.2.55';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
