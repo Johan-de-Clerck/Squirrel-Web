@@ -2,7 +2,7 @@
   <img src="squirrel-icon.webp" alt="Squirrel Studio icon" width="112">
   <h1>Squirrel Studio</h1>
   <p><strong>A browser-based groovebox, synthesizer, sampler and tracker-style step sequencer.</strong></p>
-  <p><strong>Current version: 0.2.55</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
+  <p><strong>Current version: 0.2.56</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
 </div>
 
 Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrangement into a compact, eight-track music workstation. The web version runs in a modern desktop browser using the Web Audio API.
@@ -34,7 +34,9 @@ See [HELP.md](HELP.md) for the detailed guide.
 
 ## Workflow and shortcuts
 
-- **FILE** (above the editor tabs): New Song, Open/Save Song, sample import, sample-bank import/export, render and WAV export.
+- **FILE** (above the editor tabs): New Song, Open/Save Song, sample import, sample-bank import/export and VA/FM synth render.
+- **BOUNCE** (next to FILE): selected-pattern bounce, preview waveform, loop crossfade and destination options.
+- **EXPORT WAV** (next to BOUNCE): stereo song, selected-track and stem ZIP export settings.
 - **SYNTH / DRUM SAMPLES / SAMPLE EDITOR**: edit the selected sound without losing other track and slot settings.
 - **SONG MODE**: chain patterns and manage cross-pattern sample continuation with **Step FX → Continue into next pattern**. A small check appears on an affected step only when continuation is enabled.
 - **Esc**: toggle Edit Mode when not entering text or using a menu.
