@@ -1,6 +1,10 @@
-# Squirrel Studio Web 0.2.57 — User Manual
+# Squirrel Studio Web 0.2.58 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.58 — Synth voice management
+
+The live VA/FM engine now caps synthesizer polyphony at **24 active voices per track**. If a dense chord/ratchet/MIDI passage exceeds the cap, the oldest voice is faded quickly (20 ms) to free resources. Drum and sampler voices are excluded from this synth cap. The optional native audio bridge also removes completed Note Off voices from its active registry. The WAV renderer remains unchanged; this is a live-audio resource safeguard.
 
 ### New in 0.2.57 — Manual demo loading
 
