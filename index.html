@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.46 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.47 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1105,7 +1105,11 @@ input[type="password"],textarea,
 .song-export-progress-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
 .song-export-progress output{font-variant-numeric:tabular-nums;color:#f7c58e;white-space:nowrap}
 .song-export-progress progress{width:100%;height:8px;accent-color:#e0a56c}
-.file-menubar #fileExportSong:disabled,.file-menubar #fileRenderSynth:disabled,.file-menubar #fileBouncePattern:disabled{opacity:.45;cursor:wait}
+.file-menubar #fileExportSong:disabled,.file-menubar #fileRenderSynth:disabled,.file-menubar #fileBouncePattern:disabled,.file-menubar #filePreviewPattern:disabled{opacity:.45;cursor:wait}
+.pattern-bounce-preview-actions{display:flex;flex-wrap:wrap;gap:6px;padding:3px 5px 5px}
+.pattern-bounce-preview-actions button{flex:1;min-width:125px}
+.pattern-bounce-preview-actions button:disabled{opacity:.5;cursor:default}
+#patternBouncePreviewStatus{padding:0 10px 4px;color:#c7ad8c;font:700 10px Consolas,monospace;min-height:14px}
 /* v0.2.33: export-quality controls remain inside the original, separate FILE menu. */
 .file-menubar .song-export-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:4px 5px 8px}
 .file-menubar .song-export-settings label{display:flex;flex-direction:column;gap:5px;color:#cdae89;font:700 10px Consolas,monospace;min-width:0}
@@ -1147,6 +1151,11 @@ input[type="password"],textarea,
 </div>
 <button type="button" id="fileExportSong">♫ EXPORT SONG TO STEREO WAV</button>
 <button type="button" id="fileBouncePattern">↧ BOUNCE SELECTED PATTERN TO SAMPLE</button>
+<div class="pattern-bounce-preview-actions">
+ <button type="button" id="filePreviewPattern">▶ PREVIEW BOUNCE</button>
+ <button type="button" id="fileStopPatternPreview" disabled>■ STOP PREVIEW</button>
+</div>
+<div id="patternBouncePreviewStatus" role="status" aria-live="polite">PREVIEW READY</div>
 <div class="song-export-settings" aria-label="Pattern bounce output settings">
  <label for="patternBounceDestination">BOUNCE DESTINATION
   <select id="patternBounceDestination" aria-label="Download bounced pattern or choose one of the 15 sample library slots">
@@ -1253,7 +1262,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.46';
+const SQUIRREL_VERSION='0.2.47';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -2919,7 +2928,8 @@ function redoEdit(){
  historyPosition++;restoreUndoState(historyEntries[historyPosition]);notify('Redo');
 }
 
-function persist(){try{
+let patternBounceProjectRevision=0;
+function persist(){patternBounceProjectRevision++;try{
  // Samplebytes worden apart in IndexedDB bewaard, zodat lokale opslag niet volloopt.
  const snapshot={...state,tracks:state.tracks.map(t=>({...t,sampleData:null})),drumSamples:state.drumSamples.map(row=>row.map(item=>({...item,data:null}))),drumLibrary:state.drumLibrary.map(item=>({...item,data:null}))};
  localStorage.setItem('squirrel-studio-0.1',JSON.stringify(snapshot));
@@ -4033,6 +4043,7 @@ function fadeTransportVoice(voice,now,fade=STOP_FADE_SECONDS){
  scheduledVoices.delete(voice);
 }
 function stopTransport(){
+ stopPatternBouncePreview(true);
  // Preserve the actually heard song position as the next PLAY cue.
  if(playing&&state.songModeEnabled&&state.songSequence.length){
   songCuePosition=clamp(visibleSongPosition,0,state.songSequence.length-1);
@@ -4057,6 +4068,8 @@ function stopTransport(){
 }
 async function togglePlay(){
  if(playing){stopTransport();return}
+ if(songExportBusy){notify('Finish the bounce render before pressing PLAY.',true);return}
+ stopPatternBouncePreview(true);
  if(state.songModeEnabled&&!state.songSequence.length){notify('Add a pattern to the song arrangement first.',true);return}
  if(!await initAudio())return;
  currentStep=0;
@@ -6220,6 +6233,106 @@ async function saveBouncedPatternToLibrary(wav,slot,expectedState,expectedGenera
   :'Bounce added to the song, but browser storage failed. Use FILE → SAVE SONG to keep it.',!stored);
  return slot;
 }
+// v0.2.47 — Preview and saved WAV share the same exact PCM audio if nothing
+// relevant changed, preserving the Chance/random-noise choices.
+let patternBouncePreview=null,patternBouncePreviewSerial=0;
+let patternBouncePreviewRendering=false,patternBouncePreviewCache=null;
+function currentPatternBounceSettings(){
+ const rawTail=Number($('patternBounceTail')?.value??0);
+ const tail=[0,3,6,10].includes(rawTail)?rawTail:0;
+ return {...songExportSettings(),source:'mix',tail,loopCrossfadeMs:tail===0?patternBounceCrossfadeMs():0};
+}
+function patternBouncePreviewKey(pattern,settings){
+ return JSON.stringify([pattern,sampleSession,patternBounceProjectRevision,
+  settings.rate,settings.bitDepth,settings.tail,settings.normalize,settings.dither,
+  settings.loopCrossfadeMs]);
+}
+function reusablePatternBouncePreview(pattern,settings){
+ const cached=patternBouncePreviewCache;
+ return cached&&cached.project===state&&cached.key===patternBouncePreviewKey(pattern,settings)
+  ?cached.wav:null;
+}
+function updatePatternBouncePreviewUI(){
+ const play=$('filePreviewPattern'),stop=$('fileStopPatternPreview'),status=$('patternBouncePreviewStatus');
+ if(play)play.disabled=songExportBusy||!!patternBouncePreview;
+ if(stop)stop.disabled=!patternBouncePreview;
+ if(status)status.textContent=patternBouncePreviewRendering?'RENDERING PREVIEW…':
+  patternBouncePreview?.source?'▶ PREVIEW PLAYING · '+(patternBouncePreview.loop?'LOOP':'ONE SHOT'):
+  'PREVIEW READY'+(reusablePatternBouncePreview(state.pattern,currentPatternBounceSettings())?' · AUDIO CACHED':'');
+}
+function stopPatternBouncePreview(silent=false){
+ ++patternBouncePreviewSerial;
+ const active=patternBouncePreview;
+ patternBouncePreview=null;
+ if(active){
+  if(active.source){
+   active.source.onended=null;
+   try{active.source.stop()}catch(e){}
+   try{active.source.disconnect()}catch(e){}
+  }
+  try{const closing=active.context.close();closing?.catch?.(e=>console.warn('Closing bounce preview:',e))}
+  catch(e){console.warn('Closing bounce preview:',e)}
+ }
+ updatePatternBouncePreviewUI();
+ if(active&&!silent)notify('Bounce preview stopped.');
+}
+async function previewPatternBounce(){
+ if(songExportBusy){notify('A WAV export is already in progress.',true);return}
+ if(playing){notify('Stop the sequencer before previewing a bounce.',true);return}
+ stopPatternBouncePreview(true);
+ const AudioContextType=window.AudioContext||window.webkitAudioContext;
+ if(!AudioContextType){notify('Web Audio preview is unavailable in this browser.',true);return}
+ const pattern=state.pattern,settings=currentPatternBounceSettings();
+ const key=patternBouncePreviewKey(pattern,settings),project=state;
+ const serial=++patternBouncePreviewSerial;
+ let context;
+ try{context=new AudioContextType({latencyHint:'playback'})}
+ catch(e){notify('Could not open audio preview: '+e.message,true);return}
+ // Request audio unlock synchronously from the user's button click; waiting
+ // until after offline rendering may be rejected by autoplay restrictions.
+ let ready;
+ try{ready=context.resume()}
+ catch(e){try{context.close()}catch(_){}notify('Audio preview unavailable: '+e.message,true);return}
+ patternBouncePreview={context,source:null,loop:settings.tail===0,serial};
+ patternBouncePreviewRendering=true;songExportBusy=true;
+ updatePatternBouncePreviewUI();
+ songExportProgress('PREPARING PREVIEW '+patternName(pattern),0);
+ try{
+  await ready;
+  if(serial!==patternBouncePreviewSerial)return;
+  const cached=reusablePatternBouncePreview(pattern,settings);
+  const wav=cached||await exportSongStereoWav({bouncePattern:pattern,settingsOverride:settings,collectWav:true});
+  if(serial!==patternBouncePreviewSerial)return;
+  if(!wav?.buffer)throw Error('No audio returned from pattern renderer.');
+  // Decode final PCM, including normalize/dither/crossfade, not raw float audio.
+  const buffer=await context.decodeAudioData(wav.buffer.slice(0));
+  if(serial!==patternBouncePreviewSerial)return;
+  if(!buffer?.length)throw Error('Preview buffer is empty.');
+  const source=context.createBufferSource();
+  source.buffer=buffer;source.loop=settings.tail===0;
+  source.connect(context.destination);
+  source.onended=()=>{
+   if(serial===patternBouncePreviewSerial&&patternBouncePreview?.source===source)
+    stopPatternBouncePreview(true);
+  };
+  patternBouncePreview.source=source;
+  patternBouncePreviewCache={project,key,wav};
+  source.start();
+  notify('Preview '+patternName(pattern)+' · '+(source.loop?'looping until STOP':'one shot with FX tail')+'.');
+ }catch(e){
+  if(serial===patternBouncePreviewSerial){
+   console.error('Pattern bounce preview:',e);notify('Bounce preview failed: '+e.message,true);
+   stopPatternBouncePreview(true);
+  }
+ }finally{
+  // STOP can cancel listening while offline rendering continues; retain the
+  // exclusive render lock until rendering has actually completed.
+  songExportBusy=false;
+  patternBouncePreviewRendering=false;
+  songExportProgressDone();
+  updatePatternBouncePreviewUI();
+ }
+}
 async function runPatternBounce(){
  if(songExportBusy){notify('Another WAV export is already in progress.',true);return}
  if(playing){notify('Stop playback before bouncing a pattern.',true);return}
@@ -6230,10 +6343,7 @@ async function runPatternBounce(){
  if(!toFile&&(!matched||slot<0||slot>=DRUM_LIBRARY_SIZE)){
   notify('Choose DOWNLOAD WAV or a sample slot from 01 to 15.',true);return;
  }
- const requestedTail=Number($('patternBounceTail')?.value??0);
- const tail=[0,3,6,10].includes(requestedTail)?requestedTail:0;
- const loopCrossfadeMs=tail===0?patternBounceCrossfadeMs():0;
- const settings={...songExportSettings(),source:'mix',tail,loopCrossfadeMs};
+ const settings=currentPatternBounceSettings();
  const expectedState=state,expectedGeneration=sampleSession;
  const button=$('fileBouncePattern'),oldLabel=button?.textContent;
  songExportBusy=true;
@@ -6246,12 +6356,18 @@ async function runPatternBounce(){
   const previousData=toFile?null:(drumLibraryItem(slot)?.data??null);
   const previousName=toFile?'':drumLibraryItem(slot)?.name||'Existing sample';
   if(previousData&&!confirm('Replace SLOT '+String(slot+1).padStart(2,'0')+' — '+previousName+'? This replaces its sound everywhere it is assigned.'))return;
+  const cached=reusablePatternBouncePreview(pattern,settings);
+  stopPatternBouncePreview(true);
   await yieldSongExportUI();
-  const wav=await exportSongStereoWav({bouncePattern:pattern,settingsOverride:settings,collectWav:!toFile});
+  const wav=cached||await exportSongStereoWav({bouncePattern:pattern,settingsOverride:settings,collectWav:!toFile});
   if(!toFile){
    if(!wav)throw Error('No pattern WAV was produced.');
    await saveBouncedPatternToLibrary(wav,slot,expectedState,expectedGeneration,previousData,patternLabel);
+  }else if(cached){
+   downloadSongBlob(new Blob([cached.buffer],{type:'audio/wav'}),cached.name);
+   notify('Pattern '+patternLabel+' downloaded from the exact audio you previewed.');
   }
+  patternBouncePreviewCache=null;
  }catch(e){console.error('Pattern bounce:',e);notify('Pattern bounce failed: '+e.message,true)}
  finally{
   songExportBusy=false;songExportProgressDone();
@@ -7427,8 +7543,10 @@ function bindings(){
  $('fileRenderSynth').onclick=()=>{$('fileMenu').open=false;renderSelectedSynthWav().catch(e=>notify('Render failed: '+e.message,true))};
  $('fileExportSong').onclick=()=>{$('fileMenu').open=false;runSongWavExport()};
  $('fileBouncePattern').onclick=()=>{$('fileMenu').open=false;runPatternBounce()};
- $('fileMenu').addEventListener('toggle',()=>{if($('fileMenu').open)syncPatternBounceOptions()});
- syncPatternBounceOptions();
+ $('filePreviewPattern').onclick=()=>{previewPatternBounce()};
+ $('fileStopPatternPreview').onclick=()=>{stopPatternBouncePreview()};
+ $('fileMenu').addEventListener('toggle',()=>{if($('fileMenu').open){syncPatternBounceOptions();updatePatternBouncePreviewUI()}});
+ syncPatternBounceOptions();updatePatternBouncePreviewUI();
  $('saveBtn').onclick=saveProject;$('loadBtn').onclick=()=>$('loadFile').click();
  $('loadFile').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
