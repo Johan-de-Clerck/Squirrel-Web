@@ -1,6 +1,14 @@
-# Squirrel Studio Web 0.2.67 — User Manual
+# Squirrel Studio Web 0.2.68 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Improved in 0.2.68 — Sample and drum release parity in Bounce / WAV Export
+
+The offline renderer now fades long **SAMPLE** notes exponentially on **C00 / Note Off**, matching the live sampler's release envelope more closely. Sample-library **DRUM** sounds now release through a separate post-envelope gate: stopping a loop no longer overwrites the slot's attack/decay automation. The normal drum release is a short linear gate fade, while sampled instruments retain their configured release duration.
+
+A track with fewer steps than its containing pattern now releases non-carried sample/drum voices when **that track loops**, not only when the full song pattern changes. For example, a 16-step SAMPLE track inside a 32-step pattern restarts at step 17; a long voice can continue past that boundary only if the relevant **D00 / Continue into next pattern** option has armed Carry. Carried notes stay playing until a new note, C00, their natural end, or the arrangement's final release. These changes affect bounce, full-song WAV and stem export; they do not alter project files, the live mixer or reverb/delay settings.
+
+**EXACT PATTERN · LOOP** still ends the WAV exactly at the pattern boundary and cannot include effect tails beyond that point; select a **3/6/10-second FX TAIL** to capture them.
 
 ### New in 0.2.67 — Per-pattern BPM (A1–D8)
 
