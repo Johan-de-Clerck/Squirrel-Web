@@ -6502,6 +6502,8 @@ async function runPatternBounce(){
  finally{
   songExportBusy=false;songExportProgressDone();
   if(button){button.disabled=false;button.textContent=oldLabel}
+  // A finished bounce consumes its PCM cache: clear or redraw the mini preview.
+  updatePatternBouncePreviewUI();
  }
 }
 async function renderSelectedSynthWav(){
