@@ -7319,7 +7319,7 @@ async function wavPeakAnalysisAsync(channels){
  let peak=0,nonFinite=0;
  // Measure individual L/R RMS in the same pass as the export peak.
  // PCM encoding replaces non-finite input with zero, so skip it here.
- const sumSquares=channels.map(()=>0),channelPeaks=channels.map(()=>0);
+ const sumSquares=channels.map(()=>0);
  const blockSize=131072;
  for(let start=0;start<length;start+=blockSize){
   const end=Math.min(length,start+blockSize);
@@ -7328,14 +7328,13 @@ async function wavPeakAnalysisAsync(channels){
    if(!Number.isFinite(value)){nonFinite++;continue}
    const magnitude=Math.abs(value);
    if(magnitude>peak)peak=magnitude;
-   if(magnitude>channelPeaks[c])channelPeaks[c]=magnitude;
    sumSquares[c]+=value*value;
   }
   songExportProgress('ANALYZING AUDIO',25+25*end/length);
   await yieldSongExportUI();
  }
  const rms=sumSquares.map(sum=>Math.sqrt(sum/Math.max(1,length)));
- return {peak,nonFinite,channelPeaks,rms};
+ return {peak,nonFinite,rms};
 }
 // Reject oversized exports before Web Audio allocates a long stereo render.
 function wavSongExportBytes(frames,bitDepth=16){
