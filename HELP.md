@@ -1,6 +1,14 @@
-# Squirrel Studio Web 0.2.71 — User Manual
+# Squirrel Studio Web 0.2.72 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Fixed in 0.2.72 — Ratchet overlap in Pattern Bounce and WAV export
+
+When a SAMPLE or DRUM note uses **RATCHET 2×–6×**, repeated hits within that **same step** now overlap in offline rendering, just as they do during live playback. Previously the bounce cut each earlier hit as soon as the next subdivision started, which could make long samples, layered drum transients and their sends sound unnaturally short or thin.
+
+The previous note row is released at the **sequencer grid boundary**, rather than at the first ratchet subdivision's microtimed start. Each new row still releases earlier non-continuing sample voices normally, including their configured C00 release. Individual DRUM loop gates, per-slot choke groups, sample trim/loop markers, FX sends and explicit Continue/C00 commands remain in effect. Nothing changes in the stored song format or the live sampler.
+
+This fix applies to **BOUNCE**, complete song **EXPORT WAV**, and track-stem exports. **EXACT PATTERN · LOOP** still truncates FX tails at the selected pattern boundary; select a tail length when you need delay or reverb after the pattern.
 
 ### New in 0.2.71 — Stereo level diagnostics for WAV and Bounce
 
@@ -522,4 +530,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.2.71.**
+**Documentation version: Squirrel Studio Web 0.2.72.**
