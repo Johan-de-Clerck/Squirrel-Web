@@ -1,6 +1,12 @@
-# Squirrel Studio Web 0.2.70 — User Manual
+# Squirrel Studio Web 0.2.71 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.71 — Stereo level diagnostics for WAV and Bounce
+
+After a **BOUNCE** or **EXPORT WAV** download, the completion message now includes **RMS L** and **RMS R** in dBFS, in addition to the existing peak and clipping information. These are the individual left/right channel root-mean-square levels measured over the entire rendered file, including any chosen FX tail. They are calculated in the same pass as the existing peak analysis, with no second audio render. When Normalize is enabled, the readout includes the gain applied for normalization; PCM dither and quantization occur afterwards.
+
+These measurements make it easier to spot an unexpectedly quiet or silent channel and to compare the stereo balance of different exported takes. Intentional track panning can produce unequal levels, and a long silent or fading tail lowers the overall RMS. RMS values alone cannot establish that the bounce sounds exactly like live playback; use the same audio device/sample rate and listen as well.
 
 ### Improved in 0.2.70 — Shared FX routing in live playback and bounce
 
@@ -466,9 +472,9 @@ The VU meter is a visual indicator, not a recording or gain-adjustment control. 
 
 `demo.json` must be placed beside `index.html` on your web server.
 
-- On first visit, if there is no saved local project, the app attempts to load this file automatically.
-- **OPTIONS → LOAD DEMO.JSON** loads it manually after a replacement warning.
-- **OPTIONS → manual demo loading** intentionally makes the demo override the local song at every startup; this is opt-in.
+- On a fresh installation, Squirrel Studio starts with empty patterns. The demo is **not loaded automatically**.
+- A previously saved local working project can still be restored on startup.
+- Use **FILE → LOAD DEMO.JSON** or **OPTIONS → LOAD DEMO.JSON** to load the hosted demo manually, after the replacement confirmation.
 - To replace the hosted demo, export a **complete project JSON** (including embedded samples), rename it `demo.json`, and upload it alongside `index.html`.
 
 If `demo.json` is missing or cannot be fetched, the app still opens. The included `demo.json` is the **Johan_01** song with embedded kick, clap, snare, and closed hi-hat audio, plus named patterns **Main**, **Odd Track** and **Odd Snare**. Replace it with a different complete project JSON whenever you choose.
@@ -516,4 +522,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.1.59.**
+**Documentation version: Squirrel Studio Web 0.2.71.**
