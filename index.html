@@ -7230,7 +7230,9 @@ async function runPatternBounce(){
    await saveBouncedPatternToLibrary(wav,slot,expectedState,expectedGeneration,previousData,patternLabel,expectedRevision);
   }else if(cached||range){
    downloadSongBlob(new Blob([wav.buffer],{type:'audio/wav'}),wav.name);
-   notify('Pattern '+patternLabel+(range?' · selected range':'')+' downloaded from the exact audio you previewed.');
+   const cachedLevels=!range&&Array.isArray(wav.stereoRms)?
+    ' · RMS L '+wav.stereoRms[0]+' / R '+wav.stereoRms[1]:'';
+   notify('Pattern '+patternLabel+(range?' · selected range':'')+' downloaded from the exact audio you previewed'+cachedLevels+'.');
   }
   patternBouncePreviewCache=null;
   clearPatternBounceSelection();
@@ -8336,7 +8338,11 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
    ?'Squirrel_Bounce_'+patternName(bouncePattern).replace(/[^A-Za-z0-9_-]/g,'_').slice(0,45)+'_STEREO'+(bitDepth===24?'_24BIT':'')+'.wav'
    :songExportWavName(bitDepth,source,exportTrack);
  const wav=await downloadSongPCMWav(channels,rate,wavName,gain,bitDepth,dither,collectWav);
- if(collectWav)return wav;
+ if(collectWav){
+  // Preserve the measured levels when Preview Bounce caches this exact WAV.
+  if(wav)wav.stereoRms=analysis.rms.map(value=>value>0?wavDbFS(value*gain).toFixed(1)+' dBFS':'silence');
+  return wav;
+ }
  const originalPeak=Number.isFinite(wavDbFS(analysis.peak))?wavDbFS(analysis.peak).toFixed(1)+' dBFS':'silence';
  const finalPeak=Number.isFinite(wavDbFS(analysis.peak*gain))?wavDbFS(analysis.peak*gain).toFixed(1)+' dBFS':'silence';
  const clipped=!normalize&&analysis.peak>1?' · PEAK OVER 0 dBFS (clipped to PCM'+bitDepth+')':'';
