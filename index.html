@@ -6919,7 +6919,7 @@ function renderOptions(){
  for(let count=1;count<=MAX_STEPS;count++)lenSelect.add(new Option(count+' STEPS',String(count)));
  lenSelect.value=String(trackLength(state.pattern,index));
  lenSelect.onchange=()=>setTrackLength(state.pattern,index,lenSelect.value);
- lenRow.append(lenLabel,lenSelect);grid.append(selectRow,lenRow);
+ lenRow.append(lenLabel,lenSelect);grid.append(lenRow);
 }
 function choosePattern(index){
  stopEnterPreview();stopAllEditNotePreviews();
