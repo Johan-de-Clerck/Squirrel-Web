@@ -1,6 +1,23 @@
-# Squirrel Studio Web 0.2.86 — User Manual
+# Squirrel Studio Web 0.2.87 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.87 — organized Options panel for all sixteen tracks
+
+The **OPTIONS** page now shows one selected track instead of sixteen separate instrument, groove, MIDI and pattern-length cards. At the top, choose **EDIT TRACK → 01–16**. The dropdown displays every track number and its current instrument type. Its selection initially follows the track active in the Sequencer, but you can browse other tracks' settings without interrupting playback or changing the Sequencer selection.
+
+The panel is organized into:
+
+- **PATTERN & STEP LENGTH:** pattern group/number, pattern name, pattern BPM (0.1 BPM increments), and the selected track's step length from 1–32
+- **INSTRUMENT:** Drum, Sample, Bass, Lead or Chord type and relevant sample/drum slot assignments
+- **GROOVE & HUMANIZE:** swing and velocity humanization for the selected track
+- **AUDIO / MIDI OUTPUT:** internal sound or MIDI OUT ONLY, plus MIDI channel 1–16
+
+Choosing a different track updates all four sections together. Tracks 9–16 have the same controls as tracks 1–8, including the option to replace their default SAMPLE instrument with a VA/FM BASS, LEAD or CHORD sound. Settings and project data remain per track and are persisted just as in earlier versions; no new project-file format is needed for this visual reorganization.
+
+Use **SHOW IN SEQUENCER** to jump directly to the currently edited track and automatically display its **TRACKS 1–8** or **TRACKS 9–16** bank. When returning to OPTIONS, the dropdown initially follows whichever track is currently selected in the Sequencer.
+
+**Regression test:** `node --test tests/options-track-selector.test.mjs` checks the sixteen dropdown options, one visible card per category, isolation when editing track 13, and correct current-track selection. Verify appearance and keyboard interactions in Chrome or Edge on a real screen.
 
 ### New in 0.2.86 — sixteen tracks and an eight-lane sequencer bank selector
 
@@ -672,4 +689,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.2.86.**
+**Documentation version: Squirrel Studio Web 0.2.87.**
