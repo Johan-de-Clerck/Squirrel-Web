@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.86 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.87 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1408,6 +1408,41 @@ input[type="password"],textarea,
 .sequencer-track-bank{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
 .sequencer-track-bank select{min-width:135px;padding:7px 10px;border:1px solid #8c674a;
  background:#33271f;color:#efd6b4;border-radius:6px;font:700 11px Consolas,monospace;cursor:pointer}
+
+/* v0.2.87 — One-track Options dashboard: no sixteen repeated cards. */
+#view-options .options-main-head{margin-bottom:12px}
+#view-options .options-track-toolbar{display:flex;align-items:end;flex-wrap:wrap;gap:12px;padding:12px 14px;margin-bottom:14px;background:#30251d;border:1px solid #705036;border-radius:9px}
+#view-options .options-track-selector{display:grid;gap:6px;flex:0 1 310px;min-width:195px}
+#view-options .options-track-selector .field-head{font:700 10px Consolas,monospace;color:#e5bd8e}
+#view-options #optionsTrackSelect{width:100%;min-height:36px;padding:7px 10px;color:#f6d5aa;background:#201914;border:1px solid #96714d;border-radius:6px;font:700 12px Consolas,monospace}
+#view-options .options-track-description{flex:1 1 210px;min-width:0;padding-bottom:8px;color:#c4a585;font:11px/1.4 Consolas,monospace}
+#view-options #optionsShowTrack{min-height:36px;white-space:nowrap}
+#view-options .options-section{min-width:0;border:1px solid #614b38;border-radius:9px;background:#2a211b;padding:12px 13px;margin:0}
+#view-options .options-section>h3{margin:0 0 10px;color:#eac396;font-size:12px;letter-spacing:.04em}
+#view-options .options-track-dashboard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-top:13px;align-items:start}
+#view-options .options-track-dashboard .options-section:first-child{grid-row:span 2}
+#view-options .options-slots,#view-options .groove-track-list,#view-options .midi-track-list{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+#view-options .track-kind-card,#view-options .groove-track-row,#view-options .midi-track-row{border:0;background:transparent;padding:0;min-width:0;box-shadow:none}
+#view-options .groove-track-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+#view-options .groove-track-row>strong{grid-column:1/-1;color:#ddb78d}
+#view-options .midi-track-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+#view-options .midi-track-row>strong{grid-column:1/-1}
+#view-options .midi-track-row select{max-width:none}
+#view-options .midi-mode-help{margin:10px 0 0}
+#view-options .options-patterns{display:grid;grid-template-columns:minmax(0,1fr) minmax(210px,.45fr);gap:10px}
+#view-options .options-pattern-select{min-width:0;margin:0}
+#view-options .option-pattern{min-width:0;padding:10px 12px}
+#view-options .options-track-dashboard select,#view-options .options-section input{max-width:100%;min-width:0}
+@media(max-width:1100px){
+ #view-options .options-track-dashboard{grid-template-columns:1fr}
+ #view-options .options-track-dashboard .options-section:first-child{grid-row:auto}
+ #view-options .options-patterns{grid-template-columns:1fr}
+}
+@media(max-width:650px){
+ #view-options .options-track-toolbar{align-items:stretch}
+ #view-options #optionsShowTrack{width:100%}
+ #view-options .groove-track-row{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -1511,7 +1546,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.86</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.87</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span><label class="transport-song-switch" for="songEnable" title="Play the Song Mode arrangement instead of looping a single pattern"><input type="checkbox" id="songEnable" aria-label="Enable Song Mode"> ENABLE SONG MODE</label></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label" id="bpmPatternLabel">BPM · A1</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1562,27 +1597,35 @@ input[type="password"],textarea,
 <div class="song-mode-grid"><section class="song-browser"><h3 class="song-subtitle">PATTERN LIBRARY</h3><div id="songPalette" class="song-palette"></div></section>
 <section class="song-builder"><h3 class="song-subtitle">SONG ARRANGEMENT</h3><div id="songSequence" class="song-sequence" aria-label="Song pattern sequence"></div></section></div><p class="song-hint">Click a song tile to cue its playback position. Double-click to start there. Drag to reorder; arrow, + and × buttons edit the arrangement.</p></section></div>
 <div id="view-sound" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Synth engine</h2></div><div class="right-buttons"><span class="pill" id="soundTrackLabel">BASS</span><label class="sq-synth-track-switch"><span>SYNTH TRACK</span><select id="soundTrackSelect" aria-label="Choose synth track"></select></label><label class="sq-engine-switch"><span>ENGINE</span><select id="soundEngineSelect" aria-label="Synthesis engine"><option value="va">VA SYNTH</option><option value="fm">FM SYNTH</option></select></label><button class="btn" id="soundAuditionBtn">♪ PREVIEW C3</button></div></div><div class="synth-presets" id="synthPresetBar"><span class="field-head">SYNTH PRESET LIBRARY</span><select id="synthPresetSelect" aria-label="Saved VA and FM synth presets"></select><button type="button" class="mini-btn" id="synthPresetLoad">LOAD</button><button type="button" class="mini-btn" id="synthPresetSave">SAVE AS</button><button type="button" class="mini-btn" id="synthPresetRename">RENAME</button><button type="button" class="mini-btn" id="synthPresetDelete">DELETE</button><button type="button" class="mini-btn" id="synthPresetExport">EXPORT</button><button type="button" class="mini-btn" id="synthPresetImport">IMPORT</button><input type="file" id="synthPresetFile" accept=".json,application/json" hidden></div><div class="wave-viz" id="waveViz" aria-label="Oscillator visualization"></div><div class="control-grid" id="soundControls"></div><div class="preview"><div><div class="tag">LIVE KEYBOARD</div></div><div class="preview-keys" id="previewKeys"></div></div></section></div>
-      <div id="view-mixer" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Eight-track mixer</h2></div><button class="mini-btn" id="resetMixerBtn">RESET MIXER</button></div><div class="mixer" id="mixerStrips"></div></section></div>
+      <div id="view-mixer" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">16-track mixer</h2></div><button class="mini-btn" id="resetMixerBtn">RESET MIXER</button></div><div class="mixer" id="mixerStrips"></div></section></div>
       <div id="view-mod" class="hidden"><div class="mod-layout"><section class="panel"><div class="panel-head"><h2 class="section-title">LFO modulation</h2><span class="pill">4 LFO's</span></div><div class="lfo-grid" id="lfoGrid"></div></section><section class="panel"><div class="panel-head"><h2 class="section-title">Filter envelopes</h2><span class="pill">2 ADSR</span></div><div id="envelopeGrid" class="envelope-grid"></div></section></div></div>
       <div id="view-drum" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Drum samples</h2><div class="sample-bank-tools"><button class="mini-btn" id="drumExportBank" type="button">↓ EXPORT BANK</button><button class="mini-btn" id="drumImportBank" type="button">↑ IMPORT BANK</button><span class="pill">5 SLOTS / DRUM TRACK</span></div></div>
 <div class="drum-panel-top"><label class="field"><span class="field-head">DRUM TRACK</span><select id="drumTrackSelect" aria-label="Select drum track"></select></label><label class="field"><span class="field-head">DRUM SLOT</span><select id="drumSlotSelect" aria-label="Select one of five drum slots"></select></label><span class="pill" id="drumSlotSummary">1 / 5 SELECTED</span><span class="pill">15 SHARED SAMPLES</span></div>
 <div id="drumSlotList" class="drum-slot-list" aria-label="Selected drum slot editor"></div>
 <input id="drumSampleFileInput" type="file" accept="audio/*,.wav,.wave,.aiff,.aif,.mp3,.ogg" class="hidden"></section></div>
-<div id="view-sample" class="hidden"><section class="panel sample-editor-panel"><div class="panel-head"><h2 class="section-title">Waveform sample editor</h2><span class="pill">8 FLEXIBLE TRACKS</span></div><div class="sample-editor-top"><label class="field"><span class="field-head">SAMPLE / DRUM SLOT</span><select id="sampleEditTrack"><option value="6">07 · SAMPLER</option><option value="7">08 · SAMPLER</option></select></label><button class="btn" id="sampleEditorLoad">↑ LOAD WAV</button><button class="mini-btn hidden" id="sampleEditorLibrary" type="button">♬ DRUM LIBRARY</button><button class="btn" id="sampleEditorPreview">▶ AUDITION</button><span id="sampleEditorFile" class="sample-filename">NO SAMPLE</span><span id="samplePlayStatus" class="sample-play-status" aria-live="off">POS —</span></div><div class="sample-wave-toolbar" role="group" aria-label="Waveform zoom and navigation">
+<div id="view-sample" class="hidden"><section class="panel sample-editor-panel"><div class="panel-head"><h2 class="section-title">Waveform sample editor</h2><span class="pill">16 FLEXIBLE TRACKS</span></div><div class="sample-editor-top"><label class="field"><span class="field-head">SAMPLE / DRUM SLOT</span><select id="sampleEditTrack"><option value="6">07 · SAMPLER</option><option value="7">08 · SAMPLER</option></select></label><button class="btn" id="sampleEditorLoad">↑ LOAD WAV</button><button class="mini-btn hidden" id="sampleEditorLibrary" type="button">♬ DRUM LIBRARY</button><button class="btn" id="sampleEditorPreview">▶ AUDITION</button><span id="sampleEditorFile" class="sample-filename">NO SAMPLE</span><span id="samplePlayStatus" class="sample-play-status" aria-live="off">POS —</span></div><div class="sample-wave-toolbar" role="group" aria-label="Waveform zoom and navigation">
  <label class="sample-wave-zoom-label">ZOOM <input id="sampleWaveZoom" type="range" min="0" max="1200" step="1" value="0" aria-label="Continuous waveform zoom from 1x to 4096x"><output id="sampleWaveZoomValue">1.00×</output></label>
  <label class="sample-wave-pan-label">POSITION <input id="sampleWavePan" type="range" min="0" max="1000000" step="1" value="0" aria-label="Waveform horizontal position"></label>
  <button class="mini-btn" type="button" id="sampleWaveFit">FIT</button>
  <span class="sample-wave-mouse-hint">WHEEL: ZOOM · MIDDLE-DRAG: PAN</span>
  <output id="sampleWaveRange" class="sample-wave-time" aria-live="off">FULL WAVEFORM</output>
 </div><div class="waveform-wrap"><canvas id="sampleWaveCanvas" width="1200" height="230" aria-label="Waveform: continuous mouse wheel zoom up to 4096x, middle-button drag pans, left-button drag moves START, END and LOOP markers"></canvas><div class="sample-wave-legend"><span>START</span><span>LOOP START</span><span>LOOP END</span><span>END</span><span style="color:#b2f1ce">◆ PLAYHEAD</span></div></div><div id="sampleEditControls" class="sample-editor-controls"></div><input id="sampleEditorFileInput" type="file" accept=".wav,.wave,.mp3,.ogg,.aiff,.aif,audio/*" class="hidden"></section></div>
-      <div id="view-send" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Track effects · Delay / Reverb / Chorus / Distortion</h2><span class="pill">8 TRACKS</span></div><div class="sends-grid" id="sendsGrid"></div><div class="send-global" id="sendGlobal"></div></section></div>
-      <div id="view-options" class="hidden"><section class="panel options-panel"><div class="panel-head"><h2 class="section-title">Pattern options</h2><span class="pill">MAX 32 STEPS</span></div><div id="optionsPatterns" class="options-patterns"></div>
-        <div class="options-slots-head"><h3>TRACK INSTRUMENT TYPES</h3><span class="pill">ANY TRACK · ANY INSTRUMENT</span></div>
-        <div id="optionsSlots" class="options-slots"></div><div class="options-demo"><h3>GROOVE &amp; HUMANIZE PER TRACK</h3><div id="optionsGrooveTracks" class="groove-track-list"></div></div>
-<div class="options-demo midi-track-panel"><h3>TRACK AUDIO / MIDI OUTPUT</h3>
-<div class="midi-track-list" id="optionsMidiTracks"></div>
-<p class="midi-mode-help">MIDI-only tracks do not make internal sound. Connect a MIDI output and switch MIDI OUT ON in MIDI &amp; AUDIO to hear them.</p>
-</div>
+      <div id="view-send" class="hidden"><section class="panel"><div class="panel-head"><h2 class="section-title">Track effects · Delay / Reverb / Chorus / Distortion</h2><span class="pill">16 TRACKS</span></div><div class="sends-grid" id="sendsGrid"></div><div class="send-global" id="sendGlobal"></div></section></div>
+      <div id="view-options" class="hidden"><section class="panel options-panel">
+ <div class="panel-head options-main-head"><h2 class="section-title">Options</h2><span class="pill">16 TRACKS · MAX 32 STEPS</span></div>
+ <div class="options-track-toolbar">
+  <label for="optionsTrackSelect" class="options-track-selector"><span class="field-head">EDIT TRACK</span><select id="optionsTrackSelect" aria-label="Choose track to edit in Options"></select></label>
+  <span id="optionsTrackDescription" class="options-track-description">Select a track to configure its instrument, groove and output.</span>
+  <button id="optionsShowTrack" type="button" class="mini-btn">SHOW IN SEQUENCER</button>
+ </div>
+ <section class="options-section" aria-labelledby="optionsPatternHeading"><h3 id="optionsPatternHeading">PATTERN &amp; STEP LENGTH</h3><div id="optionsPatterns" class="options-patterns"></div></section>
+ <div class="options-track-dashboard">
+  <section class="options-section" aria-labelledby="optionsInstrumentHeading"><h3 id="optionsInstrumentHeading">INSTRUMENT</h3><div id="optionsSlots" class="options-slots"></div></section>
+  <section class="options-section" aria-labelledby="optionsGrooveHeading"><h3 id="optionsGrooveHeading">GROOVE &amp; HUMANIZE</h3><div id="optionsGrooveTracks" class="groove-track-list"></div></section>
+  <section class="options-section" aria-labelledby="optionsMidiHeading"><h3 id="optionsMidiHeading">AUDIO / MIDI OUTPUT</h3><div class="midi-track-list" id="optionsMidiTracks"></div>
+   <p class="midi-mode-help">MIDI-only tracks do not make internal sound. Select a MIDI output and switch MIDI OUT ON under MIDI / AUDIO.</p>
+  </section>
+ </div>
 <div class="file-legacy-actions" hidden><button type="button" id="exportSampleBankBtn">EXPORT SAMPLE BANK</button><button type="button" id="importSampleBankBtn">IMPORT SAMPLE BANK</button><input type="file" id="sampleBankFileInput" accept=".json,.sqsamples,application/json"></div>
 <div class="options-demo">
  <h3>DEMO SONG</h3>
@@ -1591,13 +1634,13 @@ input[type="password"],textarea,
 </div>
 <div class="file-legacy-actions" hidden><button type="button" id="newSongBtn">NEW SONG</button></div></section></div>
       <div id="view-setup" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">MIDI & audio</h2></div></div>
-        <div class="setting-cols"><div class="setup-box"><h3>USB MIDI input</h3><select id="midiInput"><option value="">No MIDI input selected</option></select><div class="setup-actions"><button class="btn primary" id="connectMidiBtn">CONNECT MIDI</button><button class="mini-btn" id="refreshMidiBtn">REFRESH</button></div><div style="height:14px"></div><label class="field"><span class="field-head"><span>MIDI ROUTING</span></span><select id="midiRouting"><option value="selected">All channels → selected track</option><option value="channels">Per MIDI channel (CH 1–8)</option></select></label></div>
+        <div class="setting-cols"><div class="setup-box"><h3>USB MIDI input</h3><select id="midiInput"><option value="">No MIDI input selected</option></select><div class="setup-actions"><button class="btn primary" id="connectMidiBtn">CONNECT MIDI</button><button class="mini-btn" id="refreshMidiBtn">REFRESH</button></div><div style="height:14px"></div><label class="field"><span class="field-head"><span>MIDI ROUTING</span></span><select id="midiRouting"><option value="selected">All channels → selected track</option><option value="channels">Per MIDI channel (CH 1–16)</option></select></label></div>
         <div class="setup-box"><h3>MIDI output</h3>
           <select id="midiOutput"><option value="">No MIDI output selected</option></select>
           <div class="setup-actions"><button class="btn" id="midiOutEnableBtn" aria-pressed="false">MIDI OUT OFF</button><button class="mini-btn" id="midiPanicBtn">ALL NOTES OFF</button></div>
           <div class="control-grid midi-out-controls">
-            <label class="field"><span class="field-head">TRACK TO MIDI OUT</span><select id="midiOutTrack"><option value="selected">Selected track</option><option value="all">All 8 tracks</option></select></label>
-            <label class="field"><span class="field-head">MIDI CHANNEL</span><select id="midiOutChannel"><option value="track">CH 1–8 (per track)</option></select></label>
+            <label class="field"><span class="field-head">TRACK TO MIDI OUT</span><select id="midiOutTrack"><option value="selected">Selected track</option><option value="all">All 16 tracks</option></select></label>
+            <label class="field"><span class="field-head">MIDI CHANNEL</span><select id="midiOutChannel"><option value="track">CH 1–16 (per track)</option></select></label>
           </div><div class="midi-out-indicator" id="midiOutStatus">MIDI OUT OFF</div></div>
         <div class="setup-box"><h3>Audio output</h3><select id="audioOutput"><option value="default">Default audio output (Windows)</option></select><div class="setup-actions"><button class="btn primary" id="applyOutputBtn">SET OUTPUT</button><button class="mini-btn" id="refreshAudioBtn">REFRESH DEVICES</button><button class="mini-btn" id="chooseOutputBtn">CHOOSE DEVICE…</button></div><p id="outputHelp" class="hidden" aria-hidden="true"></p><div class="midi-out-indicator">WEB AUDIO / WINDOWS AUDIO · ASIO NOT AVAILABLE IN BROWSER</div></div></div>
         <div class="file-legacy-actions" hidden><button id="saveBtn">SAVE</button><button id="loadBtn">LOAD</button><button id="demoBtn">RESTORE DEMO</button><input type="file" id="loadFile" accept=".json,application/json"></div>
@@ -1608,7 +1651,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.86';
+const SQUIRREL_VERSION='0.2.87';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -6754,11 +6797,11 @@ function newSong(){
   for(const [key,voices] of activeLive){for(const voice of voices)if(!voice.drum)releaseVoice(voice,audio?.ctx.currentTime||0)}
   activeLive.clear();keyboardDown.clear();keyboardAssignments.clear();
   sampleSession++;sampleBuffers.clear();for(let i=0;i<TRACK_COUNT;i++)removeStoredSample(i);
-  state=fresh(false);drumSampleBuffers.clear();drumLibraryBuffers.clear();clearDrumSamplesStorage();songPosition=0;songCuePosition=0;visibleSongPosition=0; // eight tracks, sixteen blank patterns
+  state=fresh(false);drumSampleBuffers.clear();drumLibraryBuffers.clear();clearDrumSamplesStorage();songPosition=0;songCuePosition=0;visibleSongPosition=0; // sixteen tracks, thirty-two blank patterns
   clipboard=null;stepClipboard=null;clearStepRange();fxEditMode=false;fxDigitBuffer='';
   if(audio){applyTrackMix();updateSendEngine();applyLFOs()}
   persist();resetUndoHistory();switchView('seq');renderAll();focusSelectedPad(false);
-  notify('New blank song created — 120 BPM, 32 steps, 8 tracks.');
+  notify('New blank song created — 120 BPM, 32 steps, 16 tracks.');
 }
 
 function setTrackMidiMode(index,enabled){
@@ -6782,47 +6825,72 @@ function setTrackMidiChannel(index,channel){
  syncMidiMixerChannel(index);
  persist();renderAll();
 }
+// Options has one independent track selector. Changing it never changes the
+// sequencer's selected track, pattern, sample or playhead until SHOW is used.
+let optionsTrackIndex=null;
+function getOptionsTrackIndex(){
+ const value=Number(optionsTrackIndex);
+ if(optionsTrackIndex===null||!Number.isInteger(value)||value<0||value>=TRACK_COUNT)
+  optionsTrackIndex=clamp(Number(state.selectedTrack)||0,0,TRACK_COUNT-1);
+ return optionsTrackIndex;
+}
+function updateOptionsTrackSelect(){
+ const select=$('optionsTrackSelect'),selected=getOptionsTrackIndex();
+ const desired=state.tracks.map((track,i)=>({
+  id:String(i),text:String(i+1).padStart(2,'0')+' · '+track.name+' · '+kindOf(track).toUpperCase()
+ }));
+ const changed=select.options.length!==desired.length||desired.some((item,i)=>
+  select.options[i].value!==item.id||select.options[i].text!==item.text);
+ // Keep a native dropdown open through unrelated UI refreshes.
+ if(changed&&document.activeElement!==select)
+  select.replaceChildren(...desired.map(item=>new Option(item.text,item.id)));
+ if(document.activeElement!==select&&select.value!==String(selected))select.value=String(selected);
+ const track=state.tracks[selected];
+ $('optionsTrackDescription').textContent='TRACK '+String(selected+1).padStart(2,'0')+
+  ' · '+kindOf(track).toUpperCase()+
+  (track.midiOnly?' · MIDI OUT ONLY':' · INTERNAL AUDIO')+
+  ' · '+trackLength(state.pattern,selected)+' STEPS';
+}
 function renderMidiTrackOptions(){
  const container=$('optionsMidiTracks');
  container.replaceChildren();
- state.tracks.forEach((track,index)=>{
-  const row=document.createElement('div');row.className='midi-track-row';
-  const title=document.createElement('strong');title.textContent=String(index+1).padStart(2,'0')+' · '+track.name;
-  const mode=document.createElement('select');
-  mode.setAttribute('aria-label','Output mode for track '+(index+1));
-  mode.add(new Option('INTERNAL AUDIO','audio'));
-  mode.add(new Option('MIDI OUT ONLY','midi'));
-  mode.value=track.midiOnly?'midi':'audio';
-  const channel=document.createElement('select');
-  channel.setAttribute('aria-label','MIDI output channel for track '+(index+1));
-  for(let ch=1;ch<=16;ch++)channel.add(new Option('CH '+ch,String(ch-1)));
-  channel.value=String(track.midiChannel??index);
-  channel.disabled=!track.midiOnly;
-  const setMode=()=>setTrackMidiMode(index,mode.value==='midi');
-  mode.onchange=setMode;
-  channel.onchange=()=>setTrackMidiChannel(index,channel.value);
-  row.append(title,mode,channel);
-  container.appendChild(row);
- });
+ const index=getOptionsTrackIndex(),track=state.tracks[index];
+ const row=document.createElement('div');row.className='midi-track-row';
+ const title=document.createElement('strong');title.textContent=String(index+1).padStart(2,'0')+' · '+track.name;
+ const mode=document.createElement('select');
+ mode.setAttribute('aria-label','Output mode for track '+(index+1));
+ mode.add(new Option('INTERNAL AUDIO','audio'));
+ mode.add(new Option('MIDI OUT ONLY','midi'));
+ mode.value=track.midiOnly?'midi':'audio';
+ const channel=document.createElement('select');
+ channel.setAttribute('aria-label','MIDI output channel for track '+(index+1));
+ for(let ch=1;ch<=16;ch++)channel.add(new Option('CH '+ch,String(ch-1)));
+ channel.value=String(track.midiChannel??index);
+ channel.disabled=!track.midiOnly;
+ mode.onchange=()=>setTrackMidiMode(index,mode.value==='midi');
+ channel.onchange=()=>setTrackMidiChannel(index,channel.value);
+ row.append(title,mode,channel);container.append(row);
 }
 function renderOptions(){
+ updateOptionsTrackSelect();
+ const index=getOptionsTrackIndex(),track=state.tracks[index];
  renderMidiTrackOptions();
  const groove=$('optionsGrooveTracks');groove.replaceChildren();
- state.tracks.forEach((track,i)=>{
-  const row=document.createElement('div');row.className='groove-track-row';
-  const name=document.createElement('strong');name.textContent=(i+1)+' · '+track.name;row.append(name);
-  for(const [key,caption,max] of [['trackSwing','SWING',60],['velocityHumanize','VELOCITY ±',30]]){
-   const label=document.createElement('label'),output=document.createElement('output'),input=document.createElement('input');
-   input.type='range';input.min=0;input.max=max;input.step=1;
-   input.value=clamp(Number(track[key]??0),0,max);
-   output.textContent=caption+' '+input.value+'%';
-   input.setAttribute('aria-label',track.name+' '+caption);
-   input.oninput=()=>{track[key]=Number(input.value);output.textContent=caption+' '+input.value+'%';persist()};
-   label.append(output,input);row.append(label);
-  }
-  groove.append(row);
- });
- const slots=$('optionsSlots');slots.replaceChildren();state.tracks.forEach((_,i)=>slots.append(slotSelect(i)));
+ const row=document.createElement('div');row.className='groove-track-row';
+ const name=document.createElement('strong');
+ name.textContent=String(index+1).padStart(2,'0')+' · '+track.name;
+ row.append(name);
+ for(const [key,caption,max] of [['trackSwing','SWING',60],['velocityHumanize','VELOCITY ±',30]]){
+  const label=document.createElement('label'),output=document.createElement('output'),input=document.createElement('input');
+  input.type='range';input.min=0;input.max=max;input.step=1;
+  input.value=clamp(Number(track[key]??0),0,max);
+  output.textContent=caption+' '+input.value+'%';
+  input.setAttribute('aria-label',track.name+' '+caption);
+  input.oninput=()=>{track[key]=Number(input.value);output.textContent=caption+' '+input.value+'%';persist()};
+  label.append(output,input);row.append(label);
+ }
+ groove.append(row);
+ const slots=$('optionsSlots');slots.replaceChildren(slotSelect(index));
  const grid=$('optionsPatterns');grid.replaceChildren();
  const selectRow=document.createElement('label');selectRow.className='options-pattern-select';
  const caption=document.createElement('strong');caption.textContent='PATTERN';
@@ -6833,7 +6901,9 @@ function renderOptions(){
  groupChooser.value=String(Math.floor(state.pattern/PATTERNS_PER_GROUP));updateChooser();
  groupChooser.onchange=()=>choosePattern(patternIndex(Number(groupChooser.value),0));
  chooser.onchange=()=>choosePattern(patternIndex(Number(groupChooser.value),Number(chooser.value)));
- const renamer=document.createElement('input');renamer.type='text';renamer.className='options-pattern-rename';renamer.maxLength=24;renamer.spellcheck=false;renamer.value=patternName(state.pattern);renamer.setAttribute('aria-label','Pattern name');renamer.onchange=()=>setPatternName(state.pattern,renamer.value);renamer.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();renamer.blur()}};
+ const renamer=document.createElement('input');renamer.type='text';renamer.className='options-pattern-rename';renamer.maxLength=24;renamer.spellcheck=false;renamer.value=patternName(state.pattern);renamer.setAttribute('aria-label','Pattern name');
+ renamer.onchange=()=>setPatternName(state.pattern,renamer.value);
+ renamer.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();renamer.blur()}};
  const nameLabel=document.createElement('strong');nameLabel.textContent='NAME';
  const tempoCaption=document.createElement('strong');tempoCaption.textContent='BPM';
  const tempoInput=document.createElement('input');tempoInput.type='number';tempoInput.className='options-pattern-bpm';
@@ -6841,15 +6911,15 @@ function renderOptions(){
  tempoInput.setAttribute('aria-label','BPM for '+patternName(state.pattern));
  tempoInput.onchange=()=>setPatternBpm(state.pattern,tempoInput.value);
  selectRow.append(caption,groupChooser,chooser,nameLabel,renamer,tempoCaption,tempoInput);grid.append(selectRow);
- state.tracks.forEach((track,t)=>{
-  const row=document.createElement('label');row.className='option-pattern'+(state.selectedTrack===t?' current':'');
-  const label=document.createElement('strong');label.textContent=String(t+1).padStart(2,'0')+' · '+track.name;
-  const select=document.createElement('select');select.setAttribute('aria-label',track.name+' step length');
-  for(let count=1;count<=MAX_STEPS;count++)select.add(new Option(count+' STEPS',String(count)));
-  select.value=String(trackLength(state.pattern,t));
-  select.onchange=()=>setTrackLength(state.pattern,t,select.value);
-  row.append(label,select);grid.append(row);
- });
+ const lenRow=document.createElement('label');lenRow.className='option-pattern current';
+ const lenLabel=document.createElement('strong');
+ lenLabel.textContent='TRACK '+String(index+1).padStart(2,'0')+' LENGTH';
+ const lenSelect=document.createElement('select');
+ lenSelect.setAttribute('aria-label','Step length for track '+(index+1)+' in '+patternName(state.pattern));
+ for(let count=1;count<=MAX_STEPS;count++)lenSelect.add(new Option(count+' STEPS',String(count)));
+ lenSelect.value=String(trackLength(state.pattern,index));
+ lenSelect.onchange=()=>setTrackLength(state.pattern,index,lenSelect.value);
+ lenRow.append(lenLabel,lenSelect);grid.append(selectRow,lenRow);
 }
 function choosePattern(index){
  stopEnterPreview();stopAllEditNotePreviews();
@@ -9116,6 +9186,14 @@ function bindings(){
  bindPatternBounceSelection();
  syncPatternBounceOptions();updatePatternBouncePreviewUI();
  $('trackBankSelect').onchange=()=>changeTrackBank($('trackBankSelect').value);
+ $('optionsTrackSelect').onchange=()=>{
+  optionsTrackIndex=clamp(Number($('optionsTrackSelect').value)||0,0,TRACK_COUNT-1);
+  renderOptions();
+ };
+ $('optionsShowTrack').onclick=()=>{
+  const index=getOptionsTrackIndex();
+  selectTrack(index);switchView('seq');focusSelectedPad(false);
+ };
  $('saveBtn').onclick=saveProject;$('loadBtn').onclick=()=>$('loadFile').click();
  $('loadFile').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
