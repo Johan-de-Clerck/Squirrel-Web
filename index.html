@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.91 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.92 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1409,7 +1409,7 @@ input[type="password"],textarea,
 .sequencer-track-bank select{min-width:135px;padding:7px 10px;border:1px solid #8c674a;
  background:#33271f;color:#efd6b4;border-radius:6px;font:700 11px Consolas,monospace;cursor:pointer}
 
-/* v0.2.91 — One-track Options dashboard: no sixteen repeated cards. */
+/* v0.2.92 — One-track Options dashboard: no sixteen repeated cards. */
 #view-options .options-main-head{margin-bottom:12px}
 #view-options .options-track-toolbar{display:flex;align-items:end;flex-wrap:wrap;gap:12px;padding:12px 14px;margin-bottom:14px;background:#30251d;border:1px solid #705036;border-radius:9px}
 #view-options .options-track-selector{display:grid;gap:6px;flex:0 1 310px;min-width:195px}
@@ -1546,7 +1546,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.91</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.92</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span><label class="transport-song-switch" for="songEnable" title="Play the Song Mode arrangement instead of looping a single pattern"><input type="checkbox" id="songEnable" aria-label="Enable Song Mode"> ENABLE SONG MODE</label></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label" id="bpmPatternLabel">BPM · A1</span><input class="numeric" id="bpmInput" type="number" min="10" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1651,7 +1651,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.91';
+const SQUIRREL_VERSION='0.2.92';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -8522,42 +8522,45 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  // per-step gate for them: live playback does not.
  const exportTimeline=[];
  let exportCursor=0;
- for(let patternPosition=0;patternPosition<sequence.length;patternPosition++){
-  const pattern=sequence[patternPosition],stepSeconds=stepSecondsForPattern(pattern);
-  for(let stepIndex=0;stepIndex<patternLength(pattern);stepIndex++){
-   const fired=Array(TRACK_COUNT).fill(false);
-   for(let t=0;t<TRACK_COUNT;t++){
-    if(!audible(t))continue;
-    const step=state.patterns[pattern]?.[t]?.[stepIndex%trackLength(pattern,t)];
-    if(step?.on&&step.fx!==12)
-     fired[t]=(stemHash(exportSeed,patternPosition,stepIndex,t)/4294967296)*100<
-      clamp(Number(step.chance??100),0,100);
+ const patternStartTimes=[];
+ for(let position=0;position<sequence.length;position++){
+  const pattern=sequence[position],start=exportCursor,patternDuration=patternPlaybackDuration(pattern);
+  patternStartTimes.push(start);
+  for(let t=0;t<TRACK_COUNT;t++){
+   if(!audible(t))continue;
+   const len=trackLength(pattern,t);
+   const stepSeconds=stepSecondsForPattern(pattern)/trackTempoRatio(pattern,t);
+   let when=start,seqStep=0;
+   while(when<start+patternDuration-1e-8&&seqStep<16384){
+    const stepIndex=seqStep%len;
+    const step=state.patterns[pattern]?.[t]?.[stepIndex];
+    const fired=!!(step?.on&&step.fx!==12&&
+     (stemHash(exportSeed,position,seqStep,t)/4294967296)*100<clamp(Number(step.chance??100),0,100));
+    exportTimeline.push({pattern,patternPosition:position,t,stepIndex,seqStep,at:when,stepSeconds,fired});
+    when+=stepSeconds*(seqStep%2===0?1+swingAmount:1-swingAmount);
+    seqStep++;
    }
-   exportTimeline.push({pattern,patternPosition,stepIndex,at:exportCursor,stepSeconds,fired});
-   exportCursor+=stepSeconds*(stepIndex%2===0?1+swingAmount:1-swingAmount);
   }
+  exportCursor+=patternDuration;
  }
- // Tempo-synced LFOs also change at the exact song pattern boundary.
- for(const row of exportTimeline)if(row.stepIndex===0){
+ exportTimeline.sort((a,b)=>a.at-b.at||a.patternPosition-b.patternPosition||a.t-b.t);
+ // LFO tempo changes occur on exact pattern boundaries, not on the
+ // first audible step of any particular track.
+ for(let position=0;position<sequence.length;position++)
   for(const node of lfoNodes)if(node.lfo.sync!=='free')
-   node.oscillator.frequency.setValueAtTime(lfoFrequency(node.lfo,patternBpm(row.pattern)),row.at);
- }
+   node.oscillator.frequency.setValueAtTime(lfoFrequency(node.lfo,patternBpm(sequence[position])),patternStartTimes[position]);
  const endOfNotes=exportCursor;
- const synthStopAt=(rowIndex,trackIndex)=>{
-  // Match live BASS / LEAD / CHORD carry on D00 or the step checkbox.
-  // Once armed, ordinary track/pattern wraps no longer release the note.
-  // A new fired note or C00 always ends it, even at a pattern boundary.
-  const trigger=exportTimeline[rowIndex],initialLength=trackLength(trigger.pattern,trackIndex);
-  const initial=state.patterns[trigger.pattern]?.[trackIndex]?.[trigger.stepIndex%initialLength];
-  let carrying=stepContinuesSample(initial);
+ const synthStopAt=(rowIndex,t)=>{
+  const first=exportTimeline[rowIndex];
+  const initial=state.patterns[first.pattern]?.[t]?.[first.stepIndex];
+  let carry=stepContinuesSample(initial);
   for(let i=rowIndex+1;i<exportTimeline.length;i++){
    const row=exportTimeline[i];
-   const laneLength=trackLength(row.pattern,trackIndex);
-   const rowStep=state.patterns[row.pattern]?.[trackIndex]?.[row.stepIndex%laneLength];
-   if(row.stepIndex%laneLength===0&&!carrying)return row.at;
-   if(rowStep?.fx===12||row.fired[trackIndex])return row.at;
-   // D00 on a later empty step can arm an already sustained synth.
-   if(!rowStep?.on&&stepContinuesSample(rowStep))carrying=true;
+   if(row.t!==t)continue;
+   const step=state.patterns[row.pattern]?.[t]?.[row.stepIndex];
+   if(row.stepIndex===0&&!carry)return row.at;
+   if(step?.fx===12||row.fired)return row.at;
+   if(!step?.on&&stepContinuesSample(step))carry=true;
   }
   return endOfNotes;
  };
@@ -8837,58 +8840,49 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
    }
   }
  };
- let cursor=0,rowIndex=0;
  const carriedAtBoundary=Array(TRACK_COUNT).fill(false);
- // The preview bypasses the pattern timeline and schedules exactly one synth
- // through the shared VA/FM4/FM2/FX/ADSR offline voice.
  if(previewSynth){
   addVoice(requestedTrack,{note:previewSynth.note,velocity:127,gate:100},0,
    previewSynth.holdSeconds,previewSynth.note,127,true);
  }
- // Each voice owns its carry flag, allowing independent overlapping drum slots.
- for(const [patternPosition,pattern] of sequence.entries()){
-  const count=patternLength(pattern);
-  if(patternPosition>0){
-   const previousPattern=sequence[patternPosition-1];
-   for(let t=0;t<TRACK_COUNT;t++){
-    const previousLane=state.patterns[previousPattern]?.[t];
-    const lastIndex=(patternLength(previousPattern)-1)%trackLength(previousPattern,t);
-    const lastStep=previousLane?.[lastIndex];
-    const boundaryTime=cursor;
-    if(!(isSample(t)||isDrum(t)))continue;
-    if(isDrum(t))expireExportDrumGates(t,boundaryTime);
-    // D00 on the last row can mark existing voices for continuation.
-    if(stepContinuesSample(lastStep)&&!lastStep?.on)
-     for(const voice of activeExportSamples[t])if(!voice.stopped&&voice.naturalEnd>boundaryTime){
-      voice.carryAcrossPatterns=true;voice.gateAt=Infinity;
-     }
-    carriedAtBoundary[t]=activeExportSamples[t].some(v=>!v.stopped&&v.carryAcrossPatterns&&v.naturalEnd>boundaryTime);
-    stopExportSample(t,boundaryTime,voice=>!voice.carryAcrossPatterns);
-   }
-  }
-  for(let stepIndex=0;stepIndex<count;stepIndex++){
-   const row=exportTimeline[rowIndex];
-   const at=row.at,stepSeconds=row.stepSeconds;
-   for(let t=0;t<TRACK_COUNT;t++){
-    if(!audible(t))continue;
-    const lane=state.patterns[pattern]?.[t];
-    if(!lane?.length)continue;
-    const step=lane[stepIndex%trackLength(pattern,t)];
-    if(!step)continue;
-    // Live playback releases non-carried samples on every TRACK wrap,
-    // including shorter tracks (e.g. 16 steps inside a 32-step pattern).
-    // Song-pattern boundaries are already handled above before this row.
-    if(stepIndex%trackLength(pattern,t)===0){
-     exportFXRows[t]=blankFxRuntime();
-     if(stepIndex>0&&(isSample(t)||isDrum(t)))
-      stopExportSample(t,at,voice=>!voice.carryAcrossPatterns);
+ let previousPatternPosition=-1;
+ for(const [rowIndex,row] of exportTimeline.entries()){
+  const {pattern,patternPosition,t,at,stepIndex,stepSeconds}=row;
+  if(patternPosition!==previousPatternPosition){
+   if(previousPatternPosition>=0){
+    const boundaryTime=patternStartTimes[patternPosition];
+    const prior=sequence[previousPatternPosition];
+    for(let trackId=0;trackId<TRACK_COUNT;trackId++){
+     if(!(isSample(trackId)||isDrum(trackId)))continue;
+     if(isDrum(trackId))expireExportDrumGates(trackId,boundaryTime);
+     const prevRows=exportTimeline.filter(x=>x.patternPosition===previousPatternPosition&&x.t===trackId);
+     const lastRow=prevRows[prevRows.length-1];
+     const last=lastRow?state.patterns[prior]?.[trackId]?.[lastRow.stepIndex]:null;
+     if(stepContinuesSample(last)&&!last?.on)
+      for(const voice of activeExportSamples[trackId])if(!voice.stopped&&voice.naturalEnd>boundaryTime){
+       voice.carryAcrossPatterns=true;voice.gateAt=Infinity;
+      }
+     carriedAtBoundary[trackId]=activeExportSamples[trackId].some(v=>!v.stopped&&v.carryAcrossPatterns&&v.naturalEnd>boundaryTime);
+     stopExportSample(trackId,boundaryTime,v=>!v.carryAcrossPatterns);
     }
+   }
+   previousPatternPosition=patternPosition;
+  }
+  const lane=state.patterns[pattern]?.[t];
+  if(!lane?.length)continue;
+  const step=lane[stepIndex];
+  if(!step)continue;
+  if(stepIndex===0){
+   exportFXRows[t]=blankFxRuntime();
+   if(row.seqStep>0&&(isSample(t)||isDrum(t)))
+    stopExportSample(t,at,v=>!v.carryAcrossPatterns);
+  }
     const fxRow=exportFXRows[t];
     if(!state.tracks[t].midiOnly){
      const synthCarried=activeExportSynthFilters[t].some(v=>v.noteOff>at&&v.started<at);
      const sampleCarried=activeExportSamples[t].some(v=>!v.stopped&&v.carryAcrossPatterns&&v.naturalEnd>at);
-     const reset=shouldResetStepMixAtWrap(stepIndex%trackLength(pattern,t)===0,
-      row.fired[t],step.fx===12,synthCarried||sampleCarried);
+     const reset=shouldResetStepMixAtWrap(stepIndex===0,
+      row.fired,step.fx===12,synthCarried||sampleCarried);
      scheduleStepMixLocks(exportStepVolumes[t],exportStepPans[t],synthStepLocks(step),at,reset);
     }
     if(isSynth(t)){
@@ -8915,7 +8909,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
     // An explicit empty row without D00 does not cancel a previous carry request.
     // A new note or C00 below changes that state.
     // The live sequencer applies CHANCE once per step, before any ratchet hits.
-    if(row.fired[t]){
+    if(row.fired){
      // A new note resets pitch/volume while retaining effect memory.
      fxRow.voices=[];fxRow.basePeriod=periodForNote(step.note);
      fxRow.period=fxRow.basePeriod;fxRow.level=64;fxRow.phase=0;fxRow.activeFx=0;
@@ -8937,7 +8931,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
       const renderedStepBase=hits>1&&hit<hits-1&&stepContinuesSample(step)
        ?{...step,continueSample:false,fx:step.fx===13?0:step.fx}
        :step;
-      const renderedStep={...renderedStepBase,velocity:grooveVelocity(step.velocity,state.tracks[t],pattern,t,stepIndex%trackLength(pattern,t))};
+      const renderedStep={...renderedStepBase,velocity:grooveVelocity(step.velocity,state.tracks[t],pattern,t,stepIndex)};
       const instrumentKind=kindOf(state.tracks[t]);
       const holdSynth=isSynth(t)&&hit===hits-1;
       const noteOffTime=holdSynth?synthStopAt(rowIndex,t):hitTime+gateSeconds;
@@ -8967,10 +8961,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
      for(let tick=1;tick<TICKS_PER_STEP;tick++)
       applyExportFXVoice(fxRow.voices,at+tick*stepSeconds/TICKS_PER_STEP,advanceFXTick(fxRow));
     }
-   }
-   cursor+=stepSeconds*(stepIndex%2===0?1+swingAmount:1-swingAmount);
-   rowIndex++;
-  }
+
  }
  // Release remaining sample voices at the exact end of the arrangement.
  // The three-second render tail captures their release and the effect returns.
