@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.79 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.80 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1472,7 +1472,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.79</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.80</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span><label class="transport-song-switch" for="songEnable" title="Play the Song Mode arrangement instead of looping a single pattern"><input type="checkbox" id="songEnable" aria-label="Enable Song Mode"> ENABLE SONG MODE</label></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label" id="bpmPatternLabel">BPM · A1</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1556,7 +1556,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.79';
+const SQUIRREL_VERSION='0.2.80';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -8022,6 +8022,35 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
   else param.setValueAtTime(current,off);
   param.linearRampToValueAtTime(0,off+r);
  }
+ // Match live gainEnv / releaseVoiceScheduled for VA, FM2 and FM4 main
+ // amplitude. Other offline ADSR uses (filter offsets / FM operators)
+ // intentionally keep their own linear envelopes.
+ function exportSynthAmplitude(param,start,noteOff,velocity,sound){
+  const amp=clamp(Number(velocity)/127,0,1);
+  const peak=Math.max(.0002,amp*.5);
+  const attack=Math.max(.003,Number(sound.attack??.01));
+  const decay=Math.max(.01,Number(sound.decay??.2));
+  const sustain=Math.max(.002,clamp(Number(sound.sustain??.6),0,1));
+  const release=Math.max(.02,Number(sound.release??.2));
+  const off=Math.max(start+.001,Math.min(duration,Number.isFinite(noteOff)?noteOff:duration));
+  const attackEnd=start+attack,decayEnd=attackEnd+decay;
+  param.setValueAtTime(.0001,start);
+  if(off>=attackEnd)param.linearRampToValueAtTime(peak,attackEnd);
+  if(off>=decayEnd)param.exponentialRampToValueAtTime(Math.max(.0001,peak*sustain),decayEnd);
+  // For a short gate, schedule only the portion before Note Off;
+  // avoid leaving an Attack/Decay ramp scheduled beyond release.
+  if(off<attackEnd){
+   const current=Math.max(.0002,.0001+(peak-.0001)*(off-start)/attack);
+   param.linearRampToValueAtTime(current,off);
+  }else if(off<decayEnd){
+   // Preserve the exponential live decay rather than a linear WAV ramp.
+   const current=Math.max(.0001,peak*Math.pow(sustain,(off-attackEnd)/decay));
+   param.exponentialRampToValueAtTime(current,off);
+  }else{
+   param.setValueAtTime(Math.max(.0002,peak*sustain),off);
+  }
+  param.exponentialRampToValueAtTime(.0001,off+release);
+ }
  // Live filter modulation uses additive Hz/Q offsets, not a replacement
  // cutoff. Preserve the base filter and any routed LFO modulation.
  function exportFilterEnvelopes(filter,trackIndex,start,noteOff){
@@ -8340,8 +8369,9 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
   const fxVoice={gainParam:fxGain.gain,pitchParams:[],started:time};
   const attack=Math.max(.003,Number(sound.attack??.01)),decay=Math.max(.01,Number(sound.decay??.2)),release=Math.max(.02,Number(sound.release??.2));
   const sustain=clamp(Number(sound.sustain??.6),0,1),peak=vel*.5;
-  // Follow current ADSR level when notes are shorter than attack/decay.
-  exportAdsr(env.gain,time,time+length,peak,attack,decay,sustain,release);
+  // Live VA/FM uses exponential decay/release; keep its main volume
+  // envelope separate from linear FM-operator/filter modulation ADSRs.
+  exportSynthAmplitude(env.gain,time,time+length,vel*127,sound);
   const end=time+length+release+.01;
   exportFilterEnvelopes(filter,i,time,time+length);
   if(sound.engine==='fm'){
