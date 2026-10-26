@@ -26,7 +26,7 @@ function setup(){
  }
  const ids=Object.fromEntries(['optionsTrackSelect','optionsTrackDescription','optionsMidiTracks',
   'optionsGrooveTracks','optionsSlots','optionsPatterns'].map(id=>[id,new Element(id==='optionsTrackSelect'?'select':'div')]));
- const Option=(text,value)=>({text:String(text),value:String(value)});
+ function Option(text,value){this.text=String(text);this.value=String(value)}
  const document={activeElement:null,createElement:tag=>new Element(tag)};
  const state={selectedTrack:3,pattern:0,tracks:Array.from({length:16},(_,i)=>({
    name:'SAMPLE '+(i+1),trackKind:'sample',midiOnly:false,midiChannel:i,
