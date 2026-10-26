@@ -9155,6 +9155,9 @@ function bindings(){
   const v=Number($('microTiming').value);selectedStep().microTiming=v;
   $('microTimingOut').textContent=(v>0?'+':'')+v+'%';persist();
  };
+ $('stepFx2').onchange=()=>{selectedStep().fx2=Number($('stepFx2').value);persist();renderAll();focusSelectedPad(false)};
+ $('fx2Hex').onchange=()=>{const raw=$('fx2Hex').value.trim();if(/^[0-9a-f]{1,2}$/i.test(raw))selectedStep().fx2Amount=parseInt(raw,16);persist();renderAll();focusSelectedPad(false)};
+ $('fxProbability').oninput=()=>{selectedStep().fxProbability=Number($('fxProbability').value);$('fxProbabilityOut').textContent=$('fxProbability').value+'%';persist()};
  $('stepFx').onchange=()=>{const step=selectedStep(),prev=step.fx;step.fx=Number($('stepFx').value);if(step.fx===12){step.fxAmount=0;step.on=false;step.continueSample=false;}else if(step.fx===13){step.fxAmount=0;}else if(step.fx===9&&prev!==9)step.fxAmount=0;else if(step.fx===4&&prev!==4)step.fxAmount=0x47;else if([10,11].includes(step.fx)&&![10,11].includes(prev))step.fxAmount=0x02;else if([1,2].includes(step.fx)&&![1,2].includes(prev))step.fxAmount=0x02;persist();renderAll();focusSelectedPad(false)};
  $('fxAmount').oninput=()=>{const st=selectedStep();st.fxAmount=Number($('fxAmount').value);const label=fxAmountText(st.fx,st.fxAmount);$('fxAmountOut').textContent=st.fx===9?label+'%':label;$('fxHex').value=label;$('fxStatus').textContent=fxCode(st.fx)+label;persist();renderGrid()};
  $('fxHex').oninput=()=>{const raw=$('fxHex').value.trim(),st=selectedStep(),offset=st.fx===9;
