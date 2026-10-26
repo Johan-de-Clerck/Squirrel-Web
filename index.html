@@ -3672,7 +3672,7 @@ function scheduleStepMixLocks(volume,pan,locks,time,wrap=false){
 function clearStepMixLocks(time){
  if(!audio)return;
  for(const v of audio.stepVolumeGains||[]){v.gain.cancelScheduledValues(time);v.gain.setTargetAtTime(1,time,.015)}
- for(const v of audio.stepPans||[]){v.pan.cancelScheduledValues(time);v.pan.setTargetAtTime(0,time,.015)}
+ for(const v of audio.stepPans||[]){v.offset.cancelScheduledValues(time);v.offset.setTargetAtTime(0,time,.015)}
 }
 function applyTrackMix(){for(let i=0;i<TRACK_COUNT;i++)nativeUpdateVAMix(i);if(!audio)return;state.tracks.forEach((t,i)=>{const isOn=!isTrackEffectivelyMuted(i)&&!t.midiOnly;audio.trackGains[i].gain.setTargetAtTime(isOn?(t.volume/100)**1.4:0,audio.ctx.currentTime,.018);audio.trackPans[i].pan.setTargetAtTime(t.pan/100,audio.ctx.currentTime,.02);
  audio.delaySends[i].gain.setTargetAtTime((t.delaySend/100)*SEND_FX_BUS.delaySend,audio.ctx.currentTime,.03);
@@ -3712,13 +3712,13 @@ async function initAudio(){
  const trackStereoMeters=[];
  const trackGains=[],trackModGains=[],trackPans=[],stepVolumeGains=[],stepPans=[],trackMeters=[],delaySends=[],reverbSends=[],chorusSends=[],cutoffBuses=[],distortionStages=[];
  for(let i=0;i<TRACK_COUNT;i++){
-  const volume=ctx.createGain(),lfoVolume=ctx.createGain(),stepVolume=ctx.createGain(),pan=ctx.createStereoPanner(),stepPan=ctx.createStereoPanner(),meter=ctx.createAnalyser(),d=ctx.createGain(),r=ctx.createGain(),chorus=ctx.createGain(),cutoffBus=ctx.createGain();
+  const volume=ctx.createGain(),lfoVolume=ctx.createGain(),stepVolume=ctx.createGain(),pan=ctx.createStereoPanner(),stepPan=ctx.createConstantSource(),meter=ctx.createAnalyser(),d=ctx.createGain(),r=ctx.createGain(),chorus=ctx.createGain(),cutoffBus=ctx.createGain();
    const dry=ctx.createGain(),wet=ctx.createGain(),pre=ctx.createGain(),shape=ctx.createWaveShaper(),post=ctx.createGain();
    shape.curve=distortionCurve;shape.oversample='2x';
    const track=state.tracks[i],distortion=supportsDistortion(i)?clamp(Number(track.distortion??0),0,100)/100:0;
    const isOn=!isTrackEffectivelyMuted(i)&&!track.midiOnly;
    volume.gain.value=isOn?Math.pow(clamp(Number(track.volume??78),0,100)/100,1.4):0;
-   pan.pan.value=clamp(Number(track.pan??0),-100,100)/100;stepPan.pan.value=0;stepVolume.gain.value=1;
+   pan.pan.value=clamp(Number(track.pan??0),-100,100)/100;stepPan.offset.value=0;stepVolume.gain.value=1;
    dry.gain.value=1-distortion;wet.gain.value=distortion;
    pre.gain.value=1+distortion*11;post.gain.value=.8/(1+distortion*.35);
    lfoVolume.gain.value=1;
@@ -3729,14 +3729,14 @@ async function initAudio(){
    meter.fftSize=1024;meter.smoothingTimeConstant=0;
    const meterL=ctx.createAnalyser(),meterR=ctx.createAnalyser(),stereoSplitter=ctx.createChannelSplitter(2);
    meterL.fftSize=meterR.fftSize=1024;meterL.smoothingTimeConstant=meterR.smoothingTimeConstant=0;
-   stepPan.connect(stereoSplitter);stereoSplitter.connect(meterL,0);stereoSplitter.connect(meterR,1);
+   pan.connect(stereoSplitter);stereoSplitter.connect(meterL,0);stereoSplitter.connect(meterR,1);
    meterL.connect(meterSilence);meterR.connect(meterSilence);
    trackStereoMeters.push({left:meterL,right:meterR});
    volume.connect(lfoVolume).connect(stepVolume);stepVolume.connect(dry).connect(pan);
-   stepVolume.connect(pre).connect(shape).connect(post).connect(wet).connect(pan);pan.connect(stepPan);
+   stepVolume.connect(pre).connect(shape).connect(post).connect(wet).connect(pan);stepPan.connect(pan.pan);stepPan.start();
    // The post-fader/post-pan dry signal travels THROUGH this track's analyser.
    // Unlike the master meter, it cannot show audio from other tracks or FX returns.
-   stepPan.connect(meter).connect(compressor);stepPan.connect(d).connect(delayInput);stepPan.connect(r).connect(reverb);stepPan.connect(chorus).connect(chorusInput);
+   pan.connect(meter).connect(compressor);pan.connect(d).connect(delayInput);pan.connect(r).connect(reverb);pan.connect(chorus).connect(chorusInput);
    distortionStages.push({dry,wet,pre,shape,post});
    trackGains.push(volume);trackModGains.push(lfoVolume);trackPans.push(pan);stepVolumeGains.push(stepVolume);stepPans.push(stepPan);trackMeters.push(meter);delaySends.push(d);reverbSends.push(r);chorusSends.push(chorus);cutoffBuses.push(cutoffBus);
  }
@@ -4523,7 +4523,7 @@ function scheduleStep(idx,when){
      markSampleContinuation(t,v,when);
   }
   if(!track.midiOnly) scheduleStepMixLocks(
-   audio.stepVolumeGains[t]?.gain,audio.stepPans[t]?.pan,synthStepLocks(step),when,laneStep===0);
+   audio.stepVolumeGains[t]?.gain,audio.stepPans[t]?.offset,synthStepLocks(step),when,laneStep===0);
   if(isSynth(t)&&!track.midiOnly){
    const locks=synthStepLocks(step);
    if(Object.keys(locks).length){
@@ -8151,10 +8151,10 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  });
  const exportStepVolumes=[],exportStepPans=[];
  const outputs=state.tracks.map((track,i)=>{
-  const pan=ctx.createStereoPanner(),stepPan=ctx.createStereoPanner(),gain=ctx.createGain(),stepVolume=ctx.createGain(),dry=ctx.createGain(),wet=ctx.createGain();
+  const pan=ctx.createStereoPanner(),stepPan=ctx.createConstantSource(),gain=ctx.createGain(),stepVolume=ctx.createGain(),dry=ctx.createGain(),wet=ctx.createGain();
   const pre=ctx.createGain(),shaper=ctx.createWaveShaper(),post=ctx.createGain();
   const distortion=supportsDistortion(i)?clamp(Number(track.distortion??0),0,100)/100:0;
-  pan.pan.value=clamp(Number(track.pan??0),-100,100)/100;stepPan.pan.value=0;stepVolume.gain.value=1;
+  pan.pan.value=clamp(Number(track.pan??0),-100,100)/100;stepPan.offset.value=0;stepVolume.gain.value=1;
   gain.gain.value=Math.pow(clamp(Number(track.volume??78),0,100)/100,1.4);
   const volumeMod=ctx.createGain();volumeMod.gain.value=1;
   for(const lfo of lfoNodes){
@@ -8166,16 +8166,16 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
   shaper.curve=curve;shaper.oversample='2x';
   gain.connect(volumeMod).connect(stepVolume);
   stepVolume.connect(dry).connect(pan);
-  stepVolume.connect(pre).connect(shaper).connect(post).connect(wet).connect(pan);pan.connect(stepPan);
-  stepPan.connect(compressor);
+  stepVolume.connect(pre).connect(shaper).connect(post).connect(wet).connect(pan);stepPan.connect(pan.pan);stepPan.start(0);stepPan.stop(duration);
+  pan.connect(compressor);
   const delaySend=ctx.createGain(),reverbSend=ctx.createGain(),chorusSend=ctx.createGain();
   delaySend.gain.value=clamp(Number(track.delaySend??0),0,100)/100*SEND_FX_BUS.delaySend;
   reverbSend.gain.value=clamp(Number(track.reverbSend??0),0,100)/100*SEND_FX_BUS.reverbSend;
   chorusSend.gain.value=clamp(Number(track.chorusSend??0),0,100)/100*SEND_FX_BUS.chorusSend;
-  stepPan.connect(delaySend).connect(delayInput);
-  stepPan.connect(reverbSend).connect(reverb);
-  stepPan.connect(chorusSend).connect(chorusInput);
-  exportStepVolumes.push(stepVolume.gain);exportStepPans.push(stepPan.pan);
+  pan.connect(delaySend).connect(delayInput);
+  pan.connect(reverbSend).connect(reverb);
+  pan.connect(chorusSend).connect(chorusInput);
+  exportStepVolumes.push(stepVolume.gain);exportStepPans.push(stepPan.offset);
   return gain;
  });
  // Schedule an ADSR that respects note-off even if it occurs during attack
