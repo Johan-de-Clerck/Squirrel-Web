@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.83 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.84 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1385,7 +1385,7 @@ input[type="password"],textarea,
  #view-seq>.two-cols>.panel{height:auto;max-height:none;overflow-y:visible;}
 }
 
-/* Selection range interpolation UI — v0.2.83 */
+/* Selection range interpolation UI — v0.2.84 */
 #selectionMenu .file-menu-items{width:min(375px,92vw);max-width:min(375px,92vw)}
 #selectionMenu .ramp-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:6px}
 #selectionMenu .ramp-fields label{display:flex;flex-direction:column;gap:5px;min-width:0;font:700 10px Consolas,monospace;color:#cba783}
@@ -1498,7 +1498,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.83</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.84</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span><label class="transport-song-switch" for="songEnable" title="Play the Song Mode arrangement instead of looping a single pattern"><input type="checkbox" id="songEnable" aria-label="Enable Song Mode"> ENABLE SONG MODE</label></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label" id="bpmPatternLabel">BPM · A1</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1582,7 +1582,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.83';
+const SQUIRREL_VERSION='0.2.84';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -1727,6 +1727,7 @@ const CHORD_MODES = [
 ];
 const CHORD_MODES_BY_ID = new Map(CHORD_MODES.map(chord => [chord.id,chord]));
 const chordMode = id => CHORD_MODES_BY_ID.get(id) || CHORD_MODES_BY_ID.get('minor');
+const chordQualityForStep = (track,step) => chordMode(step?.chordMode||track?.sound?.chord).id;
 const chordNotes = (note,id) => chordMode(id).intervals.map(semi => clamp(Math.round(note)+semi,0,127));
 // BPM is quantized to a tenth throughout UI, project loading and transport timing.
 function normalizeBpm(value){
@@ -3212,7 +3213,7 @@ s.drumSamples=Array.from({length:TRACK_COUNT},(_,t)=>Array.from({length:5},(_,sl
  target.delaySend=clamp(Number(src.delaySend??0)||0,0,100);target.reverbSend=clamp(Number(src.reverbSend??0)||0,0,100);target.chorusSend=clamp(Number(src.chorusSend??0)||0,0,100);target.distortion=clamp(Number(src.distortion??0)||0,0,100);const p=src.sound||{};for(const k of ['wave1','wave2'])if(['sine','triangle','square','sawtooth','pulse'].includes(p[k]))target.sound[k]=p[k];
  for(const k of ['osc1On','osc2On','subOn'])if(typeof p[k]==='boolean')target.sound[k]=p[k];
  if(['sine','sawtooth','pulse'].includes(p.subWave))target.sound.subWave=p.subWave;
- if(p.subOctave===-12||p.subOctave===-24)target.sound.subOctave=p.subOctave;for(const [k,a,b] of [['detune',-50,50],['osc1Level',0,100],['osc2Level',0,100],['subDetune',-50,50],['subLevel',0,100],['pulseWidth',5,95],['cutoff',80,12000],['resonance',.1,18],['attack',.003,2],['decay',.01,2],['sustain',0,1],['release',.01,3]])if(Number.isFinite(Number(p[k])))target.sound[k]=clamp(Number(p[k]),a,b);if(p.chord==='minor'||p.chord==='major')target.sound.chord=p.chord;
+ if(p.subOctave===-12||p.subOctave===-24)target.sound.subOctave=p.subOctave;for(const [k,a,b] of [['detune',-50,50],['osc1Level',0,100],['osc2Level',0,100],['subDetune',-50,50],['subLevel',0,100],['pulseWidth',5,95],['cutoff',80,12000],['resonance',.1,18],['attack',.003,2],['decay',.01,2],['sustain',0,1],['release',.01,3]])if(Number.isFinite(Number(p[k])))target.sound[k]=clamp(Number(p[k]),a,b);if(CHORD_MODES_BY_ID.has(p.chord))target.sound.chord=p.chord;
   restoreReferenceSoundControls(target.sound,p);
   target.sound.fmMode=p.fmMode==='four'?'four':'two';
   if(FM_ALGORITHMS[p.fmAlgorithm])target.sound.fmAlgorithm=p.fmAlgorithm;
@@ -4524,8 +4525,8 @@ function scheduleStep(idx,when){
    rt.voices=[];rt.basePeriod=periodForNote(step.note);rt.period=rt.basePeriod;rt.level=64;rt.phase=0;rt.activeFx=0;
    // Blijf een voice vasthouden tot de volgende noot als een latere step
    // (eventueel na lege steps) een effect op diezelfde noot gaat uitvoeren.
-   const hold=(isSample(t)||kindOf(track)==='bass'||kindOf(track)==='lead')||
-    (kindOf(track)==='chord'&&(stepContinuesSample(step)||shouldHoldFXVoice(t,laneStep)));
+   // Sustain all VA/FM synths including every chord note until C00/retrigger/wrap.
+   const hold=isSample(t)||isSynth(t);
    const hits=clamp(step.ratchet||1,1,6);
    const grooveTime=Math.max(audio.ctx.currentTime+.002,when+grooveOffset(step,track,idx,dur));
    const grooveVel=grooveVelocity(step.velocity,track,state.pattern,t,laneStep);
@@ -4538,12 +4539,13 @@ function scheduleStep(idx,when){
     const hitHold=hold&&hit===hits-1;
     const gateDuration=hits===1?clamp(step.gate/100*dur,.025,.8):clamp(subDuration*step.gate/100,.004,subDuration*.94);
     const carry=stepContinuesSample(step)&&stepCanContinue(t);
-    const voices=playTrack(t,step.note,grooveVel,hitTime,carry&&hit===hits-1?null:hitHold?null:gateDuration,0,step.chordMode,step.sampleSlot||0,sampleOffsetFraction(step.fx,step.fxAmount))||[];
+    const voices=playTrack(t,step.note,grooveVel,hitTime,carry&&hit===hits-1?null:hitHold?null:gateDuration,0,
+     kindOf(track)==='chord'?chordQualityForStep(track,step):null,step.sampleSlot||0,sampleOffsetFraction(step.fx,step.fxAmount))||[];
     if(isSynth(t))applySynthStepLocks(voices,synthStepLocks(step),hitTime);
     // Only the final ratchet hit carries into a subsequent pattern,
     // including a VA/FM synth chord; earlier hits retain their gate.
     if(carry&&hit===hits-1)for(const voice of voices)markSampleContinuation(t,voice,hitTime);
-    midiPlayStep(t,step.note,grooveVel,hitTime,hitHold,gateDuration,step.chordMode);
+    midiPlayStep(t,step.note,grooveVel,hitTime,hitHold,gateDuration,kindOf(track)==='chord'?chordQualityForStep(track,step):null);
     rt.voices.push(...voices);
    }
   }
@@ -5166,9 +5168,9 @@ function renderFXEditor(){
  const chordTrack=kindOf(t)==='chord';
  $('stepChordField').classList.toggle('hidden',!chordTrack);
  document.querySelector('.fx-controls').classList.toggle('chord-mode',chordTrack);
- $('stepChordMode').value=chordMode(step.chordMode).id;
+ $('stepChordMode').value=chordQualityForStep(t,step);
  $('stepChordMode').disabled=!chordTrack;
- $('chordModeOutput').textContent=chordMode(step.chordMode).label;
+ $('chordModeOutput').textContent=chordMode(chordQualityForStep(t,step)).label;
  $('fxStatus').textContent=step.fx?fxCode(step.fx)+fxAmountText(step.fx,step.fxAmount):'FX OFF';
  // Drag-select two or more cells and apply carry to supported internal
  // DRUM, SAMPLE, BASS, LEAD and CHORD steps without changing notes.
@@ -8723,15 +8725,13 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
        :step;
       const renderedStep={...renderedStepBase,velocity:grooveVelocity(step.velocity,state.tracks[t],pattern,t,stepIndex%trackLength(pattern,t))};
       const instrumentKind=kindOf(state.tracks[t]);
-      const holdSynth=isSynth(t)&&(instrumentKind==='bass'||instrumentKind==='lead'||
-       (instrumentKind==='chord'&&(stepContinuesSample(step)||
-         shouldHoldFXVoice(t,stepIndex%trackLength(pattern,t),pattern))))&&hit===hits-1;
+      const holdSynth=isSynth(t)&&hit===hits-1;
       const noteOffTime=holdSynth?synthStopAt(rowIndex,t):hitTime+gateSeconds;
       if(instrumentKind==='chord'){
        // Live chord playback uses the chosen chord mode and divides voice
        // amplitude between its notes, rather than playing only the root.
        const sound=state.tracks[t].sound||{};
-       const notes=chordNotes(Number(step.note),step.chordMode||sound.chord);
+       const notes=chordNotes(Number(step.note),chordQualityForStep(state.tracks[t],step));
        const voiceVelocity=Number(renderedStep.velocity??100)*Math.sqrt(3/notes.length)*.72;
        for(const chordNote of notes){
         const fxVoice=addVoice(t,renderedStep,hitTime,noteOffTime,chordNote,voiceVelocity,holdSynth,stepSeconds);
@@ -8873,7 +8873,11 @@ function bindings(){
  $('undoStepBtn').onclick=undoEdit;
  $('redoStepBtn').onclick=redoEdit;
  $('auditionStepBtn').onclick=()=>playPreview(state.selectedTrack,selectedStep().note,selectedStep().velocity,selectedStep());
- $('stepChordMode').onchange=()=>{if(kindOf(state.tracks[state.selectedTrack])!=='chord')return;const step=selectedStep();step.chordMode=chordMode($('stepChordMode').value).id;persist();renderGrid();renderFXEditor();focusSelectedPad(false)};
+ $('stepChordMode').onchange=()=>{if(kindOf(state.tracks[state.selectedTrack])!=='chord')return;
+   const step=selectedStep(),quality=chordMode($('stepChordMode').value).id;
+   step.chordMode=quality;
+   state.tracks[state.selectedTrack].sound.chord=quality;
+   persist();renderGrid();renderFXEditor();focusSelectedPad(false)};
  for(const [param,check,slider] of [['cutoff','stepLockCutoffOn','stepLockCutoff'],['resonance','stepLockResoOn','stepLockReso']]){
   $(check).onchange=()=>{
    const step=selectedStep(),locks={...synthStepLocks(step)};
