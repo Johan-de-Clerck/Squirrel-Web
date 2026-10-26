@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.75 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.76 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1209,7 +1209,7 @@ input[type="password"],textarea,
  #view-seq .fx-pad{height:clamp(11px,1.48dvh,16px)}
 }
 
-/* v0.2.75 — single-screen Step Editor: grouped sources, timing and dynamics.
+/* v0.2.76 — single-screen Step Editor: grouped sources, timing and dynamics.
    The IDs, native selects, keyboard bindings, quick slots and undo stay intact. */
 #view-seq #stepEditorPanel{min-width:0;padding:7px 11px;overflow-x:hidden;}
 #view-seq #stepEditorPanel>.panel-head{margin-bottom:5px;}
@@ -1286,7 +1286,7 @@ input[type="password"],textarea,
   #view-seq #stepEditorPanel .step-editor-source{grid-column:auto;}
 }
 
-/* v0.2.75 — Song Mode's single enable control sits beside STEP before STEP COLOR. */
+/* v0.2.76 — Song Mode's single enable control sits beside STEP before STEP COLOR. */
 .transport-left .transport-song-switch{
  display:inline-flex;align-items:center;gap:6px;
  padding:5px 9px;min-height:30px;box-sizing:border-box;
@@ -1303,6 +1303,86 @@ input[type="password"],textarea,
 .transport-left .transport-song-switch:focus-within{outline:2px solid #a8dcae;outline-offset:2px;}
 @media(max-width:1260px){
  .transport-left .transport-song-switch{padding:5px 6px;font-size:9px;}
+}
+
+/* v0.2.76 — DRUM: align sample/slot selector and all step parameters, no internal scrolling. */
+#view-seq #stepEditorPanel.drum-mode .step-editor-fields{
+ display:grid;grid-template-columns:minmax(280px,.88fr) minmax(0,1.12fr);
+ grid-template-areas:"source dynamics" "source timing";
+ column-gap:clamp(9px,1vw,16px);row-gap:4px;
+ align-content:start;align-items:start;min-width:0;
+}
+#view-seq #stepEditorPanel.drum-mode .step-editor-source{
+ grid-area:source;grid-column:auto;display:grid;
+ grid-template-columns:minmax(108px,.82fr) minmax(155px,1.18fr);
+ gap:9px;align-items:start;min-width:0;
+}
+#view-seq #stepEditorPanel.drum-mode .step-editor-source>.field,
+#view-seq #stepEditorPanel.drum-mode .step-editor-source-detail>.field{
+ padding:0;margin:0;align-self:start;
+}
+#view-seq #stepEditorPanel.drum-mode #stepNoteField{display:none!important;}
+#view-seq #stepEditorPanel.drum-mode #stepDrumSampleField{display:flex!important;}
+#view-seq #stepEditorPanel.drum-mode .step-editor-source .field-head{
+ min-height:15px;align-items:center;font-size:9px;
+}
+#view-seq #stepEditorPanel.drum-mode .step-editor-source select{
+ height:27px;min-height:27px;max-height:27px;padding:3px 6px;
+}
+#view-seq #stepEditorPanel.drum-mode #stepDrumQuick{
+ display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+ gap:4px;margin-top:5px;
+}
+#view-seq #stepEditorPanel.drum-mode #stepDrumQuick button{
+ min-width:0;min-height:23px;padding:2px 0;font-size:10px;line-height:16px;
+}
+#view-seq #stepEditorPanel.drum-mode .step-editor-params{
+ display:grid;gap:5px;min-width:0;padding-top:0;align-content:start;
+}
+#view-seq #stepEditorPanel.drum-mode .step-editor-dynamics{
+ grid-area:dynamics;grid-template-columns:repeat(2,minmax(0,1fr));
+}
+#view-seq #stepEditorPanel.drum-mode .step-editor-timing{
+ grid-area:timing;grid-template-columns:repeat(3,minmax(0,1fr));
+}
+#view-seq #stepEditorPanel.drum-mode .step-editor-params .field{
+ display:flex;flex-direction:column;gap:2px;min-width:0;min-height:33px;
+ grid-template-columns:none;grid-template-rows:none;
+}
+#view-seq #stepEditorPanel.drum-mode .step-editor-params .field-head{
+ display:flex;justify-content:space-between;gap:3px;width:100%;
+ min-height:12px;align-items:center;
+}
+#view-seq #stepEditorPanel.drum-mode .step-editor-params .field-head>span,
+#view-seq #stepEditorPanel.drum-mode .step-editor-params .field-head>output{
+ display:block;grid-column:auto;grid-row:auto;font-size:9px;
+ white-space:nowrap;font-variant-numeric:tabular-nums;
+}
+#view-seq #stepEditorPanel.drum-mode .step-editor-params input[type="range"]{
+ display:block;grid-column:auto;grid-row:auto;
+ margin:0;width:100%;min-width:0;height:15px;
+}
+#view-seq #stepEditorPanel.drum-mode .step-editor-actions{
+ display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
+ gap:5px;margin-top:6px;
+}
+#view-seq #stepEditorPanel.drum-mode .step-editor-actions .mini-btn{
+ min-height:25px;padding:3px 4px;font-size:10px;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+@media(max-width:1100px){
+ #view-seq #stepEditorPanel.drum-mode .step-editor-fields{
+  grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"source" "dynamics" "timing";row-gap:9px;
+ }
+ #view-seq #stepEditorPanel.drum-mode .step-editor-source{
+  grid-template-columns:minmax(110px,.8fr) minmax(155px,1.2fr);
+ }
+ #view-seq #stepEditorPanel.drum-mode .step-editor-actions{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+ }
+ #view-seq>.two-cols{height:auto;max-height:none;flex:0 0 auto;}
+ #view-seq>.two-cols>.panel{height:auto;max-height:none;overflow-y:visible;}
 }
 </style>
 </head>
@@ -1392,7 +1472,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.75</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.76</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span><label class="transport-song-switch" for="songEnable" title="Play the Song Mode arrangement instead of looping a single pattern"><input type="checkbox" id="songEnable" aria-label="Enable Song Mode"> ENABLE SONG MODE</label></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label" id="bpmPatternLabel">BPM · A1</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1476,7 +1556,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.75';
+const SQUIRREL_VERSION='0.2.76';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -4847,6 +4927,7 @@ function syncStepContinueControl(step=selectedStep()){
 function renderStepEditor(){const step=selectedStep(),t=state.tracks[state.selectedTrack];
  $('stepTrackKind').value=kindOf(t);
  const drum=isDrum(state.selectedTrack),drumField=$('stepDrumSampleField'),drumSelect=$('stepDrumSample');
+ $('stepEditorPanel').classList.toggle('drum-mode',drum&&!t.midiOnly);
  drumField.classList.toggle('hidden',!drum||t.midiOnly);
  if(drum){
   drumSelect.replaceChildren();
