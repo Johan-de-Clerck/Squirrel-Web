@@ -1978,7 +1978,8 @@ function applyFXVoice(voices, when, result){
   if(voice.modGain)voice.modGain.gain.setValueAtTime(result.level,when);
  }
 }
-function applyFXCommand(rt, step){
+function applyFXCommand(rt, step, enabled=true){
+ if(!enabled)step={...step,fx:0};
  const effect=step.fx;
  // Ieder FX-pad is één tracker-rij. Geen commando op de volgende rij betekent
  // géén verdere slide. De period (pitch) en het volume blijven wel behouden.
@@ -4667,7 +4668,7 @@ function scheduleStep(idx,when,onlyTrack=null,trackDur=null,absoluteStep=idx){
     rt.voices.push(...voices);
    }
   }
-  applyFXCommand(rt,step);
+  applyFXCommand(rt,step,Math.random()*100<clamp(Number(step.fxProbability??100),0,100));
   // De vorige period en het volume blijven staan; de slide zelf werkt alleen
   // binnen steps die expliciet hetzelfde FX-commando bevatten.
   if(rt.voices.length){
@@ -8987,7 +8988,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
      }
      carriedAtBoundary[t]=false;
     }
-    applyFXCommand(fxRow,step);
+    applyFXCommand(fxRow,step,(stemHash(exportSeed,patternPosition,row.seqStep,t,17)/4294967296)*100<clamp(Number(step.fxProbability??100),0,100));
     if(fxRow.voices.length){
      // The zero tick preserves slides and applies octave shifts on empty rows.
      const wave=fxRow.activeFx===4?Math.sin(fxRow.phase*2*Math.PI/64)*fxRow.vibratoDepth*4:0;
