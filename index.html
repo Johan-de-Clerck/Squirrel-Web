@@ -3683,6 +3683,10 @@ function setTrackSolo(index){
  applyTrackMix();persist();renderAll();
 }
 // Separate step automation, relative to normal track mixer sliders.
+// A long carried voice must retain its step mix on a silent pattern boundary.
+function shouldResetStepMixAtWrap(isWrap,startsNote,noteOff,carriedVoice){
+ return !!isWrap&&(!!startsNote||!!noteOff||!carriedVoice);
+}
 function scheduleStepMixLocks(volume,pan,locks,time,wrap=false){
  if(!volume||!pan)return;
  if(Number.isFinite(locks?.volume))volume.setTargetAtTime(clamp(locks.volume,0,100)/100,time,.006);
@@ -4543,8 +4547,14 @@ function scheduleStep(idx,when){
     if(v.trackIndex===t&&(v.sampleVoice||v.drum||isSynth(t))&&!v.released)
      markSampleContinuation(t,v,when);
   }
-  if(!track.midiOnly) scheduleStepMixLocks(
-   audio.stepVolumeGains[t]?.gain,audio.stepPans[t]?.offset,synthStepLocks(step),when,laneStep===0);
+  // Calculate Chance once, before mix automation; an unplayed chance row
+  // must not cancel a carried voice's volume/pan modulation.
+  const startsNote=step.on&&step.fx!==12&&Math.random()*100<step.chance;
+  if(!track.midiOnly){
+   const carried=[...scheduledVoices].some(v=>v.trackIndex===t&&v.carryAcrossPatterns&&!v.released);
+   const reset=shouldResetStepMixAtWrap(laneStep===0,startsNote,step.fx===12,carried);
+   scheduleStepMixLocks(audio.stepVolumeGains[t]?.gain,audio.stepPans[t]?.offset,synthStepLocks(step),when,reset);
+  }
   if(isSynth(t)&&!track.midiOnly){
    const locks=synthStepLocks(step);
    if(Object.keys(locks).length){
@@ -4552,7 +4562,6 @@ function scheduleStep(idx,when){
     applySynthStepLocks(active,locks,when);
    }
   }
-  const startsNote=step.on&&step.fx!==12&&Math.random()*100<step.chance;
   if(startsNote){
    // A new note terminates any carried SAMPLE, DRUM, BASS, LEAD or
    // CHORD voice on the same track before triggering its new sound.
@@ -8583,7 +8592,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
   filter.frequency.value=typeof locks.cutoff==='number'&&Number.isFinite(locks.cutoff)?clamp(Number(locks.cutoff),80,18000):
    sound.filterEnabled===false?20000:clamp(Number(sound.cutoff??4000)*Math.pow(2,(soundNote-60)/12*Number(sound.filterKeyTrack??0)/100),80,18000);
   filter.Q.value=typeof locks.resonance==='number'&&Number.isFinite(locks.resonance)?clamp(Number(locks.resonance),.1,18):clamp(Number(sound.resonance??.7),.1,18);
-  activeExportSynthFilters[i].push({filter,noteOff:time+length,
+  activeExportSynthFilters[i].push({filter,started:time,noteOff:time+length,
    end:time+length+Math.max(.1,Number(sound.release??.2))});
   for(const lfo of lfoNodes)if(lfo.target==='track'+i+'-cutoff')lfo.depth.connect(filter.frequency);
   const fxGain=ctx.createGain();fxGain.gain.value=1;
@@ -8750,8 +8759,13 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
       stopExportSample(t,at,voice=>!voice.carryAcrossPatterns);
     }
     const fxRow=exportFXRows[t];
-    if(!state.tracks[t].midiOnly) scheduleStepMixLocks(
-     exportStepVolumes[t],exportStepPans[t],synthStepLocks(step),at,stepIndex%trackLength(pattern,t)===0);
+    if(!state.tracks[t].midiOnly){
+     const synthCarried=activeExportSynthFilters[t].some(v=>v.noteOff>at&&v.started<at);
+     const sampleCarried=activeExportSamples[t].some(v=>!v.stopped&&v.carryAcrossPatterns&&v.naturalEnd>at);
+     const reset=shouldResetStepMixAtWrap(stepIndex%trackLength(pattern,t)===0,
+      row.fired[t],step.fx===12,synthCarried||sampleCarried);
+     scheduleStepMixLocks(exportStepVolumes[t],exportStepPans[t],synthStepLocks(step),at,reset);
+    }
     if(isSynth(t)){
      const active=activeExportSynthFilters[t];
      for(let n=active.length-1;n>=0;n--)if(active[n].end<at)active.splice(n,1);
