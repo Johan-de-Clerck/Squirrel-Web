@@ -1764,7 +1764,7 @@ function setPatternName(bank,value){
 }
 const AUDIO_TRACK_COUNT=6;
 const TRACK_COUNT=bases.length;
-const makeStep=(track,on=false,note=null)=>({on,note:note??bases[track].note,sampleSlot:0,velocity:track<3?112:104,gate:track<3?70:92,ratchet:1,chance:100,microTiming:0,continueSample:false,locks:null,fx:0,fxAmount:2,chordMode:track===5?'minor':null});
+const makeStep=(track,on=false,note=null)=>({on,note:note??bases[track].note,sampleSlot:0,velocity:track<3?112:104,gate:track<3?70:92,ratchet:1,chance:100,microTiming:0,continueSample:false,locks:null,fx:0,fxAmount:2,chordMode:null});
 // Trackereffecten per rij (ProTracker-timing): tick 0 behoudt de beginwaarde,
 // ticks 1..5 voeren de slide uit; lege FX-rijen stoppen de slide, maar behouden
 // de laatste period/volume. 1xx/2xx gebruiken period-units, Axx/Bxx volume-units.
@@ -8901,9 +8901,15 @@ function bindings(){
  $('redoStepBtn').onclick=redoEdit;
  $('auditionStepBtn').onclick=()=>playPreview(state.selectedTrack,selectedStep().note,selectedStep().velocity,selectedStep());
  $('stepChordMode').onchange=()=>{if(kindOf(state.tracks[state.selectedTrack])!=='chord')return;
-   const step=selectedStep(),quality=chordMode($('stepChordMode').value).id;
-   step.chordMode=quality;
-   state.tracks[state.selectedTrack].sound.chord=quality;
+   const track=state.tracks[state.selectedTrack],step=selectedStep();
+   const previous=chordQualityForStep(track,step),quality=chordMode($('stepChordMode').value).id;
+   step.chordMode=quality;track.sound.chord=quality;
+   // New notes on still-empty steps inherit the selected track quality,
+   // but notes with individually configured chords are never overwritten.
+   for(const candidate of state.patterns[state.pattern][state.selectedTrack]){
+    if(candidate!==step&&!candidate.on&&(!candidate.chordMode||candidate.chordMode===previous))
+     candidate.chordMode=quality;
+   }
    persist();renderGrid();renderFXEditor();focusSelectedPad(false)};
  for(const [param,check,slider] of [['cutoff','stepLockCutoffOn','stepLockCutoff'],['resonance','stepLockResoOn','stepLockReso']]){
   $(check).onchange=()=>{
