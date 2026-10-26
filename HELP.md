@@ -1,6 +1,34 @@
-# Squirrel Studio Web 0.2.83 — User Manual
+# Squirrel Studio Web 0.2.85 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Improved in 0.2.85 — all CHORD qualities, sustained chords and four-parameter SELECTION ramps
+
+**CHORD playback and continuation**
+
+- All fifteen chord qualities are supported: **MAJ, MIN, SUS2, SUS4, DIM, AUG, 7, MAJ7, MIN7, M7♭5, DIM7, ADD9, MIN9, MAJ9, POWER (5)**. Select the track and the step, then choose **STEP FX → CHORD MODE**. The full group of notes—not only the root—is generated from the selected interval structure in live Web Audio, MIDI OUT and offline WAV.
+- **New chord steps inherit the selected chord quality** when they have no explicit per-step chord quality. Changing the quality on one step updates the default used by still-empty steps in the current pattern without overwriting existing active chord notes. Older projects with explicit per-step qualities retain those choices.
+- CHORD now behaves like BASS and LEAD for note duration: the complete chord stays in sustain until **C00 NOTE OFF**, another note, or the normal track wrap. A chord carrying **CONTINUE / D00** survives the track/pattern boundary, even when the next song pattern uses a different BPM. A later C00 or retrigger stops every held chord voice and activates its release envelope.
+- New JSON files retain an unset chord quality as an inherited default instead of silently converting it to MIN on load.
+
+**SELECTION → INTERPOLATE STEP AUTOMATION**
+
+Select a horizontal range of at least two steps and choose:
+
+| Parameter | Range | Eligible tracks |
+| --- | --- | --- |
+| FILTER CUTOFF | 80–18,000 Hz | Internal VA/FM BASS, LEAD, CHORD |
+| FILTER RESONANCE | 0.1–18 Q | Internal VA/FM BASS, LEAD, CHORD |
+| TRACK VOLUME | 0–100% of mixer fader | Any internal DRUM, SAMPLE or VA/FM track |
+| TRACK PANNING | -100 left to +100 right, relative to mixer pan | Any internal DRUM, SAMPLE or VA/FM track |
+
+**Linear** uses equal numeric increments; **Exponential** uses equal ratios for positive values, making filter frequencies evenly spaced in octaves. When a ramp crosses zero or includes negative panning, Exponential switches to a finite curved easing, so there is no invalid logarithm. With 16 steps, both endpoint values are included with **15 intervals** between them, and the intervening positions are interpolated.
+
+For example, set Cutoff to **200 Hz → 12,800 Hz** for a rising sweep. For pan, choose **-100 → +100** to move from left to right. For volume, **100 → 0** fades the track to silence by the last selected step. Blank steps receive locks but do not create notes. Cutoff rounds to whole hertz, resonance to 0.1 Q, volume and pan to integer units.
+
+Step Volume and Panning are **separate from the mixer faders and pan controls**, so they do not rewrite stored mixer settings. Volume operates as a multiplier on the track level; the additional stereo pan node shapes its existing mixer pan. They affect the signal before the shared delay, reverb and chorus sends. Live playback and offline WAV, bounce and stems have matching signal-routing stages. An unset Volume/Pan lock holds the previous step setting, until the track wraps or transport stops, when it resets to 100% and center relative to the track mixer.
+
+**Tests:** `node --test tests/chord-selection-mix.test.mjs` verifies all chord intervals, hold behavior in code, log/linear frequency spacing, volume and panning bounds, zero-crossing safety, and live/export signal routing. Test a real browser for audible results, including FM4 chords and song-mode changes of BPM.
 
 ### New in 0.2.83 — SELECTION menu: linear and exponential filter ramps
 
@@ -630,4 +658,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.2.83.**
+**Documentation version: Squirrel Studio Web 0.2.85.**
