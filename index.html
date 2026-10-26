@@ -3661,6 +3661,19 @@ function setTrackSolo(index){
  for(let i=0;i<TRACK_COUNT;i++)if(isTrackEffectivelyMuted(i)){midiOffTrack(i);stopMixerPreview(i)}
  applyTrackMix();persist();renderAll();
 }
+// Separate step automation, relative to normal track mixer sliders.
+function scheduleStepMixLocks(volume,pan,locks,time,wrap=false){
+ if(!volume||!pan)return;
+ if(Number.isFinite(locks?.volume))volume.setTargetAtTime(clamp(locks.volume,0,100)/100,time,.006);
+ else if(wrap)volume.setTargetAtTime(1,time,.006);
+ if(Number.isFinite(locks?.pan))pan.setTargetAtTime(clamp(locks.pan,-100,100)/100,time,.006);
+ else if(wrap)pan.setTargetAtTime(0,time,.006);
+}
+function clearStepMixLocks(time){
+ if(!audio)return;
+ for(const v of audio.stepVolumeGains||[]){v.gain.cancelScheduledValues(time);v.gain.setTargetAtTime(1,time,.015)}
+ for(const v of audio.stepPans||[]){v.pan.cancelScheduledValues(time);v.pan.setTargetAtTime(0,time,.015)}
+}
 function applyTrackMix(){for(let i=0;i<TRACK_COUNT;i++)nativeUpdateVAMix(i);if(!audio)return;state.tracks.forEach((t,i)=>{const isOn=!isTrackEffectivelyMuted(i)&&!t.midiOnly;audio.trackGains[i].gain.setTargetAtTime(isOn?(t.volume/100)**1.4:0,audio.ctx.currentTime,.018);audio.trackPans[i].pan.setTargetAtTime(t.pan/100,audio.ctx.currentTime,.02);
  audio.delaySends[i].gain.setTargetAtTime((t.delaySend/100)*SEND_FX_BUS.delaySend,audio.ctx.currentTime,.03);
  audio.reverbSends[i].gain.setTargetAtTime((t.reverbSend/100)*SEND_FX_BUS.reverbSend,audio.ctx.currentTime,.03);audio.chorusSends[i].gain.setTargetAtTime((t.chorusSend/100)*SEND_FX_BUS.chorusSend,audio.ctx.currentTime,.03)});audio.masterGain.gain.setTargetAtTime((state.master/100)*.84,audio.ctx.currentTime,.018);updateDistortionEngine();applyLFOs()}
@@ -3697,15 +3710,15 @@ async function initAudio(){
   const distortionCurve=createDistortionCurve();
   const meterSilence=ctx.createGain();meterSilence.gain.value=0;meterSilence.connect(ctx.destination);
  const trackStereoMeters=[];
- const trackGains=[],trackModGains=[],trackPans=[],trackMeters=[],delaySends=[],reverbSends=[],chorusSends=[],cutoffBuses=[],distortionStages=[];
+ const trackGains=[],trackModGains=[],trackPans=[],stepVolumeGains=[],stepPans=[],trackMeters=[],delaySends=[],reverbSends=[],chorusSends=[],cutoffBuses=[],distortionStages=[];
  for(let i=0;i<TRACK_COUNT;i++){
-  const volume=ctx.createGain(),lfoVolume=ctx.createGain(),pan=ctx.createStereoPanner(),meter=ctx.createAnalyser(),d=ctx.createGain(),r=ctx.createGain(),chorus=ctx.createGain(),cutoffBus=ctx.createGain();
+  const volume=ctx.createGain(),lfoVolume=ctx.createGain(),stepVolume=ctx.createGain(),pan=ctx.createStereoPanner(),stepPan=ctx.createStereoPanner(),meter=ctx.createAnalyser(),d=ctx.createGain(),r=ctx.createGain(),chorus=ctx.createGain(),cutoffBus=ctx.createGain();
    const dry=ctx.createGain(),wet=ctx.createGain(),pre=ctx.createGain(),shape=ctx.createWaveShaper(),post=ctx.createGain();
    shape.curve=distortionCurve;shape.oversample='2x';
    const track=state.tracks[i],distortion=supportsDistortion(i)?clamp(Number(track.distortion??0),0,100)/100:0;
    const isOn=!isTrackEffectivelyMuted(i)&&!track.midiOnly;
    volume.gain.value=isOn?Math.pow(clamp(Number(track.volume??78),0,100)/100,1.4):0;
-   pan.pan.value=clamp(Number(track.pan??0),-100,100)/100;
+   pan.pan.value=clamp(Number(track.pan??0),-100,100)/100;stepPan.pan.value=0;stepVolume.gain.value=1;
    dry.gain.value=1-distortion;wet.gain.value=distortion;
    pre.gain.value=1+distortion*11;post.gain.value=.8/(1+distortion*.35);
    lfoVolume.gain.value=1;
@@ -3716,22 +3729,22 @@ async function initAudio(){
    meter.fftSize=1024;meter.smoothingTimeConstant=0;
    const meterL=ctx.createAnalyser(),meterR=ctx.createAnalyser(),stereoSplitter=ctx.createChannelSplitter(2);
    meterL.fftSize=meterR.fftSize=1024;meterL.smoothingTimeConstant=meterR.smoothingTimeConstant=0;
-   pan.connect(stereoSplitter);stereoSplitter.connect(meterL,0);stereoSplitter.connect(meterR,1);
+   stepPan.connect(stereoSplitter);stereoSplitter.connect(meterL,0);stereoSplitter.connect(meterR,1);
    meterL.connect(meterSilence);meterR.connect(meterSilence);
    trackStereoMeters.push({left:meterL,right:meterR});
-   volume.connect(lfoVolume);lfoVolume.connect(dry).connect(pan);
-   lfoVolume.connect(pre).connect(shape).connect(post).connect(wet).connect(pan);
+   volume.connect(lfoVolume).connect(stepVolume);stepVolume.connect(dry).connect(pan);
+   stepVolume.connect(pre).connect(shape).connect(post).connect(wet).connect(pan);pan.connect(stepPan);
    // The post-fader/post-pan dry signal travels THROUGH this track's analyser.
    // Unlike the master meter, it cannot show audio from other tracks or FX returns.
-   pan.connect(meter).connect(compressor);pan.connect(d).connect(delayInput);pan.connect(r).connect(reverb);pan.connect(chorus).connect(chorusInput);
+   stepPan.connect(meter).connect(compressor);stepPan.connect(d).connect(delayInput);stepPan.connect(r).connect(reverb);stepPan.connect(chorus).connect(chorusInput);
    distortionStages.push({dry,wet,pre,shape,post});
-   trackGains.push(volume);trackModGains.push(lfoVolume);trackPans.push(pan);trackMeters.push(meter);delaySends.push(d);reverbSends.push(r);chorusSends.push(chorus);cutoffBuses.push(cutoffBus);
+   trackGains.push(volume);trackModGains.push(lfoVolume);trackPans.push(pan);stepVolumeGains.push(stepVolume);stepPans.push(stepPan);trackMeters.push(meter);delaySends.push(d);reverbSends.push(r);chorusSends.push(chorus);cutoffBuses.push(cutoffBus);
  }
  compressor.connect(masterGain).connect(analyser).connect(ctx.destination);
  const pwmBuses=Array.from({length:TRACK_COUNT},()=>ctx.createGain());
  pwmBuses.forEach(bus=>bus.gain.value=1);
  const lfoNodes=[];for(let i=0;i<4;i++){const osc=ctx.createOscillator(),depthNode=ctx.createGain();depthNode.gain.value=0;osc.connect(depthNode);osc.start();lfoNodes.push({osc,depthNode,route:'off'})}
- audio={ctx,masterGain,analyser,compressor,trackGains,trackModGains,trackPans,trackMeters,trackStereoMeters,delaySends,reverbSends,chorusSends,distortionStages,cutoffBuses,pwmBuses,delayNode,delayFeedback,delayDamping,delayReturn,reverb,reverbReturn,chorusInput,chorusDelayLeft,chorusDelayRight,chorusOsc,chorusDepthLeft,chorusDepthRight,irDecay,lfoNodes,noise:null,streamDest:null,outputElement:null};
+ audio={ctx,masterGain,analyser,compressor,trackGains,trackModGains,trackPans,stepVolumeGains,stepPans,trackMeters,trackStereoMeters,delaySends,reverbSends,chorusSends,distortionStages,cutoffBuses,pwmBuses,delayNode,delayFeedback,delayDamping,delayReturn,reverb,reverbReturn,chorusInput,chorusDelayLeft,chorusDelayRight,chorusOsc,chorusDepthLeft,chorusDepthRight,irDecay,lfoNodes,noise:null,streamDest:null,outputElement:null};
  updateSendEngine();applyTrackMix();applyLFOs();
  ctx.addEventListener('statechange',refreshAudioPowerUI);
  }
@@ -4511,6 +4524,7 @@ function scheduleStep(idx,when){
   }
   if(isSynth(t)&&!track.midiOnly){
    const locks=synthStepLocks(step);
+   scheduleStepMixLocks(audio.stepVolumeGains[t]?.gain,audio.stepPans[t]?.pan,locks,when,laneStep===0);
    if(Object.keys(locks).length){
     const active=[...scheduledVoices].filter(v=>v.trackIndex===t&&!v.released);
     applySynthStepLocks(active,locks,when);
@@ -4627,6 +4641,7 @@ function stopTransport(){
  if(audio){
   const now=audio.ctx.currentTime;
   for(const v of [...scheduledVoices])fadeTransportVoice(v,now);
+   clearStepMixLocks(now);
  }
  // Do not leave already-faded drum voices in choke groups on a rapid restart.
  activeChokeVoices.clear();
