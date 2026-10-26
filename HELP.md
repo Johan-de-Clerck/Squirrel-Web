@@ -1,6 +1,14 @@
-# Squirrel Studio Web 0.2.72 — User Manual
+# Squirrel Studio Web 0.2.73 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Fixed in 0.2.73 — Sample filter release and pattern-tempo LFO parity
+
+**SAMPLE filter envelopes:** In **BOUNCE** and **EXPORT WAV**, assigned cutoff/resonance envelopes now begin their RELEASE at the actual **C00 Note Off**, retrigger, or track/pattern wrap. Previously a long looping sample could keep its filter envelope active until the end of the entire WAV even after its amplitude had been released, causing the exported effect send tails to differ from live playback. The render retains each sample's filter modulation source so its scheduled release can be moved to the real note-off point. A sample marked **CONTINUE** still carries across patterns until an explicit stop/retrigger or the end of the arrangement.
+
+**Tempo changes:** When Song Mode changes pattern tempo, tempo-synced live LFO oscillator rates now switch **exactly at the scheduled pattern boundary**, like the offline renderer. For example, an LFO synced to **1/4** moves from its A1 = 60 BPM rate to the A2 = 120 BPM rate without an extra 25 ms glide. Manual LFO knob edits still use a short smoothing ramp.
+
+The audio-file format, note timings, WAV sample rates, master FX settings, and saved song JSON are unchanged. A browser playback/listening comparison is still recommended for complex arrangements and cross-pattern reverb tails.
 
 ### Fixed in 0.2.72 — Ratchet overlap in Pattern Bounce and WAV export
 
@@ -530,4 +538,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.2.72.**
+**Documentation version: Squirrel Studio Web 0.2.73.**
