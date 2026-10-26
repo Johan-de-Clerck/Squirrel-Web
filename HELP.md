@@ -1,6 +1,14 @@
-# Squirrel Studio Web 0.2.80 — User Manual
+# Squirrel Studio Web 0.2.81 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Fixed in 0.2.81 — accurate live VA/FM note-off during decay
+
+The **live Web Audio renderer** now computes the volume at Note Off using the same exponential decay curve that it actually plays. Previously, releasing a sustained VA, FM2 or FM4 voice during the decay stage used a *linear* estimate instead, potentially causing a sudden amplitude jump on C00, a new note, or a pattern/track boundary. This was most audible on patches with a low sustain level and a long decay.
+
+The WAV renderer has also been aligned at very quiet levels: its release now begins at exactly the same minimum-positive-gain target as the live amplitude envelope. Attack, decay, sustained notes, zero sustain and low-velocity notes use the same release starting level in both engines. **D00 / Continue** still keeps the original voice alive through pattern changes, including changes to pattern BPM; the voice enters release only on C00, retrigger, or another legitimate Note Off.
+
+**Regression tests:** `node --test tests/envelope-parity.test.mjs` checks release levels at five representative points (attack, decay, sustain and quiet notes). These numerical checks do not replace real-browser listening tests for FX, filter modulation or hardware timing.
 
 ### Fixed in 0.2.80 — VA/FM synth envelope consistency in WAV export
 
@@ -597,4 +605,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.2.80.**
+**Documentation version: Squirrel Studio Web 0.2.81.**
