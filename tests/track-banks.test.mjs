@@ -82,6 +82,54 @@ test('legacy project formats retain their original first eight channels',()=>{
  assert.match(html,/const s=fresh\(false\);\s*s\.drumLastSlots=/);
  assert.match(html,/for\(let t=0;t<TRACK_COUNT;t\+\+\)\{const src=data\.tracks\[t\];if\(!src\|\|typeof src!=='object'\)continue/);
 });
+test('an actual legacy eight-track song restores audio track 8 and adds empty tracks 9–16',()=>{
+ const compatibility=new Function(`
+  const MAX_STEPS=32,PATTERN_COUNT=32,TRACK_COUNT=16,DRUM_LIBRARY_SIZE=15;
+  const AUDIO_TRACK_COUNT=6,LEGACY_TRACK_COUNT=8,FM_ALGORITHMS={};
+  const CHORD_MODES_BY_ID=new Map();
+  const LFO_TARGETS=[],ENVELOPE_TARGETS=[],LFO_DIVISIONS=['free'];
+  const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+  const kindName=(i,k)=>k.toUpperCase()+' '+(i+1);
+  const kindAllowed=k=>['drum','bass','lead','chord','sample'].includes(k);
+  const defaultPatternName=i=>'A'+(i+1);
+  const defaultSound=()=>({cutoff:4000,resonance:.7,chord:'minor'});
+  const defaultDrumSlot=(name='',data=null,chokeGroup=0)=>({
+   name,data,chokeGroup,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8
+  });
+  const defaultLFOs=()=>[],defaultEnvelopes=()=>[];
+  const defaultSendFX=()=>({delayTime:.34,feedback:32,reverbDecay:1.8,chorusRate:.8,chorusDepth:4});
+  const drumSlotFilterType=()=>'lowpass',sanitizeSampleMarkers=()=>{};
+  const restoreReferenceSoundControls=()=>{},safeSoundPatch=(mode,p)=>p;
+  const fmOperatorWave=()=> 'sine';
+  const normalizeBpm=x=>Math.max(50,Math.min(240,Number(x)||120));
+  const migrateModTarget=x=>x,FX_OPTIONS=[{id:0}],srcChordDefault=()=> 'minor';
+  ${basesSource}
+  ${makeStepSource}
+  ${sourceFunction('fresh')}
+  ${sourceFunction('validate')}
+  return {fresh,validate};
+ `)();
+ const generated=compatibility.fresh(false);
+ const old={...generated,version:24,
+  tracks:generated.tracks.slice(0,8),
+  patterns:generated.patterns.map(p=>p.slice(0,8)),
+  trackLengths:generated.trackLengths.map(p=>p.slice(0,8)),
+  drumSamples:generated.drumSamples.slice(0,8),
+  drumLastSlots:generated.drumLastSlots.slice(0,8),
+  selectedTrack:7
+ };
+ old.patterns[0][7][0].on=true;
+ old.patterns[0][7][0].note=62;
+ old.tracks[7].sampleData='data:audio/wav;base64,QUJD';
+ old.tracks[7].sampleName='legacy.wav';
+ const upgraded=compatibility.validate(old);
+ assert.equal(upgraded.tracks.length,16);
+ assert.equal(upgraded.patterns[0][7][0].note,62);
+ assert.equal(upgraded.tracks[7].sampleName,'legacy.wav');
+ assert.equal(upgraded.selectedTrack,7);
+ assert.ok(upgraded.tracks.slice(8).every(t=>t.trackKind==='sample'));
+ assert.ok(upgraded.patterns[0].slice(8).every(row=>row.every(step=>!step.on)));
+});
 test('the renderer only displays the bank selected by the current track',()=>{
  assert.match(html,/if\(trackBankOf\(track\)!==bank\)return/);
  assert.match(html,/selector\.value=String\(bank\)/);
