@@ -1395,6 +1395,14 @@ input[type="password"],textarea,
 #selectionMenu #rampCurveHelp{color:#ac977f;font:10px/1.4 Consolas,monospace}
 #selectionMenu #rampApply{background:#67462f;border:1px solid #aa8057;text-align:center}
 #selectionMenu #rampApply:disabled{opacity:.45;cursor:default}
+
+/* v0.2.86: compact parameter lock FILTER/MIX tabs */
+#stepLocksPanel .step-lock-head{display:flex;align-items:center;justify-content:space-between;gap:7px;min-width:0}
+#stepLocksPanel .step-lock-tabs{display:flex;gap:4px;flex:0 0 auto}
+#stepLocksPanel .step-lock-tabs button{padding:4px 8px;border:1px solid #786048;background:#34281f;color:#d7b995;border-radius:4px;font:700 10px Consolas,monospace;cursor:pointer}
+#stepLocksPanel .step-lock-tabs button[aria-selected="true"]{background:#87613c;color:#fff1d4;border-color:#c19866}
+#stepLocksPanel .step-lock-tabs button[hidden],#stepLocksPanel .step-lock-controls[hidden]{display:none!important}
+#stepLocksPanel .step-lock-controls label:has(input[type=checkbox]:not(:checked)){opacity:.65}
 </style>
 </head>
 <body>
@@ -1528,7 +1536,20 @@ input[type="password"],textarea,
     <label class="field" id="stepGateField"><span class="field-head"><span>GATE</span><output id="gateOut">85%</output></span><input id="gate" type="range" min="10" max="180" value="85"></label>
   </div>
 </div><div class="setup-actions step-editor-actions"><button class="mini-btn" id="toggleStepBtn">TOGGLE STEP</button><button class="mini-btn" id="copyStepBtn" type="button">COPY STEP</button><button class="mini-btn" id="pasteStepBtn" type="button" disabled>PASTE STEP</button><button class="mini-btn" id="undoStepBtn" type="button" disabled>↶ UNDO</button><button class="mini-btn" id="redoStepBtn" type="button" disabled>↷ REDO</button><button class="mini-btn" id="auditionStepBtn">♪ AUDITION</button></div></section>
-          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step FX</h2></div><span class="pill" id="fxStatus">FX OFF</span></div><div class="fx-compact-layout"><div class="fx-main-fields"><div class="control-grid fx-controls"><label class="field"><span class="field-head"><span>FX COMMAND</span></span><select id="stepFx" aria-label="Effect for the selected step"><option value="0">0 · NO EFFECT</option><option value="1">1 · PORTAMENTO UP</option><option value="2">2 · PORTAMENTO DOWN</option><option value="3">3 · OCTAVE UP</option><option value="4">4 · VIBRATO</option><option value="5">5 · OCTAVE DOWN</option><option value="9">9 · SAMPLE OFFSET (%)</option><option value="10">A · VOLUME SLIDE DOWN</option><option value="11">B · VOLUME SLIDE UP</option><option value="12">C · NOTE OFF</option><option value="13">D · CONTINUE NOTE / SAMPLE → NEXT PATTERN</option></select></label><label class="field step-continue-field step-continue-fx" id="stepContinueField"><span class="field-head">VOICE CONTINUATION</span><span class="step-continue-control"><input id="stepContinue" type="checkbox" aria-label="Continue note or sample into next pattern"><span>CONTINUE INTO NEXT PATTERN</span></span></label><label class="field hidden" id="stepChordField"><span class="field-head"><span>CHORD MODE</span><output id="chordModeOutput">MIN</output></span><select id="stepChordMode" aria-label="Chord quality for the selected CHORD step"></select></label><label class="field" id="fxAmountField"><span class="field-head"><span id="fxAmountLabel">PERIOD/TICK · HEX</span><output id="fxAmountOut">02</output></span><div class="fx-amount-row"><input id="fxAmount" aria-label="FX amount" type="range" min="0" max="255" step="1" value="2"><input id="fxHex" type="text" maxlength="2" spellcheck="false" autocomplete="off" inputmode="text" aria-label="FX parameter in hex" value="02"></div></label></div><div class="step-locks" id="stepLocksPanel"><div class="field-head">PARAMETER LOCKS · SYNTH FILTER</div><div class="step-lock-controls"><label><input type="checkbox" id="stepLockCutoffOn"> CUTOFF <output id="stepLockCutoffOut">4000 Hz</output><input id="stepLockCutoff" type="range" min="80" max="18000" step="10"></label><label><input type="checkbox" id="stepLockResoOn"> RESONANCE <output id="stepLockResoOut">0.7</output><input id="stepLockReso" type="range" min="0.1" max="18" step="0.1"></label></div></div></div><div class="setup-actions fx-actions"><button class="mini-btn" type="button" id="applyCarryRange" disabled>APPLY CARRY TO RANGE</button><button class="mini-btn" id="clearStepFx">CLEAR FX</button><button class="mini-btn" id="clearTrackFx">CLEAR TRACK FX</button></div></div></section>
+          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step FX</h2></div><span class="pill" id="fxStatus">FX OFF</span></div><div class="fx-compact-layout"><div class="fx-main-fields"><div class="control-grid fx-controls"><label class="field"><span class="field-head"><span>FX COMMAND</span></span><select id="stepFx" aria-label="Effect for the selected step"><option value="0">0 · NO EFFECT</option><option value="1">1 · PORTAMENTO UP</option><option value="2">2 · PORTAMENTO DOWN</option><option value="3">3 · OCTAVE UP</option><option value="4">4 · VIBRATO</option><option value="5">5 · OCTAVE DOWN</option><option value="9">9 · SAMPLE OFFSET (%)</option><option value="10">A · VOLUME SLIDE DOWN</option><option value="11">B · VOLUME SLIDE UP</option><option value="12">C · NOTE OFF</option><option value="13">D · CONTINUE NOTE / SAMPLE → NEXT PATTERN</option></select></label><label class="field step-continue-field step-continue-fx" id="stepContinueField"><span class="field-head">VOICE CONTINUATION</span><span class="step-continue-control"><input id="stepContinue" type="checkbox" aria-label="Continue note or sample into next pattern"><span>CONTINUE INTO NEXT PATTERN</span></span></label><label class="field hidden" id="stepChordField"><span class="field-head"><span>CHORD MODE</span><output id="chordModeOutput">MIN</output></span><select id="stepChordMode" aria-label="Chord quality for the selected CHORD step"></select></label><label class="field" id="fxAmountField"><span class="field-head"><span id="fxAmountLabel">PERIOD/TICK · HEX</span><output id="fxAmountOut">02</output></span><div class="fx-amount-row"><input id="fxAmount" aria-label="FX amount" type="range" min="0" max="255" step="1" value="2"><input id="fxHex" type="text" maxlength="2" spellcheck="false" autocomplete="off" inputmode="text" aria-label="FX parameter in hex" value="02"></div></label></div><div class="step-locks" id="stepLocksPanel"><div class="step-lock-head">
+ <span class="field-head" id="stepLockHeading">PARAMETER LOCKS · FILTER</span>
+ <div class="step-lock-tabs" role="tablist" aria-label="Step automation category">
+  <button id="stepLockFilterTab" type="button" role="tab" aria-controls="stepLockFilterFields" aria-selected="true">FILTER</button>
+  <button id="stepLockMixTab" type="button" role="tab" aria-controls="stepLockMixFields" aria-selected="false">MIX</button>
+ </div></div>
+ <div class="step-lock-controls" id="stepLockFilterFields" role="tabpanel" aria-labelledby="stepLockFilterTab">
+  <label><input type="checkbox" id="stepLockCutoffOn"> CUTOFF <output id="stepLockCutoffOut">4000 Hz</output><input id="stepLockCutoff" type="range" min="0" max="1000" step="1" aria-label="Cutoff frequency on logarithmic scale"></label>
+  <label><input type="checkbox" id="stepLockResoOn"> RESONANCE <output id="stepLockResoOut">0.7 Q</output><input id="stepLockReso" type="range" min="0.1" max="18" step="0.1"></label>
+ </div>
+ <div class="step-lock-controls" id="stepLockMixFields" role="tabpanel" aria-labelledby="stepLockMixTab" hidden>
+  <label><input type="checkbox" id="stepLockVolumeOn"> VOLUME <output id="stepLockVolumeOut">100%</output><input id="stepLockVolume" type="range" min="0" max="100" step="1"></label>
+  <label><input type="checkbox" id="stepLockPanOn"> PANNING <output id="stepLockPanOut">C</output><input id="stepLockPan" type="range" min="-100" max="100" step="1"></label>
+ </div></div></div><div class="setup-actions fx-actions"><button class="mini-btn" type="button" id="applyCarryRange" disabled>APPLY CARRY TO RANGE</button><button class="mini-btn" id="clearStepFx">CLEAR FX</button><button class="mini-btn" id="clearTrackFx">CLEAR TRACK FX</button></div></div></section>
         </div>
       </div>
       <div id="view-song" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Song mode</h2></div><span class="pill">A1–D8 · 32 PATTERNS</span></div>
@@ -5161,18 +5182,45 @@ function applySynthStepLocks(voices,locks,when){
   }
  }
 }
+const STEP_CUTOFF_MIN=80,STEP_CUTOFF_MAX=18000;
+// 0..1000 geometric slider position. Song JSON always stores ordinary Hz.
+function cutoffToSlider(hz){
+ return Math.round(1000*Math.log(clamp(Number(hz)||80,80,18000)/80)/Math.log(18000/80));
+}
+function sliderToCutoff(position){
+ return Math.round(80*Math.pow(18000/80,clamp(Number(position)||0,0,1000)/1000));
+}
+function stepPanLabel(value){
+ const n=Math.round(clamp(Number(value)||0,-100,100));
+ return n<0?'L'+Math.abs(n):n>0?'R'+n:'C';
+}
+let stepLockTab='filter';
 function renderStepLocks(){
  const panel=$('stepLocksPanel');if(!panel)return;
- const t=state.tracks[state.selectedTrack],enabled=isSynth(state.selectedTrack)&&!t.midiOnly;
+ const track=state.tracks[state.selectedTrack],synth=isSynth(state.selectedTrack),enabled=!track.midiOnly;
  panel.classList.toggle('hidden',!enabled);
- const locks=synthStepLocks(selectedStep()),sound=t.sound||{};
- const c=typeof locks.cutoff==='number'&&Number.isFinite(locks.cutoff),r=typeof locks.resonance==='number'&&Number.isFinite(locks.resonance);
- $('stepLockCutoffOn').checked=c;$('stepLockResoOn').checked=r;
- $('stepLockCutoff').disabled=!c;$('stepLockReso').disabled=!r;
- $('stepLockCutoff').value=String(c?clamp(Number(locks.cutoff),80,18000):clamp(Number(sound.cutoff??4000),80,18000));
- $('stepLockReso').value=String(r?clamp(Number(locks.resonance),.1,18):clamp(Number(sound.resonance??.7),.1,18));
- $('stepLockCutoffOut').textContent=$('stepLockCutoff').value+' Hz';
- $('stepLockResoOut').textContent=Number($('stepLockReso').value).toFixed(1);
+ const tab=synth?stepLockTab:'mix';
+ $('stepLockFilterTab').hidden=!synth;
+ $('stepLockFilterTab').setAttribute('aria-selected',String(tab==='filter'));
+ $('stepLockMixTab').setAttribute('aria-selected',String(tab==='mix'));
+ $('stepLockFilterFields').hidden=tab!=='filter';$('stepLockMixFields').hidden=tab!=='mix';
+ $('stepLockHeading').textContent='PARAMETER LOCKS · '+tab.toUpperCase();
+ const locks=synthStepLocks(selectedStep()),sound=track.sound||{};
+ const specs=[
+  ['cutoff','stepLockCutoffOn','stepLockCutoff','stepLockCutoffOut',Number(sound.cutoff??4000)],
+  ['resonance','stepLockResoOn','stepLockReso','stepLockResoOut',Number(sound.resonance??.7)],
+  ['volume','stepLockVolumeOn','stepLockVolume','stepLockVolumeOut',100],
+  ['pan','stepLockPanOn','stepLockPan','stepLockPanOut',0]
+ ];
+ for(const [param,check,slider,output,fallback] of specs){
+  const active=Number.isFinite(locks[param]);
+  const bounds=rampSpec(param),value=clamp(active?locks[param]:fallback,bounds.min,bounds.max);
+  $(check).checked=active;$(slider).disabled=!active;
+  $(slider).value=String(param==='cutoff'?cutoffToSlider(value):value);
+  $(output).textContent=param==='cutoff'?Math.round(value)+' Hz':
+   param==='resonance'?value.toFixed(1)+' Q':
+   param==='volume'?Math.round(value)+'%':stepPanLabel(value);
+ }
 }
 function renderFXEditor(){
  renderStepLocks();
@@ -8911,18 +8959,25 @@ function bindings(){
      candidate.chordMode=quality;
    }
    persist();renderGrid();renderFXEditor();focusSelectedPad(false)};
- for(const [param,check,slider] of [['cutoff','stepLockCutoffOn','stepLockCutoff'],['resonance','stepLockResoOn','stepLockReso']]){
+ $('stepLockFilterTab').onclick=()=>{stepLockTab='filter';renderStepLocks()};
+ $('stepLockMixTab').onclick=()=>{stepLockTab='mix';renderStepLocks()};
+ for(const [param,check,slider] of [
+  ['cutoff','stepLockCutoffOn','stepLockCutoff'],['resonance','stepLockResoOn','stepLockReso'],
+  ['volume','stepLockVolumeOn','stepLockVolume'],['pan','stepLockPanOn','stepLockPan']
+ ]){
+  const readSlider=()=>param==='cutoff'?sliderToCutoff($(slider).value):Number($(slider).value);
   $(check).onchange=()=>{
    const step=selectedStep(),locks={...synthStepLocks(step)};
-   if($(check).checked)locks[param]=Number($(slider).value);
-   else delete locks[param];
+   if($(check).checked){
+    locks[param]=param==='cutoff'?clamp(Number(state.tracks[state.selectedTrack].sound?.cutoff??4000),80,18000):
+     readSlider();
+   }else delete locks[param];
    step.locks=Object.keys(locks).length?locks:null;
    persist();renderGrid();renderStepLocks();
   };
   $(slider).oninput=()=>{
    const step=selectedStep(),locks={...synthStepLocks(step)};
-   locks[param]=Number($(slider).value);step.locks=locks;
-   $(check).checked=true;
+   locks[param]=readSlider();step.locks=locks;$(check).checked=true;
    persist();renderGrid();renderStepLocks();
   };
  }
