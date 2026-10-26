@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.84 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.85 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1385,7 +1385,7 @@ input[type="password"],textarea,
  #view-seq>.two-cols>.panel{height:auto;max-height:none;overflow-y:visible;}
 }
 
-/* Selection range interpolation UI — v0.2.84 */
+/* Selection range interpolation UI — v0.2.85 */
 #selectionMenu .file-menu-items{width:min(375px,92vw);max-width:min(375px,92vw)}
 #selectionMenu .ramp-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:6px}
 #selectionMenu .ramp-fields label{display:flex;flex-direction:column;gap:5px;min-width:0;font:700 10px Consolas,monospace;color:#cba783}
@@ -1426,10 +1426,10 @@ input[type="password"],textarea,
 
 <details id="selectionMenu" class="file-action-menu"><summary>▦ SELECTION</summary>
  <div class="file-menu-items" role="group" aria-label="Ramp filter locks over selected steps">
-  <div class="file-menu-heading">INTERPOLATE FILTER LOCKS</div>
+  <div class="file-menu-heading">INTERPOLATE STEP AUTOMATION</div>
   <div class="ramp-fields">
    <div id="rampInfo" class="ramp-wide" role="status" aria-live="polite">DRAG TWO OR MORE STEPS ON ONE SYNTH TRACK.</div>
-   <label>PARAMETER<select id="rampParameter"><option value="cutoff">FILTER CUTOFF</option><option value="resonance">FILTER RESONANCE</option></select></label>
+   <label>PARAMETER<select id="rampParameter"><option value="cutoff">FILTER CUTOFF</option><option value="resonance">FILTER RESONANCE</option><option value="volume">TRACK VOLUME</option><option value="pan">TRACK PANNING</option></select></label>
    <label>CURVE<select id="rampCurve"><option value="linear">LINEAR</option><option value="exponential">EXPONENTIAL</option></select></label>
    <label>FIRST STEP<input id="rampStart" type="number" aria-label="First step filter value" disabled></label>
    <label>LAST STEP<input id="rampEnd" type="number" aria-label="Last step filter value" disabled></label>
@@ -1498,7 +1498,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.84</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.85</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span><label class="transport-song-switch" for="songEnable" title="Play the Song Mode arrangement instead of looping a single pattern"><input type="checkbox" id="songEnable" aria-label="Enable Song Mode"> ENABLE SONG MODE</label></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label" id="bpmPatternLabel">BPM · A1</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1582,7 +1582,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.84';
+const SQUIRREL_VERSION='0.2.85';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -4522,9 +4522,10 @@ function scheduleStep(idx,when){
     if(v.trackIndex===t&&(v.sampleVoice||v.drum||isSynth(t))&&!v.released)
      markSampleContinuation(t,v,when);
   }
+  if(!track.midiOnly) scheduleStepMixLocks(
+   audio.stepVolumeGains[t]?.gain,audio.stepPans[t]?.pan,synthStepLocks(step),when,laneStep===0);
   if(isSynth(t)&&!track.midiOnly){
    const locks=synthStepLocks(step);
-   scheduleStepMixLocks(audio.stepVolumeGains[t]?.gain,audio.stepPans[t]?.pan,locks,when,laneStep===0);
    if(Object.keys(locks).length){
     const active=[...scheduledVoices].filter(v=>v.trackIndex===t&&!v.released);
     applySynthStepLocks(active,locks,when);
@@ -4802,21 +4803,28 @@ function rampSelectedRange(){
  const track=stepRange.startTrack,first=Math.min(stepRange.startStep,stepRange.endStep);
  const last=Math.max(stepRange.startStep,stepRange.endStep);
  if(first<0||last<=first||last>=trackLength(state.pattern,track)||
-  !isSynth(track)||state.tracks[track].midiOnly)return null;
+  state.tracks[track].midiOnly||
+  (['cutoff','resonance'].includes($('rampParameter')?.value)&&!isSynth(track)))return null;
  return {pattern:state.pattern,track,first,last};
 }
 function rampInterpolate(a,b,t,curve){
  t=clamp(t,0,1);
- return curve==='exponential'?a*Math.pow(b/a,t):a+(b-a)*t;
+ return curve!=='exponential'?a+(b-a)*t:
+  a>0&&b>0?a*Math.pow(b/a,t):a+(b-a)*t*t;
 }
-function rampSpec(param){return param==='resonance'?{min:.1,max:18,step:.1,unit:'Q'}:{min:80,max:18000,step:1,unit:'Hz'}}
+function rampSpec(param){
+ if(param==='resonance')return {min:.1,max:18,step:.1,unit:'Q'};
+ if(param==='volume')return {min:0,max:100,step:1,unit:'%'};
+ if(param==='pan')return {min:-100,max:100,step:1,unit:'PAN'};
+ return {min:80,max:18000,step:1,unit:'Hz'};
+}
 function rampNumber(id,spec){
  const raw=$(id).value.trim();if(!raw)return NaN;
  const n=Number(raw);
  return Number.isFinite(n)&&n>=spec.min&&n<=spec.max?n:NaN;
 }
 function updateRampMenu(reset=false){
- const range=rampSelectedRange(),param=$('rampParameter').value==='resonance'?'resonance':'cutoff';
+ const range=rampSelectedRange(),param=['cutoff','resonance','volume','pan'].includes($('rampParameter').value)?$('rampParameter').value:'cutoff';
  const spec=rampSpec(param),key=range?`${range.pattern}:${range.track}:${range.first}:${range.last}:${param}`:'none:'+param;
  for(const input of [$('rampStart'),$('rampEnd')]){
   input.min=String(spec.min);input.max=String(spec.max);input.step=String(spec.step);input.disabled=!range;
@@ -4825,7 +4833,7 @@ function updateRampMenu(reset=false){
   rampEditorKey=key;
   if(range){
    const lane=state.patterns[range.pattern][range.track],sound=state.tracks[range.track].sound;
-   const fallback=param==='cutoff'?Number(sound?.cutoff??4000):Number(sound?.resonance??.7);
+   const fallback=param==='cutoff'?Number(sound?.cutoff??4000):param==='resonance'?Number(sound?.resonance??.7):param==='volume'?100:0;
    const endpoint=cell=>{
     const lock=synthStepLocks(cell)[param];
     return clamp(Number.isFinite(lock)?lock:Number.isFinite(fallback)?fallback:spec.min,spec.min,spec.max);
@@ -4839,17 +4847,17 @@ function updateRampMenu(reset=false){
  $('rampApply').disabled=!valid;
  const curve=$('rampCurve').value;
  $('rampCurveHelp').textContent=curve==='exponential'
-  ?'EXPONENTIAL = EVEN FREQUENCY RATIOS / OCTAVES; ASCENDING OR DESCENDING.'
-  :'LINEAR = EVEN INCREMENTS IN HZ OR Q. ENDPOINTS DEFAULT TO EXISTING LOCKS.';
+  ?'EXPONENTIAL = EQUAL POSITIVE RATIOS; CURVED THROUGH ZERO OR NEGATIVE VALUES.'
+  :'LINEAR = EQUAL NUMERIC INTERVALS BETWEEN FIRST AND LAST STEP.';
  if(!range){
   $('rampInfo').textContent=stepRange?.startTrack!==stepRange?.endTrack&&stepRange?.pattern===state.pattern
    ?'SELECT A RANGE ON ONE TRACK, NOT MULTIPLE TRACKS.'
-   :'DRAG-SELECT TWO OR MORE STEPS ON ONE VA/FM BASS, LEAD OR CHORD TRACK.';
+   :(['cutoff','resonance'].includes(param)?'SELECT STEPS ON A BASS / LEAD / CHORD TRACK.':'SELECT STEPS ON ANY INTERNAL AUDIO TRACK.');
  }else if(!valid){
   $('rampInfo').textContent='TRACK '+(range.track+1)+' · STEPS '+(range.first+1)+'–'+(range.last+1)+
    ' · VALUES MUST BE '+spec.min+'–'+spec.max+' '+spec.unit;
  }else{
-  const fmt=n=>param==='cutoff'?Math.round(n)+' Hz':n.toFixed(1)+' Q';
+  const fmt=n=>param==='cutoff'?Math.round(n)+' Hz':param==='resonance'?n.toFixed(1)+' Q':param==='pan'?(n<0?'L ':n>0?'R ':'C ')+Math.round(Math.abs(n)):Math.round(n)+'%';
   $('rampInfo').textContent='TRACK '+(range.track+1)+' · STEPS '+String(range.first+1).padStart(2,'0')+
    '–'+String(range.last+1).padStart(2,'0')+' · '+fmt(a)+' → '+fmt(b)+
    ' · MID '+fmt(rampInterpolate(a,b,.5,curve));
@@ -4858,7 +4866,7 @@ function updateRampMenu(reset=false){
 function applyRampSelection(){
  const range=rampSelectedRange();
  if(!range){notify('Select a range on one synth track first.',true);return false}
- const param=$('rampParameter').value==='resonance'?'resonance':'cutoff',spec=rampSpec(param);
+ const param=['cutoff','resonance','volume','pan'].includes($('rampParameter').value)?$('rampParameter').value:'cutoff',spec=rampSpec(param);
  const a=rampNumber('rampStart',spec),b=rampNumber('rampEnd',spec);
  if(!Number.isFinite(a)||!Number.isFinite(b)){notify('Enter valid first and last values.',true);return false}
  const curve=$('rampCurve').value==='exponential'?'exponential':'linear';
@@ -4867,7 +4875,7 @@ function applyRampSelection(){
  for(let i=0;i<=total;i++){
   const cell=lane[range.first+i],locks={...synthStepLocks(cell)};
   const raw=i===0?a:i===total?b:rampInterpolate(a,b,i/total,curve);
-  const value=param==='cutoff'?Math.round(raw):Math.round(raw*10)/10;
+  const value=param==='resonance'?Math.round(raw*10)/10:Math.round(raw);
   if(locks[param]===value)continue;
   locks[param]=value;cell.locks=locks;changed++;
  }
@@ -4991,7 +4999,7 @@ function renderGrid(){syncTrackNoteColorPicker();
     pad.classList.add('track-colored');
     pad.style.setProperty('--note-light',colors[0]);pad.style.setProperty('--note-dark',colors[1]);pad.style.setProperty('--note-ink',colors[2]);
    }
-   if(Object.keys(synthStepLocks(step)).length){pad.classList.add('has-parameter-lock');pad.title='Synth filter parameter lock';}
+   if(Object.keys(synthStepLocks(step)).length){pad.classList.add('has-parameter-lock');pad.title='Step parameter lock (Filter, Volume or Panning)';}
    pad.dataset.track=String(track);pad.dataset.step=String(i);pad.disabled=inactive;
    if(isDrum(track)&&!t.midiOnly)pad.classList.add('drum-step');
    pad.tabIndex=(state.selectedTrack===track&&state.selectedStep===i)?0:-1;
@@ -8694,12 +8702,12 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
       stopExportSample(t,at,voice=>!voice.carryAcrossPatterns);
     }
     const fxRow=exportFXRows[t];
+    if(!state.tracks[t].midiOnly) scheduleStepMixLocks(
+     exportStepVolumes[t],exportStepPans[t],synthStepLocks(step),at,stepIndex%trackLength(pattern,t)===0);
     if(isSynth(t)){
      const active=activeExportSynthFilters[t];
      for(let n=active.length-1;n>=0;n--)if(active[n].end<at)active.splice(n,1);
      const locks=synthStepLocks(step);
-     scheduleStepMixLocks(exportStepVolumes[t],exportStepPans[t],locks,at,
-      stepIndex%trackLength(pattern,t)===0);
      for(const entry of active){
       // Live step locks skip released voices: filter release tails
       // should not acquire new cutoff/resonance automation.
