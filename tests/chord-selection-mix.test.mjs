@@ -82,10 +82,14 @@ test('volume and pan are relative to mixer and persist until a track wrap',()=>{
  assert.deepEqual(events,[['volume',1,3,.006],['pan',0,3,.006]]);
 });
 test('offline WAV and live audio both route volume and pan before all send FX',()=>{
- assert.match(html,/stepPan\.connect\(delaySend\)\.connect\(delayInput\)/);
- assert.match(html,/stepPan\.connect\(reverbSend\)\.connect\(reverb\)/);
- assert.match(html,/stepPan\.connect\(chorusSend\)\.connect\(chorusInput\)/);
+ assert.match(html,/pan\.connect\(delaySend\)\.connect\(delayInput\)/);
+ assert.match(html,/pan\.connect\(reverbSend\)\.connect\(reverb\)/);
+ assert.match(html,/pan\.connect\(chorusSend\)\.connect\(chorusInput\)/);
  assert.match(html,/scheduleStepMixLocks\(\s*exportStepVolumes\[t\],exportStepPans\[t\]/);
- assert.match(html,/scheduleStepMixLocks\(\s*audio\.stepVolumeGains\[t\]\?\.gain,audio\.stepPans\[t\]\?\.pan/);
+ assert.match(html,/scheduleStepMixLocks\(\s*audio\.stepVolumeGains\[t\]\?\.gain,audio\.stepPans\[t\]\?\.offset/);
  assert.match(html,/\['cutoff','resonance','volume','pan'\]\.filter/);
+ assert.match(html,/stepPan\.connect\(pan\.pan\)/);
+ assert.match(html,/stepPan\.start\(0\);stepPan\.stop\(duration\)/);
+ assert.doesNotMatch(html,/pan\.connect\(stepPan\)/);
+
 });
