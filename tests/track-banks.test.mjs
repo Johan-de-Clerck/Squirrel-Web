@@ -91,5 +91,5 @@ test('audio, sample editor, MIDI and export use dynamic track count',()=>{
  assert.match(html,/for\(let i=0;i<TRACK_COUNT;i\+\+\)\{\s*if\(isSample\(i\)\)/);
  assert.match(html,/const trackGains=\[\],trackModGains=\[\],trackPans=\[\]/);
  assert.match(html,/const exportFXRows=Array\.from\(\{length:TRACK_COUNT\}/);
- assert.match(html,/const targetFromChannel/);
+ assert.match(html,/function targetFromChannel/);
 });
