@@ -1,6 +1,14 @@
-# Squirrel Studio Web 0.2.87 — User Manual
+# Squirrel Studio Web 0.2.88 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.88 — extended tempo range down to 10 BPM
+
+The minimum tempo is now **10.0 BPM** instead of 50.0 BPM; the maximum stays **240.0 BPM**. Adjust in **0.1 BPM** increments through the transport BPM field or **OPTIONS → PATTERN & STEP LENGTH**. Pattern tempo values are saved separately for all 32 patterns.
+
+The same minimum is enforced by the project's shared tempo normalization, so **Song Mode**, saved song loading, the real-time step scheduler, **Bounce**, and stereo WAV / stem export all accept tempos as low as 10.0 BPM. A 16th-note step at 10 BPM lasts **1.5 seconds**; a 32-step pattern spans **48 seconds** before swing adjustments. Very low tempos and long arrangements can produce large WAV files; export memory and duration limits still apply.
+
+**Regression test:** `node --test tests/tempo-range.test.mjs` checks decimal values, lower/upper limits, both BPM inputs and the shared playback/export calculations.
 
 ### New in 0.2.87 — organized Options panel for all sixteen tracks
 
@@ -199,7 +207,7 @@ A track with fewer steps than its containing pattern now releases non-carried sa
 
 ### New in 0.2.67 — Per-pattern BPM (A1–D8)
 
-Every pattern has its **own BPM**, adjustable in **0.1 BPM steps from 50.0 to 240.0**. Select a pattern in the **SEQUENCER** and change **BPM · A1** (the label follows the selected pattern), or change the BPM next to the pattern name in **OPTIONS → PATTERNS**. For example, set **A1 = 60.0 BPM** and **A2 = 120.0 BPM**. The tempo is saved separately for all 32 patterns, including empty patterns.
+Every pattern has its **own BPM**, adjustable in **0.1 BPM steps from 10.0 to 240.0**. Select a pattern in the **SEQUENCER** and change **BPM · A1** (the label follows the selected pattern), or change the BPM next to the pattern name in **OPTIONS → PATTERNS**. For example, set **A1 = 60.0 BPM** and **A2 = 120.0 BPM**. The tempo is saved separately for all 32 patterns, including empty patterns.
 
 In **SONG MODE**, the pattern library and song tiles show their BPM. Playback switches tempo **at the first step of each pattern**; changing A1 does not alter A2. Synced LFO rates follow the new tempo, while reverb, delay and long carried samples continue across the change. The selected pattern's BPM is also used when playing that pattern alone.
 
@@ -430,7 +438,7 @@ The **ProTracker keyboard layout** uses two rows. The **lower octave** starts at
 
 ### BPM precision (0.1 BPM)
 
-The BPM field accepts fractional tempos in **0.1 BPM steps**, from **50.0** to **240.0**. For example, select **120.3** (the browser may display a comma instead of a decimal point according to your locale). Use the keyboard arrow keys on the BPM input to adjust the tempo by one tenth.
+The BPM field accepts fractional tempos in **0.1 BPM steps**, from **10.0** to **240.0**. For example, select **120.3** (the browser may display a comma instead of a decimal point according to your locale). Use the keyboard arrow keys on the BPM input to adjust the tempo by one tenth.
 
 Each pattern stores its chosen BPM independently. It controls the sequencer and tempo-synchronized LFO rates whenever that pattern plays, is saved in project JSON, and is preserved when loading compatible older songs. Song Mode automatically follows the BPM of each arrangement tile.
 
@@ -689,4 +697,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.2.87.**
+**Documentation version: Squirrel Studio Web 0.2.88.**
