@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.77 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.78 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1472,7 +1472,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.77</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.78</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span><label class="transport-song-switch" for="songEnable" title="Play the Song Mode arrangement instead of looping a single pattern"><input type="checkbox" id="songEnable" aria-label="Enable Song Mode"> ENABLE SONG MODE</label></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label" id="bpmPatternLabel">BPM · A1</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1502,7 +1502,7 @@ input[type="password"],textarea,
     <label class="field" id="stepGateField"><span class="field-head"><span>GATE</span><output id="gateOut">85%</output></span><input id="gate" type="range" min="10" max="180" value="85"></label>
   </div>
 </div><div class="setup-actions step-editor-actions"><button class="mini-btn" id="toggleStepBtn">TOGGLE STEP</button><button class="mini-btn" id="copyStepBtn" type="button">COPY STEP</button><button class="mini-btn" id="pasteStepBtn" type="button" disabled>PASTE STEP</button><button class="mini-btn" id="undoStepBtn" type="button" disabled>↶ UNDO</button><button class="mini-btn" id="redoStepBtn" type="button" disabled>↷ REDO</button><button class="mini-btn" id="auditionStepBtn">♪ AUDITION</button></div></section>
-          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step FX</h2></div><span class="pill" id="fxStatus">FX OFF</span></div><div class="fx-compact-layout"><div class="fx-main-fields"><div class="control-grid fx-controls"><label class="field"><span class="field-head"><span>FX COMMAND</span></span><select id="stepFx" aria-label="Effect for the selected step"><option value="0">0 · NO EFFECT</option><option value="1">1 · PORTAMENTO UP</option><option value="2">2 · PORTAMENTO DOWN</option><option value="3">3 · OCTAVE UP</option><option value="4">4 · VIBRATO</option><option value="5">5 · OCTAVE DOWN</option><option value="9">9 · SAMPLE OFFSET (%)</option><option value="10">A · VOLUME SLIDE DOWN</option><option value="11">B · VOLUME SLIDE UP</option><option value="12">C · NOTE OFF</option><option value="13">D · SAMPLE CONTINUE → NEXT PATTERN</option></select></label><label class="field step-continue-field step-continue-fx" id="stepContinueField"><span class="field-head">SAMPLE PLAYBACK</span><span class="step-continue-control"><input id="stepContinue" type="checkbox" aria-label="Continue sample or drum after pattern"><span>CONTINUE INTO NEXT PATTERN</span></span></label><label class="field hidden" id="stepChordField"><span class="field-head"><span>CHORD MODE</span><output id="chordModeOutput">MIN</output></span><select id="stepChordMode" aria-label="Chord quality for the selected CHORD step"></select></label><label class="field" id="fxAmountField"><span class="field-head"><span id="fxAmountLabel">PERIOD/TICK · HEX</span><output id="fxAmountOut">02</output></span><div class="fx-amount-row"><input id="fxAmount" aria-label="FX amount" type="range" min="0" max="255" step="1" value="2"><input id="fxHex" type="text" maxlength="2" spellcheck="false" autocomplete="off" inputmode="text" aria-label="FX parameter in hex" value="02"></div></label></div><div class="step-locks" id="stepLocksPanel"><div class="field-head">PARAMETER LOCKS · SYNTH FILTER</div><div class="step-lock-controls"><label><input type="checkbox" id="stepLockCutoffOn"> CUTOFF <output id="stepLockCutoffOut">4000 Hz</output><input id="stepLockCutoff" type="range" min="80" max="18000" step="10"></label><label><input type="checkbox" id="stepLockResoOn"> RESONANCE <output id="stepLockResoOut">0.7</output><input id="stepLockReso" type="range" min="0.1" max="18" step="0.1"></label></div></div></div><div class="setup-actions fx-actions"><button class="mini-btn" type="button" id="applyCarryRange" disabled>APPLY CARRY TO RANGE</button><button class="mini-btn" id="clearStepFx">CLEAR FX</button><button class="mini-btn" id="clearTrackFx">CLEAR TRACK FX</button></div></div></section>
+          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step FX</h2></div><span class="pill" id="fxStatus">FX OFF</span></div><div class="fx-compact-layout"><div class="fx-main-fields"><div class="control-grid fx-controls"><label class="field"><span class="field-head"><span>FX COMMAND</span></span><select id="stepFx" aria-label="Effect for the selected step"><option value="0">0 · NO EFFECT</option><option value="1">1 · PORTAMENTO UP</option><option value="2">2 · PORTAMENTO DOWN</option><option value="3">3 · OCTAVE UP</option><option value="4">4 · VIBRATO</option><option value="5">5 · OCTAVE DOWN</option><option value="9">9 · SAMPLE OFFSET (%)</option><option value="10">A · VOLUME SLIDE DOWN</option><option value="11">B · VOLUME SLIDE UP</option><option value="12">C · NOTE OFF</option><option value="13">D · CONTINUE NOTE / SAMPLE → NEXT PATTERN</option></select></label><label class="field step-continue-field step-continue-fx" id="stepContinueField"><span class="field-head">VOICE CONTINUATION</span><span class="step-continue-control"><input id="stepContinue" type="checkbox" aria-label="Continue note or sample into next pattern"><span>CONTINUE INTO NEXT PATTERN</span></span></label><label class="field hidden" id="stepChordField"><span class="field-head"><span>CHORD MODE</span><output id="chordModeOutput">MIN</output></span><select id="stepChordMode" aria-label="Chord quality for the selected CHORD step"></select></label><label class="field" id="fxAmountField"><span class="field-head"><span id="fxAmountLabel">PERIOD/TICK · HEX</span><output id="fxAmountOut">02</output></span><div class="fx-amount-row"><input id="fxAmount" aria-label="FX amount" type="range" min="0" max="255" step="1" value="2"><input id="fxHex" type="text" maxlength="2" spellcheck="false" autocomplete="off" inputmode="text" aria-label="FX parameter in hex" value="02"></div></label></div><div class="step-locks" id="stepLocksPanel"><div class="field-head">PARAMETER LOCKS · SYNTH FILTER</div><div class="step-lock-controls"><label><input type="checkbox" id="stepLockCutoffOn"> CUTOFF <output id="stepLockCutoffOut">4000 Hz</output><input id="stepLockCutoff" type="range" min="80" max="18000" step="10"></label><label><input type="checkbox" id="stepLockResoOn"> RESONANCE <output id="stepLockResoOut">0.7</output><input id="stepLockReso" type="range" min="0.1" max="18" step="0.1"></label></div></div></div><div class="setup-actions fx-actions"><button class="mini-btn" type="button" id="applyCarryRange" disabled>APPLY CARRY TO RANGE</button><button class="mini-btn" id="clearStepFx">CLEAR FX</button><button class="mini-btn" id="clearTrackFx">CLEAR TRACK FX</button></div></div></section>
         </div>
       </div>
       <div id="view-song" class="hidden"><section class="panel"><div class="panel-head"><div><h2 class="section-title">Song mode</h2></div><span class="pill">A1–D8 · 32 PATTERNS</span></div>
@@ -1556,7 +1556,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.77';
+const SQUIRREL_VERSION='0.2.78';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -1743,7 +1743,7 @@ const makeStep=(track,on=false,note=null)=>({on,note:note??bases[track].note,sam
 // de laatste period/volume. 1xx/2xx gebruiken period-units, Axx/Bxx volume-units.
 // 4xy = vibrato (speed=x, depth=y), 0xx herhaalt de laatst gebruikte parameter.
 function stepContinuesSample(step){return !!step?.continueSample||step?.fx===13}
-function stepCanContinue(t){return (isSample(t)||isDrum(t))&&!state.tracks[t].midiOnly}
+function stepCanContinue(t){return (isSample(t)||isDrum(t)||isSynth(t))&&!state.tracks[t].midiOnly}
 function setStepContinue(t,index,enabled){
  if(!stepCanContinue(t))return false;
  const step=state.patterns[state.pattern][t]?.[index];if(!step)return false;
@@ -1751,7 +1751,7 @@ function setStepContinue(t,index,enabled){
  if(!enabled&&step.fx===13){step.fx=0;step.fxAmount=0}
  return true;
 }
-const FX_OPTIONS=[{id:0,label:'0 · No effect'},{id:1,label:'1 · Portamento up'},{id:2,label:'2 · Portamento down'},{id:3,label:'3 · Octave up'},{id:4,label:'4 · Vibrato'},{id:5,label:'5 · Octave down'},{id:9,label:'9 · Sample offset (%)'},{id:10,label:'A · Volume slide down'},{id:11,label:'B · Volume slide up'},{id:12,label:'C · NOTE OFF'},{id:13,label:'D · SAMPLE CONTINUE'}];
+const FX_OPTIONS=[{id:0,label:'0 · No effect'},{id:1,label:'1 · Portamento up'},{id:2,label:'2 · Portamento down'},{id:3,label:'3 · Octave up'},{id:4,label:'4 · Vibrato'},{id:5,label:'5 · Octave down'},{id:9,label:'9 · Sample offset (%)'},{id:10,label:'A · Volume slide down'},{id:11,label:'B · Volume slide up'},{id:12,label:'C · NOTE OFF'},{id:13,label:'D · CONTINUE TO NEXT PATTERN'}];
 const fxHex=n=>clamp(n|0,0,255).toString(16).toUpperCase().padStart(2,'0');
 const fxAmountText=(id,n)=>id===9?String(clamp(Math.round(Number(n)||0),0,99)).padStart(2,'0'):fxHex(n);
 const sampleOffsetFraction=(id,amount)=>id===9?clamp(Math.round(Number(amount)||0),0,99)/100:0;
@@ -1761,12 +1761,16 @@ const periodForNote=note=>428*Math.pow(2,(48-note)/12);
 const TICKS_PER_STEP=6;
 function blankFxRuntime(){return {voices:[],basePeriod:428,period:428,level:64,activeFx:0,activeAmount:0,phase:0,memory:{},vibratoSpeed:0,vibratoDepth:0}}
 let fxRuntime=Array.from({length:TRACK_COUNT},blankFxRuntime);
+// A per-track registry of voices carried into the next pattern.
+// Includes SAMPLE / DRUM as before and now BASS / LEAD / CHORD synth notes.
 const continuedSampleVoices=Array.from({length:TRACK_COUNT},()=>new Set());
 // Only show voices that have actually reached their scheduled start time.
 function activeCarryVoiceCount(t,now=audio?.ctx?.currentTime??0){
  let count=0;
  for(const voice of continuedSampleVoices[t]||[]){
-  if(!voice||voice.released||!scheduledVoices.has(voice))continue;
+  if(!voice||voice.released||!scheduledVoices.has(voice)){
+   continuedSampleVoices[t].delete(voice);continue;
+  }
   if(Number.isFinite(voice.startTime)&&voice.startTime>now+.012)continue;
   count++;
  }
@@ -1780,7 +1784,7 @@ function updateCarryIndicators(){
   badge.hidden=count===0;
   if(count){
    badge.textContent='CARRY '+count;
-   badge.title=count+' continuing sample '+(count===1?'voice':'voices')+' on '+state.tracks[t].name;
+   badge.title=count+' continuing audio '+(count===1?'voice':'voices')+' on '+state.tracks[t].name;
   }
  }
 }
@@ -1790,8 +1794,9 @@ function markSampleContinuation(t,voice,when=audio?.ctx?.currentTime??0){
  // In particular, a looping drum slot may already have a future gate fade
  // and source.stop scheduled. Extend that gate before it fires, otherwise
  // D00 appears checked but the audio stops early at the previous gate.
- const source=voice?.src||(voice?.sampleVoice?voice?.oscs?.[0]:null);
- if(!voice||voice.released||!source||!(voice.sampleVoice||voice.drum))return false;
+ const source=voice?.src||voice?.oscs?.[0];
+ if(!voice||voice.released||(!source&&!voice.nativeId)||
+    !(voice.sampleVoice||voice.drum||isSynth(t)))return false;
  // A completed drum envelope is silent regardless of its loop flag.
  if(voice.drum&&Number.isFinite(voice.drumEnvelopeStop)&&when>=voice.drumEnvelopeStop)return false;
  if(voice.drum&&source.loop&&Number.isFinite(voice.gateOff)){
@@ -4409,10 +4414,10 @@ function scheduleStep(idx,when){
    midiOffTrack(t,when);
    for(const v of fxRuntime[t].voices)
     if(v&&!v.released&&!v.carryAcrossPatterns)releaseVoiceScheduled(v,when);
-   // Drum/sample voices can outlive their FX row. Enforce the boundary
-   // for every voice, not just the last note held by the FX runtime.
+   // A track wrap releases every non-carried internal voice, including
+   // sustained VA/FM notes that have already left the current FX row.
    for(const v of [...scheduledVoices])
-    if(v.trackIndex===t&&(v.sampleVoice||v.drum)&&!v.released&&!v.carryAcrossPatterns)
+    if(v.trackIndex===t&&(v.sampleVoice||v.drum||isSynth(t))&&!v.released&&!v.carryAcrossPatterns)
      releaseVoiceScheduled(v,when);
    fxRuntime[t]=blankFxRuntime();
   }
@@ -4426,19 +4431,21 @@ function scheduleStep(idx,when){
   if(step.fx===12){
    midiOffTrack(t,when);
    releaseContinuedSamples(t,when);
-   // Also stop non-carried drum/sample voices, which may outlive their FX row.
+   // C00 ends ALL held audio voices, including a synth continued from
+   // a previous pattern whose FX row was reset at the boundary.
    if(stepCanContinue(t))
     for(const v of [...scheduledVoices])
-     if(v.trackIndex===t&&(v.drum||v.sampleVoice)&&!v.released)releaseVoiceScheduled(v,when);
+     if(v.trackIndex===t&&(v.drum||v.sampleVoice||isSynth(t))&&!v.released)
+      releaseVoiceScheduled(v,when);
    for(const v of rt.voices)if(v&&!v.released)releaseVoiceScheduled(v,when);
    rt.voices=[];
   }
-  // D00 may also appear on an empty FX row after the sample trigger.
+  // An empty D00 row can arm any currently held internal voice.
+  // A synth carried across the boundary remains alive even when its
+  // FX row was reset by the pattern change.
   if(stepContinuesSample(step)&&!step.on&&stepCanContinue(t)){
-   // An empty D00 row can arm any still-playing sample on this track,
-   // including drum voices whose FX runtime was reset at a pattern boundary.
    for(const v of [...scheduledVoices])
-    if(v.trackIndex===t&&(v.sampleVoice||v.drum)&&!v.released)
+    if(v.trackIndex===t&&(v.sampleVoice||v.drum||isSynth(t))&&!v.released)
      markSampleContinuation(t,v,when);
   }
   if(isSynth(t)&&!track.midiOnly){
@@ -4450,14 +4457,15 @@ function scheduleStep(idx,when){
   }
   const startsNote=step.on&&step.fx!==12&&Math.random()*100<step.chance;
   if(startsNote){
-   // CONTINUE crosses empty pattern boundaries only. Any new sample/drum hit
-   // on this track first ends the old carried voice, then starts from scratch.
+   // A new note terminates any carried SAMPLE, DRUM, BASS, LEAD or
+   // CHORD voice on the same track before triggering its new sound.
    if(stepCanContinue(t))releaseContinuedSamples(t,when);
    for(const v of rt.voices)if(v&&!v.released&&!v.carryAcrossPatterns)releaseVoiceScheduled(v,when);
    rt.voices=[];rt.basePeriod=periodForNote(step.note);rt.period=rt.basePeriod;rt.level=64;rt.phase=0;rt.activeFx=0;
    // Blijf een voice vasthouden tot de volgende noot als een latere step
    // (eventueel na lege steps) een effect op diezelfde noot gaat uitvoeren.
-   const hold=(isSample(t)||kindOf(track)==='bass'||kindOf(track)==='lead')||(kindOf(track)==='chord'&&shouldHoldFXVoice(t,laneStep));
+   const hold=(isSample(t)||kindOf(track)==='bass'||kindOf(track)==='lead')||
+    (kindOf(track)==='chord'&&(stepContinuesSample(step)||shouldHoldFXVoice(t,laneStep)));
    const hits=clamp(step.ratchet||1,1,6);
    const grooveTime=Math.max(audio.ctx.currentTime+.002,when+grooveOffset(step,track,idx,dur));
    const grooveVel=grooveVelocity(step.velocity,track,state.pattern,t,laneStep);
@@ -4472,8 +4480,8 @@ function scheduleStep(idx,when){
     const carry=stepContinuesSample(step)&&stepCanContinue(t);
     const voices=playTrack(t,step.note,grooveVel,hitTime,carry&&hit===hits-1?null:hitHold?null:gateDuration,0,step.chordMode,step.sampleSlot||0,sampleOffsetFraction(step.fx,step.fxAmount))||[];
     if(isSynth(t))applySynthStepLocks(voices,synthStepLocks(step),hitTime);
-    // Only the final ratchet hit carries into a subsequent pattern.
-    // Earlier hits retain their gate and must not become indefinite voices.
+    // Only the final ratchet hit carries into a subsequent pattern,
+    // including a VA/FM synth chord; earlier hits retain their gate.
     if(carry&&hit===hits-1)for(const voice of voices)markSampleContinuation(t,voice,hitTime);
     midiPlayStep(t,step.note,grooveVel,hitTime,hitHold,gateDuration,step.chordMode);
     rt.voices.push(...voices);
@@ -4920,7 +4928,7 @@ function syncStepContinueControl(step=selectedStep()){
  field.classList.toggle('continue-unavailable',!supported||noteOff);
  input.checked=supported&&stepContinuesSample(step);
  input.disabled=!supported||noteOff;
- const reason=!supported?'Available on DRUM and SAMPLE tracks with internal audio only.':noteOff?'NOTE OFF stops the sample. Choose another FX command to continue it.':'Carry this sample or drum voice into the next pattern until Note Off or a new note.';
+ const reason=!supported?'Available on internal DRUM, SAMPLE, BASS, LEAD and CHORD tracks.':noteOff?'NOTE OFF ends the note or sample. Choose another FX command to continue it.':'Hold this note, chord or sample into the next pattern until NOTE OFF or a new note.';
  field.title=reason;
  input.title=reason;
 }
@@ -5017,8 +5025,8 @@ function renderFXEditor(){
  $('stepChordMode').disabled=!chordTrack;
  $('chordModeOutput').textContent=chordMode(step.chordMode).label;
  $('fxStatus').textContent=step.fx?fxCode(step.fx)+fxAmountText(step.fx,step.fxAmount):'FX OFF';
- // Drag-select two or more sequencer cells, then paint the selected step's
- // carry state over compatible drum/sample cells without changing note/FX data.
+ // Drag-select two or more cells and apply carry to supported internal
+ // DRUM, SAMPLE, BASS, LEAD and CHORD steps without changing notes.
  const carryCells=rangeCells().filter(c=>stepCanContinue(c.track)&&state.patterns[state.pattern][c.track][c.step].fx!==12);
  const carryButton=$('applyCarryRange');
  carryButton.disabled=rangeCells().length<2||carryCells.length===0||!stepCanContinue(state.selectedTrack)||step.fx===12;
@@ -8152,11 +8160,20 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  }
  const endOfNotes=exportCursor;
  const synthStopAt=(rowIndex,trackIndex)=>{
+  // Match live BASS / LEAD / CHORD carry on D00 or the step checkbox.
+  // Once armed, ordinary track/pattern wraps no longer release the note.
+  // A new fired note or C00 always ends it, even at a pattern boundary.
+  const trigger=exportTimeline[rowIndex],initialLength=trackLength(trigger.pattern,trackIndex);
+  const initial=state.patterns[trigger.pattern]?.[trackIndex]?.[trigger.stepIndex%initialLength];
+  let carrying=stepContinuesSample(initial);
   for(let i=rowIndex+1;i<exportTimeline.length;i++){
    const row=exportTimeline[i];
    const laneLength=trackLength(row.pattern,trackIndex);
    const rowStep=state.patterns[row.pattern]?.[trackIndex]?.[row.stepIndex%laneLength];
-   if(row.stepIndex%laneLength===0||rowStep?.fx===12||row.fired[trackIndex])return row.at;
+   if(row.stepIndex%laneLength===0&&!carrying)return row.at;
+   if(rowStep?.fx===12||row.fired[trackIndex])return row.at;
+   // D00 on a later empty step can arm an already sustained synth.
+   if(!rowStep?.on&&stepContinuesSample(rowStep))carrying=true;
   }
   return endOfNotes;
  };
@@ -8520,7 +8537,8 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
       const renderedStep={...renderedStepBase,velocity:grooveVelocity(step.velocity,state.tracks[t],pattern,t,stepIndex%trackLength(pattern,t))};
       const instrumentKind=kindOf(state.tracks[t]);
       const holdSynth=isSynth(t)&&(instrumentKind==='bass'||instrumentKind==='lead'||
-       (instrumentKind==='chord'&&shouldHoldFXVoice(t,stepIndex%trackLength(pattern,t),pattern)))&&hit===hits-1;
+       (instrumentKind==='chord'&&(stepContinuesSample(step)||
+         shouldHoldFXVoice(t,stepIndex%trackLength(pattern,t),pattern))))&&hit===hits-1;
       const noteOffTime=holdSynth?synthStopAt(rowIndex,t):hitTime+gateSeconds;
       if(instrumentKind==='chord'){
        // Live chord playback uses the chosen chord mode and divides voice
