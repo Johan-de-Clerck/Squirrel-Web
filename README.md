@@ -2,7 +2,7 @@
   <img src="squirrel-icon.webp" alt="Squirrel Studio icon" width="112">
   <h1>Squirrel Studio</h1>
   <p><strong>A browser-based groovebox, synthesizer, sampler and tracker-style step sequencer.</strong></p>
-  <p><strong>Current version: 0.2.82</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
+  <p><strong>Current version: 0.2.83</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
 </div>
 
 Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrangement into a compact, eight-track music workstation. The web version runs in a modern desktop browser using the Web Audio API.
@@ -11,7 +11,7 @@ Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrange
 
 | Area | Highlights |
 | --- | --- |
-| **Sequencer** | Eight freely configurable tracks, tracker-style note input, up to 32 steps in view, per-track pattern lengths, **individual BPM for all 32 patterns**, chance, ratchets, Step FX, VA/FM Parameter Locks and Groove & Humanize. |
+| **Sequencer** | Eight freely configurable tracks, tracker-style note input, up to 32 steps in view, per-track pattern lengths, **individual BPM for all 32 patterns**, chance, ratchets, Step FX, VA/FM Parameter Locks, **Selection → Linear/Exponential filter ramps**, and Groove & Humanize. |
 | **Instruments** | Virtual analog (VA) and FM synthesizers, sampled instruments, drum tracks and chord playback. Independent sounds for different tracks and a reusable VA/FM preset manager. |
 | **VA / FM engines** | Multi-oscillator VA with sub oscillator, noise and PWM; two- and four-operator FM with selectable algorithms. |
 | **Drum library** | A shared pool of 15 samples, with five assignable slots per drum track, waveform preview, rename, copy and overwrite confirmation. |
@@ -35,8 +35,9 @@ See [HELP.md](HELP.md) for the detailed guide.
 ## Workflow and shortcuts
 
 - **FILE** (above the editor tabs): New Song, Open/Save Song, sample import, sample-bank import/export and VA/FM synth render.
-- **BOUNCE** (next to FILE): selected-pattern bounce, preview waveform, loop crossfade and destination options.
-- **EXPORT WAV** (next to BOUNCE): stereo song, selected-track and stem ZIP export settings.
+- **SELECTION** (next to FILE): select a horizontal range of at least two steps on one VA/FM synth track, then interpolate Cutoff or Resonance locks from the first to last step using linear or exponential interpolation. Edit either endpoint in the menu; blank steps are included, and other step settings remain untouched. Ctrl+Z reverses the complete ramp.
+- **BOUNCE**: selected-pattern bounce, preview waveform, loop crossfade and destination options.
+- **EXPORT WAV**: stereo song, selected-track and stem ZIP export settings.
 - **SYNTH / DRUM SAMPLES / SAMPLE EDITOR**: edit the selected sound without losing other track and slot settings.
 - **SONG MODE**: chain patterns with their own BPM and manage cross-pattern sample continuation with **Step FX → Continue into next pattern**. A small check appears on an affected step only when continuation is enabled.
 - **Esc**: toggle Edit Mode when not entering text or using a menu.
