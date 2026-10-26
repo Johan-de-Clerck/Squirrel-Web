@@ -9380,6 +9380,7 @@ function bindings(){
  window.addEventListener('blur',()=>{stopEnterPreview();stopAllEditNotePreviews();for(const [key,voices] of activeLive){voices.forEach(v=>releaseVoice(v,audio?.ctx.currentTime||0))}activeLive.clear();keyboardDown.clear();keyboardAssignments.clear()});window.addEventListener('beforeunload',persist);
 }
 document.addEventListener('contextmenu',event=>event.preventDefault());
+document.addEventListener('contextmenu',event=>event.preventDefault());
 installNotes();bindings();bindSampleEditor();bindDrumSamples();bindSampleBank();attachStepRangeSelection();resetUndoHistory();renderAll();refreshOutputs();requestAnimationFrame(uiTick);
 </script>
 </body>
