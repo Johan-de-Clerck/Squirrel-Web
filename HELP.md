@@ -1,6 +1,12 @@
-# Squirrel Studio Web 0.2.75 — User Manual
+# Squirrel Studio Web 0.2.76 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Fixed in 0.2.76 — Aligned DRUM Step Editor
+
+The **DRUM** step editor now uses a compact two-column arrangement on desktop. The left group aligns **INSTRUMENT TYPE**, the **SAMPLE** selector and **S1–S5** quick buttons; the right group displays **VELOCITY / GATE** above **CHANCE / RATCHET / MICROTIMING**. The six edit buttons remain in a single row.
+
+This layout is selected automatically when the current track uses the **DRUM** instrument type with internal audio. Other instrument types preserve their existing Step Editor layout, and a MIDI-only DRUM track retains its note selector instead of the sample bank. The native dropdown, quick buttons and step-edit actions are unchanged. For narrow screens, the controls stack and the editor is allowed to grow rather than hiding them in an invisible scrolling panel.
 
 ### New in 0.2.75 — Enable Song Mode in the transport
 
@@ -552,4 +558,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.2.75.**
+**Documentation version: Squirrel Studio Web 0.2.76.**
