@@ -1,6 +1,16 @@
-# Squirrel Studio Web 0.2.81 — User Manual
+# Squirrel Studio Web 0.2.82 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Fixed in 0.2.82 — filter-envelope continuity across long notes and WAV release tails
+
+**Live VA/FM synth envelopes:** Changing the synth's filter-envelope sliders while a note is playing now preserves the modulation offset at the edit instant. It smoothly approaches the new envelope level and uses that smoothed offset on **C00 Note Off** or retrigger, instead of snapping back to a freshly estimated ADSR value. This also works with negative filter-envelope modulation.
+
+**Sequencer lookahead:** If a note has been scheduled just ahead of playback, changing the patch filter-envelope settings before that note begins preserves its **attack and decay**. Previously, the edit could cancel the not-yet-started envelope's scheduled ramps. Long BASS, LEAD, and CHORD notes still use absolute AudioContext time, so their filter envelopes are not restarted when **Song Mode** advances to a pattern with a different BPM.
+
+**WAV export / Bounce:** Per-step VA/FM cutoff and resonance locks no longer modify voices that have entered their release phase. The offline renderer now follows the live engine more closely for sustained notes, including held notes crossing pattern boundaries and notes released on C00. These changes do not alter the shared stereo reverb, delay, chorus or distortion settings, nor existing project JSON files.
+
+**Regression tests:** Run `node --test tests/filter-envelope-parity.test.mjs`. Five tests cover edits to held and future voices, repeated smooth edits, native AudioParam release holding, and offline post-note-off filter-lock behavior. For a complete result, also compare the sound in a real browser using a low-sustain VA/FM patch, D00 continuation, and a C00 in the following pattern; use 3–10 seconds of FX tail when comparing WAV.
 
 ### Fixed in 0.2.81 — accurate live VA/FM note-off during decay
 
@@ -605,4 +615,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.2.81.**
+**Documentation version: Squirrel Studio Web 0.2.82.**
