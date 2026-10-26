@@ -2003,6 +2003,7 @@ function applyFXCommand(rt, step, enabled=true){
  if(amount)rt.memory[effect]=amount;
  rt.activeAmount=amount||rt.memory[effect]||0;
 }
+function advanceDualFXTick(rt){const a=advanceFXTick(rt);if(!rt.secondary)return a;const b=advanceFXTick(rt.secondary);return {...a,cents:a.cents+b.cents,level:a.level*b.level}}
 function applyDualFX(rt,step,enabled){applyFXCommand(rt,step,enabled);if(!rt.secondary)rt.secondary=blankFxRuntime();applyFXCommand(rt.secondary,{fx:step.fx2||0,fxAmount:step.fx2Amount||0},enabled)}
 const DRUM_LIBRARY_SIZE=15;
 function defaultDrumSlot(name='',data=null,chokeGroup=0){return {name,data,chokeGroup,libraryIndex:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,slotVolume:100,slotPitch:0,slotFine:0,slotPan:0,slotAttack:2,slotDecay:0,slotRelease:18,slotFilterOn:false,slotFilterType:'lowpass',slotCutoff:12000,slotResonance:.7,slotFilterEnvDepth:0,slotFilterEnvTime:0}}
@@ -4676,7 +4677,7 @@ function scheduleStep(idx,when,onlyTrack=null,trackDur=null,absoluteStep=idx){
    const wave=rt.activeFx===4?Math.sin(rt.phase*2*Math.PI/64)*rt.vibratoDepth*4:0;
    applyFXVoice(rt.voices,when,{cents:1200*Math.log2(rt.basePeriod/Math.max(55,rt.period+wave)),level:rt.level/64});
    for(let tick=1;tick<TICKS_PER_STEP;tick++){
-    const result=advanceFXTick(rt);
+    const result=advanceDualFXTick(rt);
     applyFXVoice(rt.voices,when+tick*tickTime,result);
    }
   }
@@ -8996,7 +8997,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
      const cents=1200*Math.log2(fxRow.basePeriod/Math.max(55,fxRow.period+wave));
      applyExportFXVoice(fxRow.voices,at,{cents,level:fxRow.level/64});
      for(let tick=1;tick<TICKS_PER_STEP;tick++)
-      applyExportFXVoice(fxRow.voices,at+tick*stepSeconds/TICKS_PER_STEP,advanceFXTick(fxRow));
+      applyExportFXVoice(fxRow.voices,at+tick*stepSeconds/TICKS_PER_STEP,advanceDualFXTick(fxRow));
     }
 
  }
