@@ -8568,32 +8568,30 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  const endOfNotes=exportCursor;
  // Restrict held-note lookahead to events on the same track rather
  // than rescanning all 16 tracks for every rendered synth note.
- // Linear-time note-off resolution per track. D00 can arm continuation
- // on an empty row; C00 and retriggers always terminate it.
+ // Resolve note releases in one chronological pass per track. An empty
+ // D00 arms the currently sounding voice, including across pattern changes.
+ // A C00, a triggered note or an unarmed wrap ends it at the event time.
  const synthNoteEnds=new Map();
  const timelineByTrack=Array.from({length:TRACK_COUNT},()=>[]);
  for(let i=0;i<exportTimeline.length;i++)timelineByTrack[exportTimeline[i].t].push(i);
  for(let t=0;t<TRACK_COUNT;t++){
-  const timeline=timelineByTrack[t];
-  let nextForced=endOfNotes,nextWrap=endOfNotes,nextCarry=false;
-  for(let k=timeline.length-1;k>=0;k--){
-   const eventIndex=timeline[k],row=exportTimeline[eventIndex];
+  let held=null,carry=false;
+  for(const eventIndex of timelineByTrack[t]){
+   const row=exportTimeline[eventIndex];
    const step=state.patterns[row.pattern]?.[t]?.[row.stepIndex];
-   if(step?.fx===12||row.fired){
-    nextForced=row.at;
-    nextWrap=endOfNotes;
-    nextCarry=false;
-   }else{
-    if(row.stepIndex===0)nextWrap=row.at;
-    if(!step?.on&&stepContinuesSample(step))nextCarry=true;
+   const forced=step?.fx===12||row.fired;
+   if(held!==null&&(forced||(row.stepIndex===0&&!carry))){
+    synthNoteEnds.set(held,row.at);
+    held=null;carry=false;
    }
    if(row.fired){
-    // A D00 on this note OR on any later empty step before the
-    // next forced termination permits crossing an intervening wrap.
-    const carry=stepContinuesSample(step)||nextCarry;
-    synthNoteEnds.set(eventIndex,carry?nextForced:Math.min(nextForced,nextWrap));
+    held=eventIndex;
+    carry=stepContinuesSample(step);
+   }else if(held!==null&&!step?.on&&stepContinuesSample(step)){
+    carry=true;
    }
   }
+  if(held!==null)synthNoteEnds.set(held,endOfNotes);
  }
  const synthStopAt=(rowIndex,t)=>synthNoteEnds.get(rowIndex)??endOfNotes;
  // Live DRUM tracks produce built-in kicks, snares and hats when no sample
