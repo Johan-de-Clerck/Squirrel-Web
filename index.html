@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.81 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.82 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1472,7 +1472,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.81</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.82</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span><label class="transport-song-switch" for="songEnable" title="Play the Song Mode arrangement instead of looping a single pattern"><input type="checkbox" id="songEnable" aria-label="Enable Song Mode"> ENABLE SONG MODE</label></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label" id="bpmPatternLabel">BPM · A1</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1556,7 +1556,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.81';
+const SQUIRREL_VERSION='0.2.82';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -3711,8 +3711,15 @@ async function initAudio(){
  try{await restoredSamples;await restoredDrumSamples;await restoredDrumLibrary;await audio.ctx.resume();await decodeAllSamplers();await decodeAllDrumSamples();await decodeDrumLibrary();if(audio.ctx.state!=='running')throw Error('AudioContext is not running');refreshAudioPowerUI();return true}
  catch(e){refreshAudioPowerUI();notify('Could not start audio: '+e.message,true);return false}
 }
+// Read the exact linear ADSR offset, or the smoothed live-editor override.
+// Carried notes keep the same time origin when Song Mode switches BPM.
 function envelopeOffsetAt(entry,time){
- const env=entry.settings,elapsed=Math.max(0,time-entry.started),a=Math.max(.003,env.attack),d=Math.max(.01,env.decay),s=env.sustain/100;
+ const override=entry.override;
+ if(override&&time>=override.at)
+  return override.target+(override.initial-override.target)*Math.exp(-(time-override.at)/override.tau);
+ const env=entry.settings,elapsed=Math.max(0,time-entry.started);
+ const a=Math.max(.003,Number(env.attack??.003)),d=Math.max(.01,Number(env.decay??.1));
+ const s=clamp(Number(env.sustain??100),0,100)/100;
  if(elapsed<a)return entry.delta*(elapsed/a);
  if(elapsed<a+d)return entry.delta*(1-(1-s)*(elapsed-a)/d);
  return entry.delta*s;
@@ -3760,21 +3767,43 @@ function updateLiveFilterEnvelope(trackIndex){
   if(voice.trackIndex!==trackIndex||voice.released)continue;
   for(const entry of voice.filterEnvelopes||[]){
    if(!entry.patchEnvelope)continue;
-   const age=Math.max(0,now-entry.started),a=Math.max(.003,Number(settings.attack)||0),d=Math.max(.01,Number(settings.decay)||0);
-   const level=age<a?age/a:age<a+d?1-(1-clamp(Number(settings.sustain)||0,0,100)/100)*(age-a)/d:clamp(Number(settings.sustain)||0,0,100)/100;
+   const a=Math.max(.003,Number(settings.attack??.003)),d=Math.max(.01,Number(settings.decay??.1));
+   const sustain=clamp(Number(settings.sustain??100),0,100)/100;
    const param=entry.source.offset;
-   param.cancelScheduledValues(now);
-   param.setTargetAtTime(delta*level,now,.02);
-   entry.delta=delta;entry.settings={...settings};
+   if(entry.started>now){
+    // A scheduled note has not begun yet. Preserve its attack/decay
+    // instead of replacing both with an indefinitely silent target.
+    param.cancelScheduledValues(entry.started);
+    param.setValueAtTime(0,entry.started);
+    param.linearRampToValueAtTime(delta,entry.started+a);
+    param.linearRampToValueAtTime(delta*sustain,entry.started+a+d);
+    entry.override=null;
+   }else{
+    const age=now-entry.started,level=age<a?age/a:age<a+d?1-(1-sustain)*(age-a)/d:sustain;
+    const initial=envelopeOffsetAt(entry,now),target=delta*level;
+    param.cancelScheduledValues(now);
+    param.setValueAtTime(initial,now);
+    param.setTargetAtTime(target,now,.02);
+    entry.override={at:now,initial,target,tau:.02};
+   }
+   entry.delta=delta;entry.settings={...settings,attack:a,decay:d,sustain:sustain*100,
+    release:Math.max(.01,Number(settings.release??.3))};
   }
  }
 }
 function releaseFilterEnvelopes(voice,when){
  for(const entry of voice.filterEnvelopes||[]){
   const param=entry.source.offset;
-  param.cancelScheduledValues(when);
-  param.setValueAtTime(envelopeOffsetAt(entry,when),when);
-  param.linearRampToValueAtTime(0,when+entry.settings.release);
+  // The native hold preserves the actual AudioParam value, even if the
+  // patch envelope was edited during a long note. Older browsers use the
+  // analytical ADSR/override calculation instead.
+  if(typeof param.cancelAndHoldAtTime==='function')param.cancelAndHoldAtTime(when);
+  else{
+   const held=envelopeOffsetAt(entry,when);
+   param.cancelScheduledValues(when);
+   param.setValueAtTime(held,when);
+  }
+  param.linearRampToValueAtTime(0,when+Math.max(.01,Number(entry.settings.release??.3)));
  }
 }
 function gainEnv(param,when,velocity,a,d,s){const amp=clamp(velocity/127,0,1);param.cancelScheduledValues(when);param.setValueAtTime(.0001,when);param.linearRampToValueAtTime(Math.max(.0002,amp*.5),when+Math.max(.003,a));param.exponentialRampToValueAtTime(Math.max(.0001,amp*.5*Math.max(s,.002)),when+Math.max(.003,a)+Math.max(.01,d))}
@@ -8368,7 +8397,8 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
   filter.frequency.value=typeof locks.cutoff==='number'&&Number.isFinite(locks.cutoff)?clamp(Number(locks.cutoff),80,18000):
    sound.filterEnabled===false?20000:clamp(Number(sound.cutoff??4000)*Math.pow(2,(soundNote-60)/12*Number(sound.filterKeyTrack??0)/100),80,18000);
   filter.Q.value=typeof locks.resonance==='number'&&Number.isFinite(locks.resonance)?clamp(Number(locks.resonance),.1,18):clamp(Number(sound.resonance??.7),.1,18);
-  activeExportSynthFilters[i].push({filter,end:time+length+Math.max(.1,Number(sound.release??.2))});
+  activeExportSynthFilters[i].push({filter,noteOff:time+length,
+   end:time+length+Math.max(.1,Number(sound.release??.2))});
   for(const lfo of lfoNodes)if(lfo.target==='track'+i+'-cutoff')lfo.depth.connect(filter.frequency);
   const fxGain=ctx.createGain();fxGain.gain.value=1;
   filter.connect(env).connect(fxGain).connect(outputs[i]);
@@ -8539,6 +8569,9 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
      for(let n=active.length-1;n>=0;n--)if(active[n].end<at)active.splice(n,1);
      const locks=synthStepLocks(step);
      for(const entry of active){
+      // Live step locks skip released voices: filter release tails
+      // should not acquire new cutoff/resonance automation.
+      if(at>=entry.noteOff)continue;
       if(typeof locks.cutoff==='number'&&Number.isFinite(locks.cutoff))
        entry.filter.frequency.setTargetAtTime(clamp(locks.cutoff,80,18000),at,.006);
       if(typeof locks.resonance==='number'&&Number.isFinite(locks.resonance))
