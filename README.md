@@ -2,16 +2,16 @@
   <img src="squirrel-icon.webp" alt="Squirrel Studio icon" width="112">
   <h1>Squirrel Studio</h1>
   <p><strong>A browser-based groovebox, synthesizer, sampler and tracker-style step sequencer.</strong></p>
-  <p><strong>Current version: 0.2.85</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
+  <p><strong>Current version: 0.2.86</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
 </div>
 
-Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrangement into a compact, eight-track music workstation. The web version runs in a modern desktop browser using the Web Audio API.
+Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrangement into a compact, sixteen-track music workstation. The web version runs in a modern desktop browser using the Web Audio API.
 
 ## Features
 
 | Area | Highlights |
 | --- | --- |
-| **Sequencer** | Eight freely configurable tracks, tracker-style note input, up to 32 steps in view, per-track pattern lengths, **individual BPM for all 32 patterns**, chance, ratchets, Step FX, VA/FM Parameter Locks, **Selection → Linear/Exponential Cutoff, Resonance, Volume and Pan ramps**, and Groove & Humanize. |
+| **Sequencer** | Sixteen freely configurable tracks shown in two eight-track sequencer banks, tracker-style note input, up to 32 steps in view, per-track pattern lengths, **individual BPM for all 32 patterns**, chance, ratchets, Step FX, VA/FM Parameter Locks, **Selection → Linear/Exponential Cutoff, Resonance, Volume and Pan ramps**, and Groove & Humanize. |
 | **Instruments** | Virtual analog (VA) and FM synthesizers, sampled instruments, drum tracks and chord playback. Independent sounds for different tracks and a reusable VA/FM preset manager. |
 | **VA / FM engines** | Multi-oscillator VA with sub oscillator, noise and PWM; two- and four-operator FM with selectable algorithms. |
 | **Drum library** | A shared pool of 15 samples, with five assignable slots per drum track, waveform preview, rename, copy and overwrite confirmation. |
@@ -28,6 +28,8 @@ Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrange
 3. Serve the folder via HTTP/HTTPS and open it in a current Chrome or Edge browser.
 4. Press **START AUDIO**, add notes in the **SEQUENCER**, and press **PLAY**.
 
+When importing a sample-bank JSON file, both legacy eight-track files (versions 2/3) and the new 16-track bank format (version 4) are supported. The shared **15-sample drum library** stays separate from the sixteen individual track instruments.
+
 For Windows local testing, run `START_STUDIO.cmd` with Python 3 installed, then open <http://localhost:8765>. Opening `index.html` directly with `file://` may restrict loading the demo and Web MIDI features.
 
 See [HELP.md](HELP.md) for the detailed guide.
@@ -35,6 +37,7 @@ See [HELP.md](HELP.md) for the detailed guide.
 ## Workflow and shortcuts
 
 - **FILE** (above the editor tabs): New Song, Open/Save Song, sample import, sample-bank import/export and VA/FM synth render.
+- **TRACKS 1–8 / TRACKS 9–16** (beside **Step sequencer**): switch the eight visible lanes without interrupting the arrangement. All sixteen tracks run in the same song, mixer, MIDI engine and WAV/stem export. Tracks 9–16 begin as empty **SAMPLE** instruments, each with independent WAV storage, looping, effects and steps. Use **Step editor → INSTRUMENT TYPE** to change any of them into BASS, LEAD or CHORD, then choose VA or FM synthesis on **SYNTH**. Existing eight-track songs are automatically extended with eight empty tracks and remain editable.
 - **SELECTION** (next to FILE): drag-select at least two steps on a track and interpolate **Cutoff, Resonance, Volume or Panning** with linear/exponential curves. Cutoff (80–18,000 Hz) and Resonance (0.1–18 Q) are available on VA/FM synth tracks; Volume (0–100% relative to the track fader) and Panning (−100 left to +100 right relative to mixer pan) also work on DRUM and SAMPLE tracks. Blank steps are included. Ctrl+Z undoes an entire ramp. The same step mix automation is applied to live audio and stereo WAV/stems.
 - **BOUNCE**: selected-pattern bounce, preview waveform, loop crossfade and destination options.
 - **EXPORT WAV**: stereo song, selected-track and stem ZIP export settings.
