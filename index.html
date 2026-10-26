@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.85 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.86 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1403,6 +1403,11 @@ input[type="password"],textarea,
 #stepLocksPanel .step-lock-tabs button[aria-selected="true"]{background:#87613c;color:#fff1d4;border-color:#c19866}
 #stepLocksPanel .step-lock-tabs button[hidden],#stepLocksPanel .step-lock-controls[hidden]{display:none!important}
 #stepLocksPanel .step-lock-controls label:has(input[type=checkbox]:not(:checked)){opacity:.65}
+
+/* v0.2.86: fixed eight-lane sequencer viewport over sixteen real tracks. */
+.sequencer-track-bank{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
+.sequencer-track-bank select{min-width:135px;padding:7px 10px;border:1px solid #8c674a;
+ background:#33271f;color:#efd6b4;border-radius:6px;font:700 11px Consolas,monospace;cursor:pointer}
 </style>
 </head>
 <body>
@@ -1506,13 +1511,13 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.85</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.86</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span><label class="transport-song-switch" for="songEnable" title="Play the Song Mode arrangement instead of looping a single pattern"><input type="checkbox" id="songEnable" aria-label="Enable Song Mode"> ENABLE SONG MODE</label></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label" id="bpmPatternLabel">BPM · A1</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
       <nav class="tabs" aria-label="Workspace"><button class="tab active" data-view="seq">▦ SEQUENCER</button><button class="tab" data-view="song">▤ SONG MODE</button><button class="tab" data-view="sound">◈ SYNTH</button><button class="tab" data-view="mixer">▥ MIXER</button><button class="tab" data-view="mod">◌ LFO / ENVELOPES</button><button class="tab" data-view="drum">♬ DRUM SAMPLES</button><button class="tab" data-view="sample">♫ SAMPLE EDITOR</button><button class="tab" data-view="send">◉ SEND FX</button><button class="tab" data-view="options">⚙ OPTIONS</button><button class="tab" data-view="setup">◈ MIDI / AUDIO</button></nav>
       <div id="view-seq">
-        <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step sequencer</h2></div><div class="panel-controls"><label class="pattern-selector"><span class="small-label">PATTERN</span><select id="patternGroup" aria-label="Pattern group A through D"></select><select id="patternSelect" aria-label="Pattern 1 through 8"></select></label><label class="pattern-rename"><span class="small-label">NAME</span><input id="patternNameInput" type="text" maxlength="24" spellcheck="false" autocomplete="off" aria-label="Pattern name" placeholder="Pattern name"></label><button class="mini-btn" id="copyPatternBtn">COPY</button><button class="mini-btn" id="pastePatternBtn">PASTE</button></div></div>
+        <section class="panel"><div class="panel-head"><div class="sequencer-track-bank"><h2 class="section-title">Step sequencer</h2><select id="trackBankSelect" aria-label="Choose visible sequencer tracks"><option value="0">TRACKS 1–8</option><option value="1">TRACKS 9–16</option></select></div><div class="panel-controls"><label class="pattern-selector"><span class="small-label">PATTERN</span><select id="patternGroup" aria-label="Pattern group A through D"></select><select id="patternSelect" aria-label="Pattern 1 through 8"></select></label><label class="pattern-rename"><span class="small-label">NAME</span><input id="patternNameInput" type="text" maxlength="24" spellcheck="false" autocomplete="off" aria-label="Pattern name" placeholder="Pattern name"></label><button class="mini-btn" id="copyPatternBtn">COPY</button><button class="mini-btn" id="pastePatternBtn">PASTE</button></div></div>
           <div class="grid-scroll"><div class="grid-board" id="gridBoard"></div></div>
           
         </section>
@@ -1603,7 +1608,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.85';
+const SQUIRREL_VERSION='0.2.86';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -1619,7 +1624,11 @@ const bases=[
  {name:'LEAD',type:'synth',channel:5,volume:66,pan:7,color:'#99bedd',note:60},
  {name:'CHORD',type:'chord',channel:6,volume:56,pan:0,color:'#c4a9dd',note:48},
  {name:'EMPTY 7',type:'empty',channel:7,volume:0,pan:0,color:'#887b6d',note:48},
- {name:'EMPTY 8',type:'empty',channel:8,volume:0,pan:0,color:'#887b6d',note:48}
+ {name:'EMPTY 8',type:'empty',channel:8,volume:0,pan:0,color:'#887b6d',note:48},
+ ...Array.from({length:8},(_,i)=>({
+  name:'SAMPLE '+(i+9),type:'empty',channel:i+9,volume:78,pan:0,
+  color:'#b5a19a',note:48
+ }))
 ];
 function defaultSound(t){const patch= t.type==='chord'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:8,pulseWidth:50,pulseWidth1:50,pulseWidth2:50,pwmDepth1:100,pwmDepth2:100,noiseOn:false,noiseLevel:0,noiseTone:70,cutoff:1500,resonance:0.9,attack:.09,decay:.42,sustain:.68,release:.7,chord:'minor'}:t.type==='synth'&&t.name==='BASS'?{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'square',detune:9,pulseWidth:43,pulseWidth1:43,pulseWidth2:43,pwmDepth1:100,pwmDepth2:100,noiseOn:false,noiseLevel:0,noiseTone:70,cutoff:1350,resonance:1.8,attack:.009,decay:.22,sustain:.52,release:.19,chord:'major'}:{osc1On:true,osc2On:true,subOn:true,osc1Level:100,osc2Level:100,subWave:'sine',subOctave:-12,subDetune:0,subLevel:35,wave1:'sawtooth',wave2:'triangle',detune:14,pulseWidth:50,pulseWidth1:50,pulseWidth2:50,pwmDepth1:100,pwmDepth2:100,noiseOn:false,noiseLevel:0,noiseTone:70,cutoff:4200,resonance:.8,attack:.015,decay:.21,sustain:.65,release:.27,chord:'major'};
  return {...patch,filterType:'lowpass',filterEnabled:true,filterKeyTrack:0,transpose:0,filterEnvelope:{enabled:true,attack:.002,decay:.1,sustain:80,release:.3,amount:0},engine:'va',fmRatio:2,fmIndex:3,fmAttack:.01,fmDecay:.3,fmSustain:30,fmMode:'two',fmAlgorithm:'stack',fmOp1Ratio:1,fmOp2Ratio:2,fmOp3Ratio:3,fmOp4Ratio:4,fmOp1Level:100,fmOp2Level:75,fmOp3Level:65,fmOp4Level:55,fmOp1Fine:0,fmOp2Fine:0,fmOp3Fine:0,fmOp4Fine:0,fmOp1Wave:'sine',fmOp2Wave:'sine',fmOp3Wave:'sine',fmOp4Wave:'sine',...Object.fromEntries(Array.from({length:4},(_,i)=>[['fmOp'+(i+1)+'Attack',.01],['fmOp'+(i+1)+'Decay',.3],['fmOp'+(i+1)+'Sustain',70],['fmOp'+(i+1)+'Release',.35]]).flat())}
@@ -1784,6 +1793,7 @@ function setPatternName(bank,value){
  persist();renderAll();
 }
 const AUDIO_TRACK_COUNT=6;
+const LEGACY_TRACK_COUNT=8,TRACK_BANK_SIZE=8;
 const TRACK_COUNT=bases.length;
 const makeStep=(track,on=false,note=null)=>({on,note:note??bases[track].note,sampleSlot:0,velocity:track<3?112:104,gate:track<3?70:92,ratchet:1,chance:100,microTiming:0,continueSample:false,locks:null,fx:0,fxAmount:2,chordMode:null});
 // Trackereffecten per rij (ProTracker-timing): tick 0 behoudt de beginwaarde,
@@ -3151,7 +3161,7 @@ function migrateModTarget(x){
  return x.replace(/^(bass|lead|chord|sampler7|sampler8)-/,(_,p)=>old[p]+'-');
 }
 function validate(data){
- if(!data||![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24].includes(data.version)||!Array.isArray(data.tracks)||![AUDIO_TRACK_COUNT,TRACK_COUNT].includes(data.tracks.length)||!Array.isArray(data.patterns)||![4,16,PATTERN_COUNT].includes(data.patterns.length))throw Error('Invalid project file format');
+ if(!data||![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24].includes(data.version)||!Array.isArray(data.tracks)||![AUDIO_TRACK_COUNT,LEGACY_TRACK_COUNT,TRACK_COUNT].includes(data.tracks.length)||!Array.isArray(data.patterns)||![4,16,PATTERN_COUNT].includes(data.patterns.length))throw Error('Invalid project file format');
  if(data.patterns.length===4||data.patterns.length===16){
   // Expand old A1-D4 and legacy four-pattern projects, keeping song positions.
   const oldCount=data.patterns.length,map=i=>legacyPatternIndex(i,oldCount);
@@ -3171,7 +3181,7 @@ function validate(data){
   data={...data,patterns,patternLengths:lengths,trackLengths,patternNames:names,patternBpms:bpms,
    pattern:map(selected),songSequence:song};
  }
- const s=fresh();
+ const s=fresh(false);
  s.drumLastSlots=Array.from({length:TRACK_COUNT},(_,t)=>clamp(Math.round(Number(data.drumLastSlots?.[t])||0),0,4));
  s.drumLibrary=Array.from({length:DRUM_LIBRARY_SIZE},(_,i)=>{
  const item=data.drumLibrary?.[i];
@@ -4982,7 +4992,20 @@ function setSelectedTrackNoteColor(color){
  state.tracks[state.selectedTrack].stepColor=color;
  persist();renderGrid();syncTrackNoteColorPicker();
 }
+const trackBankOf=index=>Math.floor(clamp(Math.floor(Number(index)||0),0,TRACK_COUNT-1)/TRACK_BANK_SIZE);
+function changeTrackBank(value){
+ const bank=clamp(Number(value)|0,0,Math.ceil(TRACK_COUNT/TRACK_BANK_SIZE)-1);
+ if(bank===trackBankOf(state.selectedTrack))return;
+ stopEnterPreview();stopAllEditNotePreviews();
+ clearStepRange();fxEditMode=false;fxDigitBuffer='';
+ state.selectedTrack=bank*TRACK_BANK_SIZE;
+ state.selectedStep=clamp(state.selectedStep,0,trackLength()-1);
+ if(isSynth(state.selectedTrack))lastSynthTrack=state.selectedTrack;
+ persist();renderAll();focusSelectedPad(false);
+}
 function renderGrid(){syncTrackNoteColorPicker();
+ const bank=trackBankOf(state.selectedTrack),selector=$('trackBankSelect');
+ if(selector&&selector.value!==String(bank))selector.value=String(bank);
  const board=$('gridBoard');board.replaceChildren();
  const length=patternLength();
  const head=document.createElement('div');head.className='grid-head';
@@ -4993,6 +5016,7 @@ function renderGrid(){syncTrackNoteColorPicker();
  }
  board.appendChild(head);
  state.tracks.forEach((t,track)=>{
+  if(trackBankOf(track)!==bank)return;
   const row=document.createElement('div');row.className='seq-row';
   const lane=document.createElement('div');lane.className='lane-name';
   const choose=document.createElement('button');choose.type='button';
@@ -6934,7 +6958,7 @@ async function applyOutput(){if(!await initAudio())return;const id=$('audioOutpu
 async function chooseOutput(){if(!navigator.mediaDevices?.selectAudioOutput){notify('Select an audio device in system sound settings; in-browser device selection is not supported.',true);return}try{const x=await navigator.mediaDevices.selectAudioOutput();await refreshOutputs();if(x?.deviceId&&![...$('audioOutput').options].some(o=>o.value===x.deviceId))$('audioOutput').add(new Option(x.label||'Selected output',x.deviceId));if(x?.deviceId)$('audioOutput').value=x.deviceId;notify('Audio device selected. Click SET OUTPUT.')}catch(e){notify('No device selected: '+e.message,true)}}
 
 const SAMPLE_BANK_FORMAT='squirrel-studio-sample-bank';
-const SAMPLE_BANK_VERSION=3;
+const SAMPLE_BANK_VERSION=4;
 const SAMPLE_BANK_MAX_BYTES=450*1024*1024;
 function sampleBankSnapshot(){
  return {format:SAMPLE_BANK_FORMAT,version:SAMPLE_BANK_VERSION,createdAt:new Date().toISOString(),
@@ -6947,16 +6971,18 @@ function sampleBankSnapshot(){
   }:null)};
 }
 function validateSampleBank(pack){
- if(!pack||pack.format!==SAMPLE_BANK_FORMAT||![1,2,3].includes(pack.version))
-  throw Error('Not a Squirrel Studio sample bank (supported versions: 1, 2 and 3)');
- const drumCount=pack.version===1?3:TRACK_COUNT,samplerCount=pack.version===1?2:TRACK_COUNT;
+ if(!pack||pack.format!==SAMPLE_BANK_FORMAT||![1,2,3,4].includes(pack.version))
+  throw Error('Not a Squirrel Studio sample bank (supported versions: 1, 2, 3 and 4)');
+ const drumCount=pack.version===1?3:pack.version<=3?LEGACY_TRACK_COUNT:TRACK_COUNT;
+ const samplerCount=pack.version===1?2:pack.version<=3?LEGACY_TRACK_COUNT:TRACK_COUNT;
  if(!Array.isArray(pack.drumSamples)||pack.drumSamples.length!==drumCount||
     !pack.drumSamples.every(row=>Array.isArray(row)&&row.length===5))
   throw Error('Invalid drum bank: expected '+drumCount+' banks of five slots');
  if(!Array.isArray(pack.samplers)||pack.samplers.length!==samplerCount)
   throw Error('Invalid sampler bank: expected '+samplerCount+' tracks');
  const drumsInput=Array.from({length:TRACK_COUNT},(_,t)=>pack.drumSamples[t]||Array.from({length:5},()=>defaultDrumSlot()));
- const samplersInput=Array.from({length:TRACK_COUNT},(_,t)=>pack.version===1?(t>=6?pack.samplers[t-6]:null):pack.samplers[t]);
+ const samplersInput=Array.from({length:TRACK_COUNT},(_,t)=>
+  pack.version===1?(t>=6&&t<8?pack.samplers[t-6]:null):pack.samplers[t]??null);
  const nameOf=x=>typeof x==='string'?x.slice(0,160):'';
  const dataOf=x=>{
   if(x===null||x===undefined)return null;
@@ -9089,6 +9115,7 @@ function bindings(){
  $('patternBounceUseSelection').onchange=()=>{updatePatternBounceRangeControls();drawPatternBounceWaveform()};
  bindPatternBounceSelection();
  syncPatternBounceOptions();updatePatternBouncePreviewUI();
+ $('trackBankSelect').onchange=()=>changeTrackBank($('trackBankSelect').value);
  $('saveBtn').onclick=saveProject;$('loadBtn').onclick=()=>$('loadFile').click();
  $('loadFile').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
@@ -9176,9 +9203,9 @@ function bindings(){
     return;
    }
   }
-  // Alt+1..8 selects a track without occupying numeric notes in ProTracker layout.
+  // Alt+1..8 selects the numbered track in the visible bank.
   if(e.altKey&&!e.ctrlKey&&!e.metaKey&&/^[1-8]$/.test(e.key)){
-   e.preventDefault();selectTrack(Number(e.key)-1);return;
+   e.preventDefault();selectTrack(trackBankOf(state.selectedTrack)*TRACK_BANK_SIZE+Number(e.key)-1);return;
   }
   if(e.ctrlKey||e.altKey||e.metaKey)return;
   // ENTER toggles the note of the focused sequencer cell; clicking only selects it.
