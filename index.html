@@ -1847,7 +1847,7 @@ function setPatternName(bank,value){
 const AUDIO_TRACK_COUNT=6;
 const LEGACY_TRACK_COUNT=8,TRACK_BANK_SIZE=8;
 const TRACK_COUNT=bases.length;
-const makeStep=(track,on=false,note=null)=>({on,note:note??bases[track].note,sampleSlot:0,velocity:track<3?112:104,gate:track<3?70:92,ratchet:1,chance:100,microTiming:0,continueSample:false,locks:null,fx:0,fxAmount:2,chordMode:null});
+const makeStep=(track,on=false,note=null)=>({on,note:note??bases[track].note,sampleSlot:0,velocity:track<3?112:104,gate:track<3?70:92,ratchet:1,chance:100,microTiming:0,continueSample:false,locks:null,fx:0,fxAmount:2,fxProbability:100,chordMode:null});
 // Trackereffecten per rij (ProTracker-timing): tick 0 behoudt de beginwaarde,
 // ticks 1..5 voeren de slide uit; lege FX-rijen stoppen de slide, maar behouden
 // de laatste period/volume. 1xx/2xx gebruiken period-units, Axx/Bxx volume-units.
