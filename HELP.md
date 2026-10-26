@@ -1,6 +1,12 @@
-# Squirrel Studio Web 0.2.74 — User Manual
+# Squirrel Studio Web 0.2.75 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.75 — Enable Song Mode in the transport
+
+The **ENABLE SONG MODE** checkbox now appears in the main transport directly after **STEP 01** and before the track's **STEP COLOR** selector. There is only one checkbox; the duplicate in the separate SONG MODE page toolbar has been removed. **SONG MODE** still provides the arrangement editor, Add Current Pattern, Clear Song, and song position indicator.
+
+The checkbox controls the same saved song-mode state as before. If the arrangement has no patterns, enabling Song Mode is rejected until at least one pattern is added. Changing modes during playback stops the transport safely. The selected pattern tempos, sequence, project files and live playback are unchanged.
 
 ### New in 0.2.74 — Compact Step Editor without desktop scrolling
 
@@ -546,4 +552,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.2.74.**
+**Documentation version: Squirrel Studio Web 0.2.75.**
