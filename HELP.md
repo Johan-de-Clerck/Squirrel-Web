@@ -1,6 +1,14 @@
-# Squirrel Studio Web 0.2.73 — User Manual
+# Squirrel Studio Web 0.2.74 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.74 — Compact Step Editor without desktop scrolling
+
+The **SEQUENCER → STEP EDITOR** uses three compact groups: **INSTRUMENT TYPE / SAMPLE OR NOTE** on the left, **CHANCE / RATCHET / MICROTIMING** in the middle, and **VELOCITY / GATE** on the right. The drum SAMPLE dropdown and **S1–S5** shortcut buttons sit beside the instrument selector instead of taking another full-height row. The six commands (**TOGGLE STEP, COPY STEP, PASTE STEP, UNDO, REDO, AUDITION**) appear in one aligned row.
+
+At normal desktop resolutions, all basic step controls fit inside the existing fixed-height Step Editor without needing to scroll within the editor. Narrower windows switch to a responsive two- or one-column layout instead of hiding controls. The Step FX panel and the sequencer's steady height are unchanged for the normal desktop layout.
+
+All existing control IDs and shortcuts are preserved, including native mouse-operable select menus. The drum-slot shortcuts now sit outside the SAMPLE dropdown's HTML label, so clicking a slot is separate from opening the dropdown. Instrument choice, notes, sample assignments, sliders, clipboard, audition and Undo/Redo retain their previous behavior.
 
 ### Fixed in 0.2.73 — Sample filter release and pattern-tempo LFO parity
 
@@ -538,4 +546,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.2.73.**
+**Documentation version: Squirrel Studio Web 0.2.74.**
