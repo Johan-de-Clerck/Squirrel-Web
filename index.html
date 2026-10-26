@@ -3231,7 +3231,7 @@ s.drumSamples=Array.from({length:TRACK_COUNT},(_,t)=>Array.from({length:5},(_,sl
 // so the mixer and its visible temporary mutes always match audio routing.
 const restoredSolo=s.tracks.findIndex(t=>t.solo);
 if(restoredSolo>=0)s.tracks.forEach((t,i)=>{t.solo=i===restoredSolo});
-for(let b=0;b<PATTERN_COUNT;b++){if(!Array.isArray(data.patterns[b])||data.patterns[b].length<AUDIO_TRACK_COUNT)continue;for(let t=0;t<TRACK_COUNT;t++){if(!Array.isArray(data.patterns[b][t])||data.patterns[b][t].length<16)continue;for(let i=0;i<Math.min(MAX_STEPS,data.patterns[b][t].length);i++){const p=data.patterns[b][t][i];if(!p||typeof p!=='object')continue;s.patterns[b][t][i]={on:!!p.on,note:clamp(Math.round(Number(p.note)||bases[t].note),24,95),sampleSlot:clamp(Math.round(Number(p.sampleSlot)||0),0,4),velocity:clamp(Math.round(Number(p.velocity)||100),1,127),gate:clamp(Number(p.gate)||85,10,180),ratchet:clamp(Math.round(Number(p.ratchet)||1),1,6),chance:clamp(Number(p.chance??100),0,100),microTiming:clamp(Number(p.microTiming??0),-25,25),locks:p.locks&&typeof p.locks==='object'?Object.fromEntries(['cutoff','resonance'].filter(k=>typeof p.locks[k]==='number'&&Number.isFinite(p.locks[k])).map(k=>[k,clamp(p.locks[k],k==='cutoff'?80:.1,k==='cutoff'?18000:18)])):null,continueSample:!!p.continueSample,fx:FX_OPTIONS.some(x=>x.id===(data.version===1&&Number(p.fx)===4?5:Number(p.fx)))?(data.version===1&&Number(p.fx)===4?5:Number(p.fx)):0,fxAmount:data.version===1?clamp(Math.round(Number(p.fxAmount)||2)*3,1,255):clamp(Math.round(Number(p.fxAmount??2))||0,0,255),
+for(let b=0;b<PATTERN_COUNT;b++){if(!Array.isArray(data.patterns[b])||data.patterns[b].length<AUDIO_TRACK_COUNT)continue;for(let t=0;t<TRACK_COUNT;t++){if(!Array.isArray(data.patterns[b][t])||data.patterns[b][t].length<16)continue;for(let i=0;i<Math.min(MAX_STEPS,data.patterns[b][t].length);i++){const p=data.patterns[b][t][i];if(!p||typeof p!=='object')continue;s.patterns[b][t][i]={on:!!p.on,note:clamp(Math.round(Number(p.note)||bases[t].note),24,95),sampleSlot:clamp(Math.round(Number(p.sampleSlot)||0),0,4),velocity:clamp(Math.round(Number(p.velocity)||100),1,127),gate:clamp(Number(p.gate)||85,10,180),ratchet:clamp(Math.round(Number(p.ratchet)||1),1,6),chance:clamp(Number(p.chance??100),0,100),microTiming:clamp(Number(p.microTiming??0),-25,25),locks:p.locks&&typeof p.locks==='object'?Object.fromEntries(['cutoff','resonance','volume','pan'].filter(k=>typeof p.locks[k]==='number'&&Number.isFinite(p.locks[k])).map(k=>[k,clamp(p.locks[k],k==='cutoff'?80:k==='resonance'?.1:k==='volume'?0:-100,k==='cutoff'?18000:k==='resonance'?18:100)])):null,continueSample:!!p.continueSample,fx:FX_OPTIONS.some(x=>x.id===(data.version===1&&Number(p.fx)===4?5:Number(p.fx)))?(data.version===1&&Number(p.fx)===4?5:Number(p.fx)):0,fxAmount:data.version===1?clamp(Math.round(Number(p.fxAmount)||2)*3,1,255):clamp(Math.round(Number(p.fxAmount??2))||0,0,255),
   chordMode:CHORD_MODES_BY_ID.has(p.chordMode)?p.chordMode:srcChordDefault(data)}}}}
  if(Array.isArray(data.lfos)){data.lfos.slice(0,4).forEach((x,i)=>{if(!x||typeof x!=='object')return;const l=s.lfos[i];l.enabled=!!x.enabled;l.target=LFO_TARGETS.some(t=>t[0]===migrateModTarget(x.target))?migrateModTarget(x.target):l.target;l.wave=LFO_WAVES.includes(x.wave)?x.wave:l.wave;l.rate=clamp(Number(x.rate)||l.rate,.05,20);l.sync=LFO_DIVISIONS.includes(x.sync)?x.sync:'free';l.depth=clamp(Number(x.depth??l.depth),0,100)})}
  if(Array.isArray(data.envelopes)){
@@ -8141,11 +8141,12 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
   oscillator.connect(depth);oscillator.start(0);oscillator.stop(duration);
   return {target:l.target,depth,oscillator,lfo:l};
  });
+ const exportStepVolumes=[],exportStepPans=[];
  const outputs=state.tracks.map((track,i)=>{
-  const pan=ctx.createStereoPanner(),gain=ctx.createGain(),dry=ctx.createGain(),wet=ctx.createGain();
+  const pan=ctx.createStereoPanner(),stepPan=ctx.createStereoPanner(),gain=ctx.createGain(),stepVolume=ctx.createGain(),dry=ctx.createGain(),wet=ctx.createGain();
   const pre=ctx.createGain(),shaper=ctx.createWaveShaper(),post=ctx.createGain();
   const distortion=supportsDistortion(i)?clamp(Number(track.distortion??0),0,100)/100:0;
-  pan.pan.value=clamp(Number(track.pan??0),-100,100)/100;
+  pan.pan.value=clamp(Number(track.pan??0),-100,100)/100;stepPan.pan.value=0;stepVolume.gain.value=1;
   gain.gain.value=Math.pow(clamp(Number(track.volume??78),0,100)/100,1.4);
   const volumeMod=ctx.createGain();volumeMod.gain.value=1;
   for(const lfo of lfoNodes){
@@ -8155,17 +8156,18 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
   dry.gain.value=1-distortion;wet.gain.value=distortion;
   pre.gain.value=1+distortion*11;post.gain.value=.8/(1+distortion*.35);
   shaper.curve=curve;shaper.oversample='2x';
-  gain.connect(volumeMod);
-  volumeMod.connect(dry).connect(pan);
-  volumeMod.connect(pre).connect(shaper).connect(post).connect(wet).connect(pan);
-  pan.connect(compressor);
+  gain.connect(volumeMod).connect(stepVolume);
+  stepVolume.connect(dry).connect(pan);
+  stepVolume.connect(pre).connect(shaper).connect(post).connect(wet).connect(pan);pan.connect(stepPan);
+  stepPan.connect(compressor);
   const delaySend=ctx.createGain(),reverbSend=ctx.createGain(),chorusSend=ctx.createGain();
   delaySend.gain.value=clamp(Number(track.delaySend??0),0,100)/100*SEND_FX_BUS.delaySend;
   reverbSend.gain.value=clamp(Number(track.reverbSend??0),0,100)/100*SEND_FX_BUS.reverbSend;
   chorusSend.gain.value=clamp(Number(track.chorusSend??0),0,100)/100*SEND_FX_BUS.chorusSend;
-  pan.connect(delaySend).connect(delayInput);
-  pan.connect(reverbSend).connect(reverb);
-  pan.connect(chorusSend).connect(chorusInput);
+  stepPan.connect(delaySend).connect(delayInput);
+  stepPan.connect(reverbSend).connect(reverb);
+  stepPan.connect(chorusSend).connect(chorusInput);
+  exportStepVolumes.push(stepVolume.gain);exportStepPans.push(stepPan.pan);
   return gain;
  });
  // Schedule an ADSR that respects note-off even if it occurs during attack
@@ -8696,6 +8698,8 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
      const active=activeExportSynthFilters[t];
      for(let n=active.length-1;n>=0;n--)if(active[n].end<at)active.splice(n,1);
      const locks=synthStepLocks(step);
+     scheduleStepMixLocks(exportStepVolumes[t],exportStepPans[t],locks,at,
+      stepIndex%trackLength(pattern,t)===0);
      for(const entry of active){
       // Live step locks skip released voices: filter release tails
       // should not acquire new cutoff/resonance automation.
