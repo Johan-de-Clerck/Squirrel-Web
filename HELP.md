@@ -1,6 +1,19 @@
-# Squirrel Studio Web 0.2.77 — User Manual
+# Squirrel Studio Web 0.2.78 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.78 — Continue synth notes across patterns (VA, FM, Bass, Lead, Chord)
+
+The **CONTINUE INTO NEXT PATTERN** checkbox and tracker command **D00** now apply to **BASS**, **LEAD**, and **CHORD** as well as DRUM and SAMPLE, for tracks using the internal Web Audio engine. A VA or FM note marked Continue holds its pitch and patch through an empty pattern boundary, even if the next pattern has a different BPM. An entire chord can be held; its existing voices are not retriggered at the boundary.
+
+- Enable the small checkbox under **STEP FX → VOICE CONTINUATION** on the triggering note, or select **D · CONTINUE NOTE / SAMPLE → NEXT PATTERN**. The same flag is stored in the song JSON as in older versions.
+- An **empty D00 row** can also arm an already-sustaining note before the next boundary. It cannot resurrect a note that has already been released.
+- A **new note** on the same track or **C00 NOTE OFF** releases all held/carrying voices through their configured release envelopes. **STOP** still applies the transport fade.
+- Ratchets: only the final synth hit is allowed to carry; earlier hits use their regular gates.
+- Existing songs remain compatible. MIDI-only tracks are excluded; this carries internal audio voices rather than sending a new MIDI tie across patterns.
+- **Bounce / Export WAV / stems** schedule the same carried note duration, tracking D00 and C00 across pattern boundaries and per-track step lengths. FX sends continue receiving the sustaining voice.
+
+**Example:** put C-3 on A1's BASS track with Continue enabled, then place A2 next in Song Mode with an empty first step. The C-3 note sustains into A2 (whether A1 is 60 BPM and A2 is 120 BPM or not). Insert C00 on a later step of A2 to start its release.
 
 ### Fixed in 0.2.77 — Stable DRUM slot picker and S1–S5 buttons
 
@@ -566,4 +579,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.2.77.**
+**Documentation version: Squirrel Studio Web 0.2.78.**
