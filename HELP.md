@@ -1,6 +1,20 @@
-# Squirrel Studio Web 0.2.85 — User Manual
+# Squirrel Studio Web 0.2.86 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.86 — sixteen tracks and an eight-lane sequencer bank selector
+
+Squirrel Studio now has **16 real audio/MIDI tracks**. The Step Sequencer displays eight lanes at a time so the editor retains its original height and layout on 1920×1080 monitors. The dropdown immediately beside **Step sequencer** lets you choose **TRACKS 1–8** or **TRACKS 9–16**. This switches only the visible lanes, not playback or the active song arrangement. Selecting a track from another view automatically switches the visible bank. **Alt+1–8** selects a track within the currently displayed bank; Up/Down arrow navigation can cross the bank boundary.
+
+Tracks **9–16** start as empty **SAMPLE** instruments, with separate WAV/audio-data storage, root-note pitch, loop/trim controls, Step FX, volume/pan automation, stereo mixer channels, MIDI routing, and WAV/stem export. To load a sample, select the new track and go to **SAMPLE EDITOR → LOAD WAV** (or use FILE sample import where applicable). Each sample track can hold its own imported recording, independent of the **shared 15-slot drum library**.
+
+To replace a sample instrument with a synth, select the track, choose **Step editor → INSTRUMENT TYPE → BASS, LEAD or CHORD**, then open **SYNTH** and choose the **VA** or **FM** engine. The instrument choice is stored per track. Existing sample data is retained in project storage where supported by the instrument-type workflow; save a project backup before repurposing a track.
+
+**Song Mode** plays all 16 tracks together in the same timeline. Per-track step lengths, pattern BPM, C00 Note Off, D00 continuation, mute/solo, MIDI channels 1–16 and audio routing apply to both banks. Changing the visible sequencer bank does not split a song into separate arrangements.
+
+**Backwards compatibility:** Opening an existing 6- or 8-track project automatically adds empty tracks 9–16; original note, sample and track indices are preserved. The sample-bank file format is now **v4** for 16 tracks, and import still supports versions 1, 2 and 3, expanding missing tracks as empty. The existing 15-sample shared drum pool is unchanged.
+
+**Tests:** Run `node --test tests/track-banks.test.mjs`. Test both banks in a browser by selecting, loading and playing a sample on track 9, changing it to a VA/FM synth, switching back to TRACKS 1–8 during playback, and exporting a stereo WAV.
 
 ### Improved in 0.2.85 — all CHORD qualities, sustained chords and four-parameter SELECTION ramps
 
@@ -658,4 +672,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.2.85.**
+**Documentation version: Squirrel Studio Web 0.2.86.**
