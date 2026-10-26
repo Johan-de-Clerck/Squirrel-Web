@@ -1,6 +1,14 @@
-# Squirrel Studio Web 0.2.78 — User Manual
+# Squirrel Studio Web 0.2.79 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Fixed in 0.2.79 — Correct end-of-file timing for sustained synth notes
+
+**BOUNCE**, **EXPORT WAV**, and stem rendering no longer automatically shorten a held BASS / LEAD / CHORD note by 40 milliseconds when its note-off is at the exact file boundary. In particular, **Exact Pattern / Loop** with **0s FX Tail** now renders the sustaining note through the final available audio frame, rather than fading its ADSR early. Export with a longer FX tail still releases held notes at the actual step boundary, C00 Note Off, or the end of the arrangement, leaving the remainder for envelope release, delay, chorus and reverb.
+
+The change applies to VA, FM2 and FM4 synth voices, including the new cross-pattern **Continue (D00)** feature introduced in v0.2.78. A safety clamp prevents scheduling a sustained note beyond the rendered buffer. Normal non-held gate lengths, stored patterns, and live playback timing are unchanged.
+
+**Note:** A 0-second FX tail intentionally ends the recording at the pattern boundary. For a natural full release and effect decay, select a 3-, 6- or 10-second FX tail instead. This update corrects scheduled synth timing but does not guarantee that all effect tails fit in the selected duration.
 
 ### New in 0.2.78 — Continue synth notes across patterns (VA, FM, Bass, Lead, Chord)
 
@@ -579,4 +587,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.2.78.**
+**Documentation version: Squirrel Studio Web 0.2.79.**
