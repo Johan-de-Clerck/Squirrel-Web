@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.3.06 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.3.07 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1409,7 +1409,7 @@ input[type="password"],textarea,
 .sequencer-track-bank select{min-width:135px;padding:7px 10px;border:1px solid #8c674a;
  background:#33271f;color:#efd6b4;border-radius:6px;font:700 11px Consolas,monospace;cursor:pointer}
 
-/* v0.3.06 — One-track Options dashboard: no sixteen repeated cards. */
+/* v0.3.07 — One-track Options dashboard: no sixteen repeated cards. */
 #view-options .options-main-head{margin-bottom:12px}
 #view-options .options-track-toolbar{display:flex;align-items:end;flex-wrap:wrap;gap:12px;padding:12px 14px;margin-bottom:14px;background:#30251d;border:1px solid #705036;border-radius:9px}
 #view-options .options-track-selector{display:grid;gap:6px;flex:0 1 310px;min-width:195px}
@@ -1546,7 +1546,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.3.06</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.3.07</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span><label class="transport-song-switch" for="songEnable" title="Play the Song Mode arrangement instead of looping a single pattern"><input type="checkbox" id="songEnable" aria-label="Enable Song Mode"> ENABLE SONG MODE</label></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label" id="bpmPatternLabel">BPM · A1</span><input class="numeric" id="bpmInput" type="number" min="10" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1576,7 +1576,7 @@ input[type="password"],textarea,
     <label class="field" id="stepGateField"><span class="field-head"><span>GATE</span><output id="gateOut">85%</output></span><input id="gate" type="range" min="10" max="180" value="85"></label>
   </div>
 </div><div class="setup-actions step-editor-actions"><button class="mini-btn" id="toggleStepBtn">TOGGLE STEP</button><button class="mini-btn" id="copyStepBtn" type="button">COPY STEP</button><button class="mini-btn" id="pasteStepBtn" type="button" disabled>PASTE STEP</button><button class="mini-btn" id="undoStepBtn" type="button" disabled>↶ UNDO</button><button class="mini-btn" id="redoStepBtn" type="button" disabled>↷ REDO</button><button class="mini-btn" id="auditionStepBtn">♪ AUDITION</button></div></section>
-          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step FX</h2></div><span class="pill" id="fxStatus">FX OFF</span></div><div class="fx-compact-layout"><div class="fx-main-fields"><div class="control-grid fx-controls"><label class="field"><span class="field-head"><span>FX COMMAND</span></span><select id="stepFx" aria-label="Effect for the selected step"><option value="0">0 · NO EFFECT</option><option value="1">1 · PORTAMENTO UP</option><option value="2">2 · PORTAMENTO DOWN</option><option value="3">3 · OCTAVE UP</option><option value="4">4 · VIBRATO</option><option value="5">5 · OCTAVE DOWN</option><option value="9">9 · SAMPLE OFFSET (%)</option><option value="10">A · VOLUME SLIDE DOWN</option><option value="11">B · VOLUME SLIDE UP</option><option value="12">C · NOTE OFF</option><option value="13">D · CONTINUE NOTE / SAMPLE → NEXT PATTERN</option></select></label><label class="field"><span class="field-head">FX SLOT 2</span><select id="stepFx2"><option value="0">NO EFFECT</option><option value="1">PITCH UP</option><option value="2">PITCH DOWN</option><option value="3">OCTAVE UP</option><option value="4">VIBRATO</option><option value="5">OCTAVE DOWN</option><option value="10">VOLUME DOWN</option><option value="11">VOLUME UP</option></select></label><label class="field"><span class="field-head">FX 2 PARAMETER (HEX)</span><input id="fx2Hex" maxlength="2" value="00"/></label><label class="field"><span class="field-head">FX CHANCE <output id="fxProbabilityOut">100%</output></span><input id="fxProbability" type="range" min="0" max="100" step="1" value="100"/></label><label class="field step-continue-field step-continue-fx" id="stepContinueField"><span class="field-head">VOICE CONTINUATION</span><span class="step-continue-control"><input id="stepContinue" type="checkbox" aria-label="Continue note or sample into next pattern"><span>CONTINUE INTO NEXT PATTERN</span></span></label><label class="field hidden" id="stepChordField"><span class="field-head"><span>CHORD MODE</span><output id="chordModeOutput">MIN</output></span><select id="stepChordMode" aria-label="Chord quality for the selected CHORD step"></select></label><label class="field" id="fxAmountField"><span class="field-head"><span id="fxAmountLabel">PERIOD/TICK · HEX</span><output id="fxAmountOut">02</output></span><div class="fx-amount-row"><input id="fxAmount" aria-label="FX amount" type="range" min="0" max="255" step="1" value="2"><input id="fxHex" type="text" maxlength="2" spellcheck="false" autocomplete="off" inputmode="text" aria-label="FX parameter in hex" value="02"></div></label></div><div class="step-locks" id="stepLocksPanel"><div class="step-lock-head">
+          <section class="panel"><div class="panel-head"><div><h2 class="section-title">Step FX</h2></div><span class="pill" id="fxStatus">FX OFF</span></div><div class="fx-compact-layout"><div class="fx-main-fields"><div class="control-grid fx-controls"><label class="field"><span class="field-head"><span>FX COMMAND</span></span><select id="stepFx" aria-label="Effect for the selected step"><option value="0">0 · NO EFFECT</option><option value="1">1 · PORTAMENTO UP</option><option value="2">2 · PORTAMENTO DOWN</option><option value="3">3 · OCTAVE UP</option><option value="4">4 · VIBRATO</option><option value="5">5 · OCTAVE DOWN</option><option value="9">9 · SAMPLE OFFSET (%)</option><option value="10">A · VOLUME SLIDE DOWN</option><option value="11">B · VOLUME SLIDE UP</option><option value="12">C · NOTE OFF</option><option value="13">D · CONTINUE NOTE / SAMPLE → NEXT PATTERN</option><option value="14">E · ARPEGGIO XY</option></select></label><label class="field"><span class="field-head">FX SLOT 2</span><select id="stepFx2"><option value="0">NO EFFECT</option><option value="1">PITCH UP</option><option value="2">PITCH DOWN</option><option value="3">OCTAVE UP</option><option value="4">VIBRATO</option><option value="5">OCTAVE DOWN</option><option value="10">VOLUME DOWN</option><option value="11">VOLUME UP</option><option value="14">ARPEGGIO XY</option></select></label><label class="field"><span class="field-head">FX 2 PARAMETER (HEX)</span><input id="fx2Hex" maxlength="2" value="00"/></label><label class="field"><span class="field-head">FX CHANCE <output id="fxProbabilityOut">100%</output></span><input id="fxProbability" type="range" min="0" max="100" step="1" value="100"/></label><label class="field step-continue-field step-continue-fx" id="stepContinueField"><span class="field-head">VOICE CONTINUATION</span><span class="step-continue-control"><input id="stepContinue" type="checkbox" aria-label="Continue note or sample into next pattern"><span>CONTINUE INTO NEXT PATTERN</span></span></label><label class="field hidden" id="stepChordField"><span class="field-head"><span>CHORD MODE</span><output id="chordModeOutput">MIN</output></span><select id="stepChordMode" aria-label="Chord quality for the selected CHORD step"></select></label><label class="field" id="fxAmountField"><span class="field-head"><span id="fxAmountLabel">PERIOD/TICK · HEX</span><output id="fxAmountOut">02</output></span><div class="fx-amount-row"><input id="fxAmount" aria-label="FX amount" type="range" min="0" max="255" step="1" value="2"><input id="fxHex" type="text" maxlength="2" spellcheck="false" autocomplete="off" inputmode="text" aria-label="FX parameter in hex" value="02"></div></label></div><div class="step-locks" id="stepLocksPanel"><div class="step-lock-head">
  <span class="field-head" id="stepLockHeading">PARAMETER LOCKS · FILTER</span>
  <div class="step-lock-tabs" role="tablist" aria-label="Step automation category">
   <button id="stepLockFilterTab" type="button" role="tab" aria-controls="stepLockFilterFields" aria-selected="true">FILTER</button>
@@ -1651,7 +1651,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.3.06';
+const SQUIRREL_VERSION='0.3.07';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -1861,12 +1861,12 @@ function setStepContinue(t,index,enabled){
  if(!enabled&&step.fx===13){step.fx=0;step.fxAmount=0}
  return true;
 }
-const FX_OPTIONS=[{id:0,label:'0 · No effect'},{id:1,label:'1 · Portamento up'},{id:2,label:'2 · Portamento down'},{id:3,label:'3 · Octave up'},{id:4,label:'4 · Vibrato'},{id:5,label:'5 · Octave down'},{id:9,label:'9 · Sample offset (%)'},{id:10,label:'A · Volume slide down'},{id:11,label:'B · Volume slide up'},{id:12,label:'C · NOTE OFF'},{id:13,label:'D · CONTINUE TO NEXT PATTERN'}];
+const FX_OPTIONS=[{id:0,label:'0 · No effect'},{id:1,label:'1 · Portamento up'},{id:2,label:'2 · Portamento down'},{id:3,label:'3 · Octave up'},{id:4,label:'4 · Vibrato'},{id:5,label:'5 · Octave down'},{id:9,label:'9 · Sample offset (%)'},{id:10,label:'A · Volume slide down'},{id:11,label:'B · Volume slide up'},{id:12,label:'C · NOTE OFF'},{id:13,label:'D · CONTINUE TO NEXT PATTERN'},{id:14,label:'E · ARPEGGIO XY'}];
 const fxHex=n=>clamp(n|0,0,255).toString(16).toUpperCase().padStart(2,'0');
 const fxAmountText=(id,n)=>id===9?String(clamp(Math.round(Number(n)||0),0,99)).padStart(2,'0'):fxHex(n);
 const sampleOffsetFraction=(id,amount)=>id===9?clamp(Math.round(Number(amount)||0),0,99)/100:0;
 const fxCode=n=>n.toString(16).toUpperCase();
-const isContinuousFX=id=>[1,2,4,10,11].includes(id);
+const isContinuousFX=id=>[1,2,4,10,11,14].includes(id);
 const periodForNote=note=>428*Math.pow(2,(48-note)/12);
 const TICKS_PER_STEP=6;
 function blankFxRuntime(){return {voices:[],basePeriod:428,period:428,level:64,activeFx:0,activeAmount:0,phase:0,memory:{},vibratoSpeed:0,vibratoDepth:0,secondary:null}}
@@ -1955,7 +1955,9 @@ function advanceFXTick(rt){
  if(command===4){rt.phase=(rt.phase+rt.vibratoSpeed*4)%64;vibrato=Math.sin(rt.phase*2*Math.PI/64)*rt.vibratoDepth*4}
  if(command===10)rt.level=Math.max(0,rt.level-arg);
  if(command===11)rt.level=Math.min(64,rt.level+arg);
- return {cents:1200*Math.log2(rt.basePeriod/Math.max(55,rt.period+vibrato)),level:rt.level/64,period:rt.period};
+ if(command===14)rt.arpTick=(rt.arpTick+1)%3;
+ const arp=command===14?([0,(arg>>4)&15,arg&15][rt.arpTick||0])*100:0;
+ return {cents:1200*Math.log2(rt.basePeriod/Math.max(55,rt.period+vibrato))+arp,level:rt.level/64,period:rt.period};
 }
 function applyFXVoice(voices, when, result){
  for(const voice of voices){
@@ -1990,6 +1992,10 @@ function applyFXCommand(rt, step, enabled=true){
  if(effect===5){rt.period=Math.min(3500,rt.period*2);return}
  if(!isContinuousFX(effect))return;
  rt.activeFx=effect;
+ if(effect===14){
+  if(step.fxAmount)rt.memory[14]=step.fxAmount;
+  rt.activeFx=14;rt.activeAmount=step.fxAmount||rt.memory[14]||0;rt.arpTick=0;return;
+ }
  if(effect===4){
   const speed=(step.fxAmount>>4)&15,depth=step.fxAmount&15;
   if(speed)rt.vibratoSpeed=speed;
@@ -3321,7 +3327,7 @@ s.drumSamples=Array.from({length:TRACK_COUNT},(_,t)=>Array.from({length:5},(_,sl
 const restoredSolo=s.tracks.findIndex(t=>t.solo);
 if(restoredSolo>=0)s.tracks.forEach((t,i)=>{t.solo=i===restoredSolo});
 for(let b=0;b<PATTERN_COUNT;b++){if(!Array.isArray(data.patterns[b])||data.patterns[b].length<AUDIO_TRACK_COUNT)continue;for(let t=0;t<TRACK_COUNT;t++){if(!Array.isArray(data.patterns[b][t])||data.patterns[b][t].length<16)continue;for(let i=0;i<Math.min(MAX_STEPS,data.patterns[b][t].length);i++){const p=data.patterns[b][t][i];if(!p||typeof p!=='object')continue;s.patterns[b][t][i]={on:!!p.on,note:clamp(Math.round(Number(p.note)||bases[t].note),24,95),sampleSlot:clamp(Math.round(Number(p.sampleSlot)||0),0,4),velocity:clamp(Math.round(Number(p.velocity)||100),1,127),gate:clamp(Number(p.gate)||85,10,180),ratchet:clamp(Math.round(Number(p.ratchet)||1),1,6),chance:clamp(Number(p.chance??100),0,100),microTiming:clamp(Number(p.microTiming??0),-25,25),locks:p.locks&&typeof p.locks==='object'?Object.fromEntries(['cutoff','resonance','volume','pan'].filter(k=>typeof p.locks[k]==='number'&&Number.isFinite(p.locks[k])).map(k=>[k,clamp(p.locks[k],k==='cutoff'?80:k==='resonance'?.1:k==='volume'?0:-100,k==='cutoff'?18000:k==='resonance'?18:100)])):null,continueSample:!!p.continueSample,fx:FX_OPTIONS.some(x=>x.id===(data.version===1&&Number(p.fx)===4?5:Number(p.fx)))?(data.version===1&&Number(p.fx)===4?5:Number(p.fx)):0,fxAmount:data.version===1?clamp(Math.round(Number(p.fxAmount)||2)*3,1,255):clamp(Math.round(Number(p.fxAmount??2))||0,0,255),
-  fx2:[0,1,2,3,4,5,10,11].includes(Number(p.fx2))?Number(p.fx2):0,
+  fx2:[0,1,2,3,4,5,10,11,14].includes(Number(p.fx2))?Number(p.fx2):0,
   fx2Amount:clamp(Math.round(Number(p.fx2Amount??0))||0,0,255),
   fxProbability:clamp(Number(p.fxProbability??100),0,100),
   chordMode:p.chordMode==null?null:CHORD_MODES_BY_ID.has(p.chordMode)?p.chordMode:srcChordDefault(data)}}}}
