@@ -1,6 +1,14 @@
-# Squirrel Studio Web 0.2.76 — User Manual
+# Squirrel Studio Web 0.2.77 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Fixed in 0.2.77 — Stable DRUM slot picker and S1–S5 buttons
+
+The compact **SEQUENCER → STEP EDITOR** on DRUM tracks now **reuses** the existing native SAMPLE dropdown and five shortcut buttons instead of destroying and recreating them each time the editor redraws. This preserves browser mouse selection, button focus, and keyboard navigation when switching steps or updating the grid.
+
+When the native SAMPLE dropdown is focused/open, Squirrel does not replace its options or forcibly change its selection. After focus leaves the menu, the editor can refresh the slot names and currently selected step. The dropdown now shows the actual slot name directly, rather than prepending another redundant slot number (e.g., **SLOT 1**, not **1 · SLOT 1**). The **S1–S5** buttons update their pressed/active state in place.
+
+This changes only the editor UI; the 15-slot sample pool, drum assignments, stored songs, mixer/audio engine and WAV bounce are unchanged.
 
 ### Fixed in 0.2.76 — Aligned DRUM Step Editor
 
@@ -558,4 +566,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.2.76.**
+**Documentation version: Squirrel Studio Web 0.2.77.**
