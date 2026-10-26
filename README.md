@@ -2,7 +2,7 @@
   <img src="squirrel-icon.webp" alt="Squirrel Studio icon" width="112">
   <h1>Squirrel Studio</h1>
   <p><strong>A browser-based groovebox, synthesizer, sampler and tracker-style step sequencer.</strong></p>
-  <p><strong>Current version: 0.2.86</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
+  <p><strong>Current version: 0.2.87</strong> · <a href="index.html">Launch the application</a> · <a href="https://github.com/Johan-de-Clerck/Squirrel-Web/archive/refs/heads/main.zip">Download the repository</a></p>
 </div>
 
 Squirrel Studio brings synthesis, sampling, sequencing, effects and song arrangement into a compact, sixteen-track music workstation. The web version runs in a modern desktop browser using the Web Audio API.
@@ -37,6 +37,7 @@ See [HELP.md](HELP.md) for the detailed guide.
 ## Workflow and shortcuts
 
 - **FILE** (above the editor tabs): New Song, Open/Save Song, sample import, sample-bank import/export and VA/FM synth render.
+- **ORGANIZED OPTIONS (v0.2.87):** One **EDIT TRACK** dropdown lists all sixteen tracks. Choose a track to edit its instrument type, groove/swing, velocity humanize, internal/MIDI output and MIDI channel, and current-pattern step length. Only the selected track's controls appear; changing that selector does not change playback or the selected sequencer track. **SHOW IN SEQUENCER** opens that track in the correct eight-lane bank. Pattern selection/name/BPM remain global. Existing project and sample-bank files need no conversion for this UI-only update.
 - **TRACKS 1–8 / TRACKS 9–16** (beside **Step sequencer**): switch the eight visible lanes without interrupting the arrangement. All sixteen tracks run in the same song, mixer, MIDI engine and WAV/stem export. Tracks 9–16 begin as empty **SAMPLE** instruments, each with independent WAV storage, looping, effects and steps. Use **Step editor → INSTRUMENT TYPE** to change any of them into BASS, LEAD or CHORD, then choose VA or FM synthesis on **SYNTH**. Existing eight-track songs are automatically extended with eight empty tracks and remain editable.
 - **SELECTION** (next to FILE): drag-select at least two steps on a track and interpolate **Cutoff, Resonance, Volume or Panning** with linear/exponential curves. Cutoff (80–18,000 Hz) and Resonance (0.1–18 Q) are available on VA/FM synth tracks; Volume (0–100% relative to the track fader) and Panning (−100 left to +100 right relative to mixer pan) also work on DRUM and SAMPLE tracks. Blank steps are included. Ctrl+Z undoes an entire ramp. The same step mix automation is applied to live audio and stereo WAV/stems.
 - **BOUNCE**: selected-pattern bounce, preview waveform, loop crossfade and destination options.
