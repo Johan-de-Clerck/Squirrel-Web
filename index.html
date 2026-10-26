@@ -2010,6 +2010,8 @@ function applyFXCommand(rt, step, enabled=true){
  rt.activeAmount=amount||rt.memory[effect]||0;
 }
 function advanceDualFXTick(rt){const a=advanceFXTick(rt);if(!rt.secondary)return a;const b=advanceFXTick(rt.secondary);return {...a,cents:a.cents+b.cents,level:a.level*b.level}}
+function currentFXTick(rt){const wave=rt.activeFx===4?Math.sin(rt.phase*2*Math.PI/64)*rt.vibratoDepth*4:0;const arp=rt.activeFx===14?([0,(rt.activeAmount>>4)&15,rt.activeAmount&15][rt.arpTick||0])*100:0;return {cents:1200*Math.log2(rt.basePeriod/Math.max(55,rt.period+wave))+arp,level:rt.level/64}}
+function currentDualFXTick(rt){const a=currentFXTick(rt);if(!rt.secondary)return a;const b=currentFXTick(rt.secondary);return {cents:a.cents+b.cents,level:a.level*b.level}}
 function applyDualFX(rt,step,enabled){applyFXCommand(rt,step,enabled);if(!rt.secondary)rt.secondary=blankFxRuntime();applyFXCommand(rt.secondary,{fx:step.fx2||0,fxAmount:step.fx2Amount||0},enabled)}
 const DRUM_LIBRARY_SIZE=15;
 function defaultDrumSlot(name='',data=null,chokeGroup=0){return {name,data,chokeGroup,libraryIndex:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,slotVolume:100,slotPitch:0,slotFine:0,slotPan:0,slotAttack:2,slotDecay:0,slotRelease:18,slotFilterOn:false,slotFilterType:'lowpass',slotCutoff:12000,slotResonance:.7,slotFilterEnvDepth:0,slotFilterEnvTime:0}}
@@ -4683,8 +4685,7 @@ function scheduleStep(idx,when,onlyTrack=null,trackDur=null,absoluteStep=idx){
   // De vorige period en het volume blijven staan; de slide zelf werkt alleen
   // binnen steps die expliciet hetzelfde FX-commando bevatten.
   if(rt.voices.length){
-   const wave=rt.activeFx===4?Math.sin(rt.phase*2*Math.PI/64)*rt.vibratoDepth*4:0;
-   applyFXVoice(rt.voices,when,{cents:1200*Math.log2(rt.basePeriod/Math.max(55,rt.period+wave)),level:rt.level/64});
+   applyFXVoice(rt.voices,when,currentDualFXTick(rt));
    for(let tick=1;tick<TICKS_PER_STEP;tick++){
     const result=advanceDualFXTick(rt);
     applyFXVoice(rt.voices,when+tick*tickTime,result);
@@ -9004,9 +9005,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
     applyDualFX(fxRow,step,(stemHash(exportSeed,patternPosition,row.seqStep,t,17)/4294967296)*100<clamp(Number(step.fxProbability??100),0,100));
     if(fxRow.voices.length){
      // The zero tick preserves slides and applies octave shifts on empty rows.
-     const wave=fxRow.activeFx===4?Math.sin(fxRow.phase*2*Math.PI/64)*fxRow.vibratoDepth*4:0;
-     const cents=1200*Math.log2(fxRow.basePeriod/Math.max(55,fxRow.period+wave));
-     applyExportFXVoice(fxRow.voices,at,{cents,level:fxRow.level/64});
+     applyExportFXVoice(fxRow.voices,at,currentDualFXTick(fxRow));
      for(let tick=1;tick<TICKS_PER_STEP;tick++)
       applyExportFXVoice(fxRow.voices,at+tick*stepSeconds/TICKS_PER_STEP,advanceDualFXTick(fxRow));
     }
