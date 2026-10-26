@@ -9041,8 +9041,8 @@ function bindings(){
   // Escape toggles EDIT once per physical press, except when a native menu or
   // text editor needs Escape. The file menu gets first priority for closing.
   if(e.key==='Escape'&&!e.ctrlKey&&!e.altKey&&!e.metaKey){
-   const menu=$('fileMenu');
-   if(menu?.open){e.preventDefault();menu.open=false;return}
+   const menu=document.querySelector('.file-menubar details[open]');
+   if(menu){e.preventDefault();menu.open=false;return}
    if(escapeMayToggleEdit(el)){
     e.preventDefault();if(!e.repeat)toggleEditMode();return;
    }
