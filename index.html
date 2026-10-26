@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.3.05 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.3.06 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1409,7 +1409,7 @@ input[type="password"],textarea,
 .sequencer-track-bank select{min-width:135px;padding:7px 10px;border:1px solid #8c674a;
  background:#33271f;color:#efd6b4;border-radius:6px;font:700 11px Consolas,monospace;cursor:pointer}
 
-/* v0.3.05 — One-track Options dashboard: no sixteen repeated cards. */
+/* v0.3.06 — One-track Options dashboard: no sixteen repeated cards. */
 #view-options .options-main-head{margin-bottom:12px}
 #view-options .options-track-toolbar{display:flex;align-items:end;flex-wrap:wrap;gap:12px;padding:12px 14px;margin-bottom:14px;background:#30251d;border:1px solid #705036;border-radius:9px}
 #view-options .options-track-selector{display:grid;gap:6px;flex:0 1 310px;min-width:195px}
@@ -1546,7 +1546,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.3.05</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.3.06</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span><label class="transport-song-switch" for="songEnable" title="Play the Song Mode arrangement instead of looping a single pattern"><input type="checkbox" id="songEnable" aria-label="Enable Song Mode"> ENABLE SONG MODE</label></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label" id="bpmPatternLabel">BPM · A1</span><input class="numeric" id="bpmInput" type="number" min="10" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1651,7 +1651,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.3.05';
+const SQUIRREL_VERSION='0.3.06';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -1847,7 +1847,7 @@ function setPatternName(bank,value){
 const AUDIO_TRACK_COUNT=6;
 const LEGACY_TRACK_COUNT=8,TRACK_BANK_SIZE=8;
 const TRACK_COUNT=bases.length;
-const makeStep=(track,on=false,note=null)=>({on,note:note??bases[track].note,sampleSlot:0,velocity:track<3?112:104,gate:track<3?70:92,ratchet:1,chance:100,microTiming:0,continueSample:false,locks:null,fx:0,fxAmount:2,fxProbability:100,chordMode:null});
+const makeStep=(track,on=false,note=null)=>({on,note:note??bases[track].note,sampleSlot:0,velocity:track<3?112:104,gate:track<3?70:92,ratchet:1,chance:100,microTiming:0,continueSample:false,locks:null,fx:0,fxAmount:2,fx2:0,fx2Amount:0,fxProbability:100,chordMode:null});
 // Trackereffecten per rij (ProTracker-timing): tick 0 behoudt de beginwaarde,
 // ticks 1..5 voeren de slide uit; lege FX-rijen stoppen de slide, maar behouden
 // de laatste period/volume. 1xx/2xx gebruiken period-units, Axx/Bxx volume-units.
@@ -1869,7 +1869,7 @@ const fxCode=n=>n.toString(16).toUpperCase();
 const isContinuousFX=id=>[1,2,4,10,11].includes(id);
 const periodForNote=note=>428*Math.pow(2,(48-note)/12);
 const TICKS_PER_STEP=6;
-function blankFxRuntime(){return {voices:[],basePeriod:428,period:428,level:64,activeFx:0,activeAmount:0,phase:0,memory:{},vibratoSpeed:0,vibratoDepth:0}}
+function blankFxRuntime(){return {voices:[],basePeriod:428,period:428,level:64,activeFx:0,activeAmount:0,phase:0,memory:{},vibratoSpeed:0,vibratoDepth:0,secondary:null}}
 let fxRuntime=Array.from({length:TRACK_COUNT},blankFxRuntime);
 // A per-track registry of voices carried into the next pattern.
 // Includes SAMPLE / DRUM as before and now BASS / LEAD / CHORD synth notes.
@@ -2003,6 +2003,7 @@ function applyFXCommand(rt, step, enabled=true){
  if(amount)rt.memory[effect]=amount;
  rt.activeAmount=amount||rt.memory[effect]||0;
 }
+function applyDualFX(rt,step,enabled){applyFXCommand(rt,step,enabled);if(!rt.secondary)rt.secondary=blankFxRuntime();applyFXCommand(rt.secondary,{fx:step.fx2||0,fxAmount:step.fx2Amount||0},enabled)}
 const DRUM_LIBRARY_SIZE=15;
 function defaultDrumSlot(name='',data=null,chokeGroup=0){return {name,data,chokeGroup,libraryIndex:null,sampleStart:0,sampleEnd:1,loopStart:.2,loopEnd:.8,sampleLoop:false,loopPingPong:false,slotVolume:100,slotPitch:0,slotFine:0,slotPan:0,slotAttack:2,slotDecay:0,slotRelease:18,slotFilterOn:false,slotFilterType:'lowpass',slotCutoff:12000,slotResonance:.7,slotFilterEnvDepth:0,slotFilterEnvTime:0}}
 const DRUM_FILTER_TYPES=Object.freeze(['lowpass','highpass','bandpass']);
@@ -4668,7 +4669,7 @@ function scheduleStep(idx,when,onlyTrack=null,trackDur=null,absoluteStep=idx){
     rt.voices.push(...voices);
    }
   }
-  applyFXCommand(rt,step,Math.random()*100<clamp(Number(step.fxProbability??100),0,100));
+  applyDualFX(rt,step,Math.random()*100<clamp(Number(step.fxProbability??100),0,100));
   // De vorige period en het volume blijven staan; de slide zelf werkt alleen
   // binnen steps die expliciet hetzelfde FX-commando bevatten.
   if(rt.voices.length){
@@ -8988,7 +8989,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
      }
      carriedAtBoundary[t]=false;
     }
-    applyFXCommand(fxRow,step,(stemHash(exportSeed,patternPosition,row.seqStep,t,17)/4294967296)*100<clamp(Number(step.fxProbability??100),0,100));
+    applyDualFX(fxRow,step,(stemHash(exportSeed,patternPosition,row.seqStep,t,17)/4294967296)*100<clamp(Number(step.fxProbability??100),0,100));
     if(fxRow.voices.length){
      // The zero tick preserves slides and applies octave shifts on empty rows.
      const wave=fxRow.activeFx===4?Math.sin(fxRow.phase*2*Math.PI/64)*fxRow.vibratoDepth*4:0;
