@@ -49,6 +49,7 @@ function setup(){
   const patternName=i=>'A'+(i+1);
   const patternBpm=()=>120;
   const choosePattern=()=>{};
+  const persist=()=>{};
   const setPatternName=()=>{};
   const setPatternBpm=()=>{};
   let optionsTrackIndex=null;
