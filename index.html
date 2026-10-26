@@ -8241,6 +8241,13 @@ function crossfadePatternLoopSeam(channels,rate,milliseconds){
  return width;
 }
 async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOverride=null,previewSynth=null,bouncePattern=null}={}){
+ // Prevent a misleading WAV while the offline event timeline still uses
+ // the legacy shared step clock. Never silently export the wrong groove.
+ if(!previewSynth&&state.trackTempoRatios?.some(row=>row.some(v=>v!==1))){
+  notify('Per-track tempo WAV rendering is not supported in this experimental build. Set all track tempo multipliers to ×1 before exporting.',true);
+  return;
+ }
+
  if(playing){notify('Stop playback before exporting.',true);return}
  // Snapshot export settings and the selected track at the moment Export starts.
  // A user switching tabs or tracks during sample restoration cannot retarget it.
