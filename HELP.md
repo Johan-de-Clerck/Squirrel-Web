@@ -1,6 +1,21 @@
-# Squirrel Studio Web 0.2.82 — User Manual
+# Squirrel Studio Web 0.2.83 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### New in 0.2.83 — SELECTION menu: linear and exponential filter ramps
+
+The new **SELECTION** menu, next to FILE in the top menu bar, can fill the **FILTER CUTOFF** or **FILTER RESONANCE** parameter lock of every step within a horizontal drag selection. This is designed for a continuous filter sweep on a sustained VA or FM BASS, LEAD, or CHORD voice, without having to edit each step separately.
+
+1. In **SEQUENCER**, choose an internal VA/FM BASS, LEAD, or CHORD track, then drag-select at least two steps **on that same track**. For example, select steps **01–16**.
+2. Optionally set Cutoff locks on the first and last steps in **Step FX → PARAMETER LOCKS** (such as **200 Hz** and **12,000 Hz**). The menu will read those endpoint locks; if one is missing, it uses the synth patch's current value. You can also type the endpoint values directly in the menu.
+3. Open **SELECTION → INTERPOLATE FILTER LOCKS**. Choose **FILTER CUTOFF** (80–18,000 Hz) or **FILTER RESONANCE** (0.1–18 Q), then select **LINEAR** or **EXPONENTIAL**.
+4. Click **INTERPOLATE SELECTION**. All selected steps receive parameter locks, including empty steps. The first and last values are kept exactly; only the chosen lock parameter is edited. Existing notes, notes-off state, gate, velocity, Step FX, voice continuation and other parameter locks stay unchanged. Use **Ctrl+Z** to undo the whole operation.
+
+**Linear** divides the numeric difference into equal steps. **Exponential** uses a geometric progression, yielding equal frequency ratios (musical octave-like spacing) for cutoff. Both modes automatically handle upward and downward ramps; no separate rise/fall switch is needed. Cutoff values are stored to the nearest whole hertz and resonance to the nearest tenth.
+
+**Example:** A 16-step cutoff sweep from 200 Hz to 12,000 Hz can use an exponential rise for a musically smooth opening filter. A reversed sweep from 12,000 Hz to 200 Hz closes the filter instead. If a VA/FM voice sustains across empty steps, the existing per-step parameter-lock engine applies the changes to that held voice. No new notes are created. Multi-track selections, MIDI-only tracks and drum/sample tracks are deliberately not eligible.
+
+**Regression tests:** `node --test tests/selection-ramp.test.mjs` covers linear and exponential curves, reversed drag selections, resonance-lock preservation, invalid inputs and single-undo grouping. Real-time sound and offline WAV playback should still be compared in a browser, especially for a held note continuing into another BPM.
 
 ### Fixed in 0.2.82 — filter-envelope continuity across long notes and WAV release tails
 
@@ -615,4 +630,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.2.82.**
+**Documentation version: Squirrel Studio Web 0.2.83.**
