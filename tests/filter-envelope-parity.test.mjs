@@ -103,6 +103,6 @@ test('native cancelAndHoldAtTime is preferred at note-off', () => {
   assert.deepEqual(param.events, [['hold', 2], ['ramp', 0, 2.5]]);
 });
 test('offline parameter locks never retarget a released synth voice', () => {
-  assert.match(html, /activeExportSynthFilters\[i\]\.push\(\{filter,noteOff:time\+length,/);
+  assert.match(html, /activeExportSynthFilters\[i\]\.push\(\{filter,started:time,noteOff:time\+length,/);
   assert.match(html, /if\(at>=entry\.noteOff\)continue;/);
 });
