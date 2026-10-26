@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#171310">
   <link rel="icon" type="image/webp" href="squirrel-icon.webp">
-  <title>Squirrel Studio 0.2.72 — Web Synth & Step Sequencer</title>
+  <title>Squirrel Studio 0.2.73 — Web Synth & Step Sequencer</title>
   <style>
     :root {--bg:#171411;--panel:#25201b;--panel2:#302820;--panel3:#393027;--line:#554334;--line2:#725640;--text:#eed5ae;--muted:#aa927a;--accent:#e0a56c;--accent2:#f8c68d;--dark:#100d0a;--lcd:#241a14;--green:#a5d1aa;--red:#e68a80;--blue:#9ebdda;--radius:13px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 1100px 580px at 40% -250px,#453124 0%,#211a15 65%,#171411 100%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
@@ -1296,7 +1296,7 @@ input[type="password"],textarea,
  <progress id="songExportBar" max="100" aria-label="Song WAV export progress"></progress>
 </div>
 
-  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.72</span></div></header>
+  <header class="topbar"><div class="logo"><div class="logo-mark"><img src="squirrel-icon.webp" alt="Squirrel Studio icon"></div><div><h1>SQUIRREL STUDIO</h1></div></div><div class="top-status"><span class="status-text"><i id="audioLed" class="led"></i><span id="audioStatus">AUDIO OFF</span></span><span class="status-text"><i id="midiLed" class="led"></i><span id="midiStatus">MIDI DISCONNECTED</span></span><span class="status-text" id="voiceStatus" aria-live="off">VOICES 0</span><span class="status-text" id="timingStatus" aria-live="off">TIMING —</span><span class="version">BUILD 0.2.73</span></div></header>
   <div class="app">
     <main class="workspace">
       <section class="toolbar transport" aria-label="Transport"><div class="transport-left"><button class="btn primary" id="audioBtn">▶ START AUDIO</button><span class="sep"></span><button class="btn" id="playBtn" aria-label="Play">▶ PLAY</button><button class="btn" id="stopBtn">■ STOP</button><button class="btn" id="recBtn">● REC</button><span class="pill" id="transportStep">STEP 01</span></div><div class="transport-track-color"><label for="trackStepColor" class="small-label">STEP COLOR</label><select id="trackStepColor" aria-label="Color of note steps for selected track"><option value="orange">ORANGE</option><option value="red">RED</option><option value="yellow">YELLOW</option><option value="green">GREEN</option><option value="blue">BLUE</option><option value="magenta">MAGENTA</option><option value="cyan">CYAN</option><option value="gray">GRAY</option></select></div><div class="transport-right"><button class="btn" id="editModeBtn" type="button" aria-pressed="false" title="Toggle Edit Mode (Esc)" aria-keyshortcuts="Escape">✎ EDIT OFF</button><label class="range-box"><span class="small-label">OCTAVE</span><select class="octave-select" id="octaveInput" aria-label="Keyboard octave"><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select></label><label class="range-box"><span class="small-label" id="bpmPatternLabel">BPM · A1</span><input class="numeric" id="bpmInput" type="number" min="50" max="240" step="0.1" inputmode="decimal" value="120.0" aria-label="Tempo in BPM (0.1 increments)"></label><label class="range-box"><span class="small-label">SWING</span><input type="range" id="swingInput" min="0" max="65" value="0" aria-label="Swing"><output id="swingOut">0%</output></label><label class="range-box"><span class="small-label">MASTER</span><input type="range" id="masterInput" min="0" max="100" value="75" aria-label="Master volume"><output id="masterOut">75%</output></label></div></section>
@@ -1362,7 +1362,7 @@ input[type="password"],textarea,
 </div>
 <script>
 'use strict';
-const SQUIRREL_VERSION='0.2.72';
+const SQUIRREL_VERSION='0.2.73';
 // Browser groovebox: sequencing, VA/FM synthesis, sampling, MIDI and stereo audio export.
 const $ = id => document.getElementById(id);
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -3287,7 +3287,8 @@ function lfoModulationAmount(l,target,normalizer){
  if(Object.hasOwn(LFO_PWM_TRACKS,target))return isSynth(LFO_PWM_TRACKS[target])?ratio:0;
  return 0;
 }
-function applyLFOs(when=null){if(!audio)return;const now=Math.max(audio.ctx.currentTime,when!==null&&Number.isFinite(Number(when))?Number(when):audio.ctx.currentTime);
+function applyLFOs(when=null){if(!audio)return;const timed=when!==null&&Number.isFinite(Number(when));
+ const now=Math.max(audio.ctx.currentTime,timed?Number(when):audio.ctx.currentTime);
  const totals={};state.lfos.forEach(l=>{if(l.enabled&&l.target!=='off')totals[l.target]=(totals[l.target]||0)+l.depth/100});
  audio.lfoNodes.forEach((node,i)=>{
   const l=state.lfos[i],target=l.enabled?l.target:'off';
@@ -3299,7 +3300,11 @@ function applyLFOs(when=null){if(!audio)return;const now=Math.max(audio.ctx.curr
     node.depthNode.connect(audio.pwmBuses[LFO_PWM_TRACKS[target]]);
   }
   if(node.osc.type!==l.wave)node.osc.type=l.wave;
-  node.osc.frequency.setTargetAtTime(lfoFrequency(l),now,.025);
+  // Pattern changes must switch on the exact musical boundary: the
+  // OfflineAudioContext renderer sets synced LFO rates at that timestamp.
+  // Manual knob changes keep the familiar short smoothing ramp.
+  if(timed&&l.sync!=='free')node.osc.frequency.setValueAtTime(lfoFrequency(l),now);
+  else node.osc.frequency.setTargetAtTime(lfoFrequency(l),now,.025);
   const normalizer=Math.max(1,totals[l.target]||1);
   node.depthNode.gain.setTargetAtTime(lfoModulationAmount(l,target,normalizer),now,.02);
  });
@@ -7798,7 +7803,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
  // Live filter modulation uses additive Hz/Q offsets, not a replacement
  // cutoff. Preserve the base filter and any routed LFO modulation.
  function exportFilterEnvelopes(filter,trackIndex,start,noteOff){
-  const track=state.tracks[trackIndex],name='track'+trackIndex;
+  const track=state.tracks[trackIndex],name='track'+trackIndex,entries=[];
   const baseCutoff=filterBaseCutoff(trackIndex),baseQ=filterBaseResonance(trackIndex);
   const connectEnvelope=(target,amount,settings,patch=false)=>{
    const isCutoff=target==='cutoff',base=isCutoff?baseCutoff:baseQ;
@@ -7816,6 +7821,10 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
    exportAdsr(param,start,noteOff,delta,attack,decay,sustain,release);
    source.connect(isCutoff?filter.frequency:filter.Q);
    source.start(start);source.stop(noteOff+release+.02);
+   // Retain the automation source: C00 or a later note may release this
+   // sample before its natural end, including across a new pattern BPM.
+   entries.push({source,delta,started:start,
+    settings:{...settings,attack,decay,sustain:sustain*100,release}});
   };
   for(const settings of state.envelopes||[]){
    if(!settings.enabled||!settings.amount)continue;
@@ -7826,6 +7835,20 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
    const patch=track.sound?.filterEnvelope;
    if(patch&&patch.enabled!==false&&Number(patch.amount))
     connectEnvelope('cutoff',patch.amount,patch,true);
+  }
+  return entries;
+ }
+ // Release SAMPLE filter envelopes at the actual Note Off / retrigger / wrap,
+ // not at the end of the entire WAV render.
+ function releaseExportFilterEnvelopes(entries,when){
+  for(const entry of entries||[]){
+   const at=Math.max(entry.started,Math.min(duration,when));
+   const param=entry.source.offset;
+   param.cancelScheduledValues(at);
+   param.setValueAtTime(envelopeOffsetAt(entry,at),at);
+   param.linearRampToValueAtTime(0,at+entry.settings.release);
+   // stop() can reschedule a source until its previous stop has fired.
+   try{entry.source.stop(at+entry.settings.release+.02)}catch(_){}
   }
  }
 
@@ -7874,6 +7897,7 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
     voice.amp.gain.cancelScheduledValues(end);
     voice.amp.gain.setValueAtTime(currentLevel,end);
     voice.amp.gain.exponentialRampToValueAtTime(.0001,stopAt);
+    if(voice.filterEnvelopes?.length)releaseExportFilterEnvelopes(voice.filterEnvelopes,end);
     try{voice.source.stop(Math.min(duration-.001,stopAt+.04))}catch(_){}
    }
    voice.stopped=true;
@@ -8051,14 +8075,15 @@ async function exportSongStereoWav({forcedTrack=null,collectWav=false,settingsOv
    const naturalEnd=Math.min(sampleEnd,envelopeEnd);
    // Live sampler voices use assignable filter envelopes as well as cutoff
    // LFOs. Apply those envelopes offline, holding until their natural end.
-   if(sampleFilter)exportFilterEnvelopes(sampleFilter,i,time,
-    Math.min(duration,Number.isFinite(naturalEnd)?naturalEnd:duration));
+   const filterEnvelopeEntries=sampleFilter
+    ?exportFilterEnvelopes(sampleFilter,i,time,
+      Math.min(duration,Number.isFinite(naturalEnd)?naturalEnd:duration)):[];
    if(Number.isFinite(naturalEnd)&&naturalEnd>time&&naturalEnd<duration)source.stop(naturalEnd);
    const carrying=stepContinuesSample(step);
    const gateAt=drum&&plan.loop&&!carrying&&Number.isFinite(cutoffTime)
     ?Math.min(cutoffTime,envelopeEnd):Infinity;
    activeExportSamples[i].push({source,amp,modGain,level,note,slot,chokeGroup,carryAcrossPatterns:carrying,gateAt,
-    started:time,naturalEnd,stopped:false,drumEnvelope,
+    started:time,naturalEnd,stopped:false,drumEnvelope,filterEnvelopes:filterEnvelopeEntries,
     release:drum?clamp(Number(item?.slotRelease??18),0,2000)/1000:sampleReleaseSeconds(track)});
    return fxVoice;
   }
