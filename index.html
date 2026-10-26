@@ -5343,6 +5343,8 @@ function renderFXEditor(){
  syncStepContinueControl(step);
  
  $('stepFx').value=String(step.fx);
+ $('stepFx2').value=String(step.fx2??0);$('fx2Hex').value=fxHex(step.fx2Amount??0);
+ $('fxProbability').value=String(clamp(Number(step.fxProbability??100),0,100));$('fxProbabilityOut').textContent=$('fxProbability').value+'%';
  const offset=step.fx===9,limit=offset?99:(step.fx===10||step.fx===11)?15:255;
  $('fxAmount').max=limit;$('fxAmount').value=String(clamp(step.fxAmount,0,limit));
  $('fxHex').value=fxAmountText(step.fx,step.fxAmount);
