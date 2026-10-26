@@ -1,6 +1,16 @@
-# Squirrel Studio Web 0.2.79 — User Manual
+# Squirrel Studio Web 0.2.80 — User Manual
 
 This manual covers the current **browser** edition of Squirrel Studio. Menu labels and control names match the English interface.
+
+### Fixed in 0.2.80 — VA/FM synth envelope consistency in WAV export
+
+The offline renderer now uses the same **exponential main-amplitude decay and release** shape as the Web Audio live VA, FM2, and FM4 synth engines. Previously, the WAV bounce rendered the same envelope with linear decay and release slopes. This could make long BASS, LEAD, and CHORD notes sound brighter, louder, or more abrupt in bounce than during live playback.
+
+The update covers notes held across patterns using **CONTINUE / D00**, note-offs with **C00**, short note gates during attack or decay, near-silent sustain settings and WAVs with or without an FX tail. Exponential ramps maintain a strictly positive minimum amplitude to avoid invalid Web Audio automation values.
+
+The existing FM operator modulation-index envelopes and additive cutoff/resonance filter envelopes remain intentionally unchanged; they have different signal paths from the main amplitude ADSR. Reverb, delay, chorus, distortion, saved patches and the file format are unaffected.
+
+**Listening test:** For a meaningful live-vs-WAV comparison, export without normalization at the same sample rate and compare sustained VA/FM notes with the same patch. Use a 3-, 6- or 10-second FX tail to hear the complete release and effect decay.
 
 ### Fixed in 0.2.79 — Correct end-of-file timing for sustained synth notes
 
@@ -587,4 +597,4 @@ The browser version uses **Web Audio** via the browser and Windows audio stack. 
 - Drum samples require supported, decodable audio and are subject to browser storage limitations.
 - The separate Windows desktop source may lag behind the latest web features.
 
-**Documentation version: Squirrel Studio Web 0.2.79.**
+**Documentation version: Squirrel Studio Web 0.2.80.**
